@@ -1,0 +1,19 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+coverage/
+outputs/*.apk
+android/.gradle/
+ios/Pods/
+ios/.symlinks/
+*.iml
+.DS_Store
+.idea/
+
+# Flutter-generated platform files
+**/Flutter/ephemeral/
+
+# Local Android SDK configuration
+android/local.properties
