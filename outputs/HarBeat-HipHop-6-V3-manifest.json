@@ -1,0 +1,78 @@
+{
+  "algorithm_commit": "81fe78932b5444dec8ac9e8b674cda9f1b149591",
+  "plan_id": "31881658f6d17ad121c133931d3fd6627bd954329a4d30d3af3f4b31f0be9edf",
+  "duration_seconds": 260.944762,
+  "tracks": [
+    {
+      "title": "FREE BRO",
+      "artist": "Bandmanrill",
+      "bpm": 149.4,
+      "report_id": "45603bc8e9554c8ec2007d875691488ea42117c29fca520b1c53fd2823660c57",
+      "track_id": "track-09371f0f29e2c6a482f0",
+      "audio_sha256": "09371f0f29e2c6a482f012b7363c8a9aa0451bf3010bff8ac9e8c6f25bff7e56"
+    },
+    {
+      "title": "Big Girls",
+      "artist": "IShowSpeed",
+      "bpm": 142.9,
+      "report_id": "fd32ee40219ce80d2c3091c14700729404a113beb63712f398359489d8313500",
+      "track_id": "track-86facefc6cb91411d57e",
+      "audio_sha256": "86facefc6cb91411d57e5136e3ab8b9610707c716cc1fe4d507c9166070abe18"
+    },
+    {
+      "title": "RATATA",
+      "artist": "Skrillex,Missy Elliott,Mr. Oizo",
+      "bpm": 125.0,
+      "report_id": "df0f55db41aae9b5fd7f9913b6d112ea0d054dbdb0e91885df1649c0312e84f4",
+      "track_id": "track-6aa43bf8997b97571097",
+      "audio_sha256": "6aa43bf8997b97571097a958043260e838a4aee716e25ee1bca7ed68a4cc79f5"
+    },
+    {
+      "title": "Cold",
+      "artist": "Stormzy",
+      "bpm": 137.0,
+      "report_id": "71df014b76017169f9850c3c91520f51fbf20c851278c66578c70a8bdd495f19",
+      "track_id": "track-f0697213cb363c437304",
+      "audio_sha256": "f0697213cb363c4373049e22da02614831bb6fa8bb3bf4c1c5049e822dda2079"
+    },
+    {
+      "title": "No Me Tocas",
+      "artist": "Lazuli",
+      "bpm": 130.0,
+      "report_id": "698b10866972a2a70f6b1a16b439a463ba17627c53ffe35aec0bb5084f4392ce",
+      "track_id": "track-120cc0677da8aa7fb3f5",
+      "audio_sha256": "120cc0677da8aa7fb3f501b0f28494eb6581c70c17f7423892dc54497e73b45d"
+    },
+    {
+      "title": "Crazy Love",
+      "artist": "Tion Wayne,LeoStayTrill,MJ Cole",
+      "bpm": 136.4,
+      "report_id": "cbf1c02efb1345263a66e68f630374524b98b1bd275ab958d6fb953605717a60",
+      "track_id": "track-dfa2711a5ba3f541fb47",
+      "audio_sha256": "dfa2711a5ba3f541fb471ce9c00ad263e9be1e0aecd33e1ac0cab7c9bf79777b"
+    }
+  ],
+  "mp3_sha256": "931ace8ffc26ec35dcb581e705f4feeb5715a01757350a6423c06de447824917",
+  "phone_output_gain_db": -1.5,
+  "levels": {
+    "input_i": "-13.31",
+    "input_tp": "-1.36",
+    "input_lra": "9.90",
+    "input_thresh": "-23.52",
+    "output_i": "-17.00",
+    "output_tp": "-1.23",
+    "output_lra": "8.10",
+    "output_thresh": "-27.04",
+    "normalization_type": "dynamic",
+    "target_offset": "-1.00"
+  },
+  "ranking": {
+    "evaluated": 720,
+    "valid": 2
+  },
+  "latest_branch_checked": "2da093cc6e3a331973a3d1e1a6e168a474da4b70",
+  "latest_branch_checked_date": "2026-09-21",
+  "offline_algorithm_unchanged_at_latest": true,
+  "actual_verified_input_count": 6,
+  "recipe_metadata_note": "Upstream recipe hardcodes selection.shortlist=7 from its historical run; this reproduction verified the six selected inputs only."
+}

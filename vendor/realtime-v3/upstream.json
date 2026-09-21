@@ -1,0 +1,22 @@
+{
+  "repository": "https://github.com/jihaobi123/harbeat-client",
+  "commit": "279b65da50d436586c220fb38befdb03f6571099",
+  "files": {
+    "mixing/REALTIME_LOGS.md": "143a743737831f8d9c2b57e503413ddb9dbec2d32649dfbdd44db06205d0a7cd",
+    "mixing/REALTIME_V3.md": "1c5024628aff5098f71fe48315fdccc9b7e3e80b060144d16512243e1b93d16b",
+    "web/package-lock.json": "dbdcd510b15ac4eef85a5fdae82944f4f03391823f8ddaddaa760bc0890e0523",
+    "web/package.json": "017c3fc5f450bb83bc90b304f2542b68925f5db0f0220e67446c30efecf9de09",
+    "web/public/v3-clock.js": "29b0e3c41bd659567850d148cb689814f244beef72812ea6ec15e96d1107b404",
+    "web/src/realtime/DecisionHistory.test.tsx": "d2276da55e9f0c77992c58966843d35576d7410f0deeb3f5489521c18e6e1c5f",
+    "web/src/realtime/DecisionHistory.tsx": "625195f99826764ca1854f22759227b730eb8ae6613dcac7c2f407b85eed5797",
+    "web/src/realtime/cache.ts": "65e05cb0861056fc136bec904646ce08b138e04510e41b9375efc1c3c68f006a",
+    "web/src/realtime/clock.test.ts": "6be41638d32abce88409506eb81148a3fc922d09fcec7a6c533c3d82754afa20",
+    "web/src/realtime/decision.ts": "2704591c7ada92ee714c9f9791571621a83b119565dffc1d0ac2a08f34eb4cab",
+    "web/src/realtime/planner.test.ts": "184103936616f1920a0053eeff8e3444d5941e2e7b39cb0738474073f6a5782a",
+    "web/src/realtime/planner.ts": "2bf3687c820b3b9b1b67ca40f3275ad0d07e565f36485e1af578c714fa522e95",
+    "web/src/realtime/realtime.css": "8ae7683b04d93b8d2f11b8a0e277e68dafc4ca0a690b3958849ae6a46de810da",
+    "web/src/realtime/transport.test.ts": "5b39cb312a4d36f7e6dcc176593f5b9ca4ecc9344e0edf4c717e1533e1550218",
+    "web/src/realtime/transport.ts": "657b37656b5c0821f1446915a8be79c939790d197101850a884d903fc8eab5cd",
+    "web/tsconfig.json": "fe1a923e1aff0dcdf0eb15543c42cd912fe1931769ec07ab47db05c622f36165"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "verifiedAt": "2026-09-21T13:50:24.262857",
+  "package": "com.example.harbeat.preview",
+  "version": "0.1.5+6",
+  "artifact": "HarBeat-Preview-20260921-Player-V3-arm64.apk",
+  "bytes": 326374616,
+  "apkSha256": "2ddef9a8e2aeb84011ef56d86fe5eb445fb29be491991a61129f168fcedf430f",
+  "installedApkMatches": true,
+  "realtimeFilesVerified": 226,
+  "mediaAssetCount": 218,
+  "upstreamCommit": "279b65da50d436586c220fb38befdb03f6571099",
+  "engineEntry": "engine.html",
+  "originalPlaybackPage": true
+}

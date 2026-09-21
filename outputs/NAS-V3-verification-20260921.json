@@ -1,0 +1,13 @@
+{
+  "package": "com.example.harbeat.preview",
+  "version": "0.1.3+4",
+  "apk": "HarBeat-Preview-20260921-NAS-V3-arm64.apk",
+  "apk_sha256": "eb5faa4157d9314811469c772291d6f88f7a7e2313ffbe805c6918685a23d8d4",
+  "installed_apk_hash_matches": true,
+  "tests_passed": 71,
+  "flutter_analyze": "No issues found",
+  "phone_ui": "208 NAS tracks and six-song saved playlist confirmed; native playback of rendered V3, FREE BRO and Big Girls confirmed",
+  "web": "NAS same-origin read proxy and desktop live Big Girls to Cold transition verified",
+  "android_browser_v3": "not verified: automatic approval review rejected ADB Chrome launch",
+  "ios": "not verified"
+}

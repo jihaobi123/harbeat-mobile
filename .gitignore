@@ -5,7 +5,13 @@
 build/
 coverage/
 outputs/*.apk
+outputs/install-backups/
+outputs/*.mp3
+outputs/*.wav
+outputs/*.zip
+.vite/
 android/.gradle/
+android/build/
 ios/Pods/
 ios/.symlinks/
 *.iml
@@ -17,3 +23,10 @@ ios/.symlinks/
 
 # Local Android SDK configuration
 android/local.properties
+
+# Reproducible V3 bundle / verified single-song assets (see tools/build_realtime.py)
+vendor/realtime-v3/node_modules/
+vendor/realtime-v3/dist-mobile/
+vendor/realtime-v3/public/media/
+android/app/src/main/assets/realtime/
+services/__pycache__/

@@ -73,7 +73,11 @@ class HardCard extends StatelessWidget {
                   ? const [BoxShadow(color: HB.ink, offset: Offset(5, 5))]
                   : null),
           child: InkWell(
-              onTap: onTap, child: Padding(padding: padding, child: child)),
+              onTap: onTap,
+              child: Semantics(
+                  container: onTap == null,
+                  explicitChildNodes: onTap == null,
+                  child: Padding(padding: padding, child: child))),
         ),
       );
 }

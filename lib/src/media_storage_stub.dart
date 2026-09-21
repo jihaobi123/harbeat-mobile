@@ -5,6 +5,7 @@ import 'media_storage_base.dart';
 MediaStorage createMediaStorage() => WebMediaStorage();
 
 class WebMediaStorage implements MediaStorage {
+  final Set<String> _sessionPaths = {};
   @override
   Future<ImportedAudio> import(PlatformFile source) async {
     final size = await source.xFile.length();
@@ -15,12 +16,13 @@ class WebMediaStorage implements MediaStorage {
     if (size <= 44) {
       throw const AudioImportException(ImportFailure.damagedFile, '文件为空或已损坏');
     }
-    return ImportedAudio(
-        name: source.name, path: 'web://${source.name}', size: size);
+    final path = source.xFile.path;
+    _sessionPaths.add(path);
+    return ImportedAudio(name: source.name, path: path, size: size);
   }
 
   @override
-  Future<bool> exists(String path) async => path.startsWith('web://');
+  Future<bool> exists(String path) async => _sessionPaths.contains(path);
 
   bool _supported(String name) => const [
         'mp3',

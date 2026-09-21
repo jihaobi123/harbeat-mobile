@@ -1,8 +1,16 @@
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// Install a locally signed preview alongside an existing differently signed APK.
+// Local builds default to a separate package. Production requires an explicit
+// -PharbeatPreview=false; Flutter's installer may uninstall a conflicting ID.
+val isPreviewBuild = providers.gradleProperty("harbeatPreview").orElse("true").get() != "false"
+val isQaBuild = providers.gradleProperty("harbeatQa").orNull == "true" ||
+    providers.gradleProperty("target").orNull?.replace('\\', '/')?.contains("integration_test/") == true
 
 android {
     namespace = "com.example.harbeat"
@@ -17,6 +25,9 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.harbeat"
+        if (isQaBuild) applicationIdSuffix = ".nativeqa"
+        else if (isPreviewBuild) applicationIdSuffix = ".preview"
+        manifestPlaceholders["appLabel"] = if (isQaBuild) "HarBeat Native QA" else if (isPreviewBuild) "HarBeat Preview" else "harbeat"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -47,3 +58,9 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    implementation("androidx.webkit:webkit:1.15.0")
+}
+
+android.androidResources.noCompress += "flac"

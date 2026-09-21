@@ -1,0 +1,13 @@
+{
+  "verifiedAt": "2026-09-21T16:29:09.630434",
+  "artifact": "HarBeat-Preview-20260921-Dance-Set-arm64.apk",
+  "version": "0.1.6+7",
+  "bytes": 326523560,
+  "sha256": "9ad83ef2e000ca6981d34fcdf89909eb9b25c4583667be53bd2299ca26fab5bd",
+  "installedMatches": true,
+  "engineAndBundledFilesVerified": 226,
+  "upstreamCommit": "279b65da50d436586c220fb38befdb03f6571099",
+  "flutterTests": 79,
+  "javascriptTests": 38,
+  "selectionTests": 5
+}

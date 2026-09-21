@@ -3,16 +3,33 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
+import 'mix_planner.dart';
+
+abstract interface class MixingAudioService implements AudioService {
+  /// Downloads/opens B before asking for a plan against the live audio clock.
+  Future<bool> mixTo(
+      {String? filePath,
+      required String title,
+      Map<String, String>? headers,
+      required MixPlan Function(
+              Duration position, Duration length, Duration nextLength)
+          plan});
+  void cancelMix();
+}
 
 abstract interface class AudioService {
   Future<void> initialize();
-  Future<void> play({String? filePath, String title = 'HarBeat Preview'});
+  Future<void> play(
+      {String? filePath,
+      String title = 'HarBeat Preview',
+      Map<String, String>? headers});
   Future<void> pause();
   Future<void> resume();
   Future<void> stop();
   Future<void> seek(Duration position);
   Future<void> setLoop(bool enabled);
   Future<void> setShuffle(bool enabled);
+  Future<void> setLoopRegion(Duration? end);
   Stream<Duration> get position;
   Stream<Duration> get duration;
   Stream<void> get completed;
@@ -48,7 +65,7 @@ class PreviewAudioService implements AudioService {
         _events.add('unducked');
       } else if (_resumeAfterInterruption &&
           event.type == AudioInterruptionType.pause) {
-        await _player.play();
+        _startPlayback();
         _events.add('resumed_after_interruption');
       }
     });
@@ -66,20 +83,42 @@ class PreviewAudioService implements AudioService {
 
   @override
   Future<void> play(
-      {String? filePath, String title = 'HarBeat Preview'}) async {
+      {String? filePath,
+      String title = 'HarBeat Preview',
+      Map<String, String>? headers}) async {
     final source = filePath == null
         ? AudioSource.asset('assets/audio/preview.wav',
             tag: MediaItem(id: 'preview', title: title, album: 'HarBeat'))
-        : AudioSource.file(filePath,
-            tag: MediaItem(id: filePath, title: title, album: 'HarBeat'));
+        : filePath.startsWith('asset:')
+            ? AudioSource.asset(filePath.substring(6),
+                tag: MediaItem(id: filePath, title: title, album: 'HarBeat'))
+            : ['blob:', 'data:', 'https:', 'http:'].any(filePath.startsWith)
+                ? AudioSource.uri(Uri.parse(filePath),
+                    headers: headers,
+                    tag: MediaItem(
+                        id: Uri.parse(filePath)
+                            .replace(query: '', fragment: '')
+                            .toString(),
+                        title: title,
+                        album: 'HarBeat'))
+                : AudioSource.file(filePath,
+                    tag: MediaItem(
+                        id: filePath, title: title, album: 'HarBeat'));
     await _player.setAudioSource(source);
-    await _player.play();
+    _startPlayback();
+  }
+
+  void _startPlayback() {
+    // just_audio's play future completes when playback stops, not when it starts.
+    unawaited(_player.play().catchError((Object error) {
+      if (!_events.isClosed) _events.add('playback_error');
+    }));
   }
 
   @override
   Future<void> pause() => _player.pause();
   @override
-  Future<void> resume() => _player.play();
+  Future<void> resume() async => _startPlayback();
   @override
   Future<void> stop() => _player.stop();
   @override
@@ -90,6 +129,12 @@ class PreviewAudioService implements AudioService {
   @override
   Future<void> setShuffle(bool enabled) =>
       _player.setShuffleModeEnabled(enabled);
+  @override
+  Future<void> setLoopRegion(Duration? end) async {
+    await _player.setClip(start: Duration.zero, end: end);
+    await _player.setLoopMode(end == null ? LoopMode.off : LoopMode.one);
+  }
+
   @override
   Stream<Duration> get position => _player.positionStream;
   @override
@@ -125,7 +170,9 @@ class MemoryAudioService implements AudioService {
   Future<void> initialize() async {}
   @override
   Future<void> play(
-      {String? filePath, String title = 'HarBeat Preview'}) async {}
+      {String? filePath,
+      String title = 'HarBeat Preview',
+      Map<String, String>? headers}) async {}
   @override
   Future<void> pause() async {}
   @override
@@ -138,6 +185,8 @@ class MemoryAudioService implements AudioService {
   Future<void> setLoop(bool enabled) async {}
   @override
   Future<void> setShuffle(bool enabled) async {}
+  @override
+  Future<void> setLoopRegion(Duration? end) async {}
   @override
   Future<void> dispose() async {}
 }

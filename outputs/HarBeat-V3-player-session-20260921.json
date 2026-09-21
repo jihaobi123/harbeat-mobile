@@ -1,0 +1,5523 @@
+{
+  "schema": "harbeat.v3_live_session.v2",
+  "sessionId": "live-1789969302524-no8zr3mm",
+  "policy": {
+    "version": "v3-live-rules-1.audit-1",
+    "minimumLeadSec": 0.25,
+    "maximumGridErrorSec": 0.065,
+    "boundaryRadiusSec": 0.4,
+    "tempoRateRange": [
+      0.8,
+      1.2
+    ],
+    "minimumBodySec": 12,
+    "energyDelta": 0.025,
+    "vocalPaddingSec": 0.3,
+    "vocalMinimumSec": 0.5,
+    "vocalMinimumFraction": 0.05,
+    "ranking": "分数降序；同分取更早完成点；仍相同按候选 ID 字典序",
+    "strategy": "v3_linear_eq"
+  },
+  "retention": "当前页面会话完整事件，不截断；关闭或刷新前请导出。未上传服务器。",
+  "catalog": [
+    {
+      "id": "track-09371f0f29e2c6a482f0",
+      "reportId": "45603bc8e9554c8ec2007d875691488ea42117c29fca520b1c53fd2823660c57",
+      "provenance": {
+        "masterSha256": "09371f0f29e2c6a482f012b7363c8a9aa0451bf3010bff8ac9e8c6f25bff7e56",
+        "reportSha256": "9b414ecf55b9c7677f064bc4337ebda7e23ab5c48a443f9bdf8d8f886ee1e86e",
+        "runId": "run-track-09371f0f29e2c6a482f0-09371f0f29e2-a268a5c-57e48429",
+        "sectionSource": "songformer",
+        "vocalSha256": "a0f01be54e07c12957a84fac98fdc2796201bd1ee58207a135c844f1c4aa2879"
+      },
+      "native": {
+        "url": "media/track-09371f0f29e2c6a482f0.flac",
+        "sha256": "5d28b6c15b00438e9d5230ab72bba234b02a01d1a70736973a7e8b073ca9e588",
+        "duration": 103.08700680272109,
+        "bytes": 18253593,
+        "frames": 4546137,
+        "sampleRate": 44100
+      },
+      "style": "Grime",
+      "styleScore": 0.27556598133540905,
+      "warnings": [
+        "段落与小节未经人工确认",
+        "能量使用已有局部曲线作启发式比较，未作跨曲感知校准",
+        "原始 BPM 标记待确认"
+      ]
+    },
+    {
+      "id": "track-86facefc6cb91411d57e",
+      "reportId": "fd32ee40219ce80d2c3091c14700729404a113beb63712f398359489d8313500",
+      "provenance": {
+        "masterSha256": "86facefc6cb91411d57e5136e3ab8b9610707c716cc1fe4d507c9166070abe18",
+        "reportSha256": "40d5ace92920e3e5e8fa75c383316fd6a64234296318d9f162f8318f4e07b165",
+        "runId": "run-track-86facefc6cb91411d57e-86facefc6cb9-a268a5c-2d796ff2",
+        "sectionSource": "songformer",
+        "vocalSha256": "f9c83e170af73a87c0ab9c09a9b7dd9305ed33e6032ce68ebaee0d5a38368413"
+      },
+      "native": {
+        "url": "media/track-86facefc6cb91411d57e.flac",
+        "sha256": "ee0a61e1b1c910b7a488eaa46de7f039d66ba0f40732023758c1c52da2640373",
+        "duration": 135.21102040816328,
+        "bytes": 28088775,
+        "frames": 5962806,
+        "sampleRate": 44100
+      },
+      "style": "Trap",
+      "styleScore": 0.1588656467023409,
+      "warnings": [
+        "段落与小节未经人工确认",
+        "能量使用已有局部曲线作启发式比较，未作跨曲感知校准"
+      ]
+    },
+    {
+      "id": "track-6aa43bf8997b97571097",
+      "reportId": "df0f55db41aae9b5fd7f9913b6d112ea0d054dbdb0e91885df1649c0312e84f4",
+      "provenance": {
+        "masterSha256": "6aa43bf8997b97571097a958043260e838a4aee716e25ee1bca7ed68a4cc79f5",
+        "reportSha256": "23f0caab0914d746f1b5f8fe186b4a4d96020b1936c0a8cd5c6d8125a43ce22d",
+        "runId": "run-track-6aa43bf8997b97571097-6aa43bf8997b-a268a5c-bc4472c7",
+        "sectionSource": "songformer",
+        "vocalSha256": "4e36beaf30178b6c38ea98c7a67fe76c09f9d36270a82c9f68428a54706e610f"
+      },
+      "native": {
+        "url": "media/track-6aa43bf8997b97571097.flac",
+        "sha256": "c286ab857598fdc28f8758365b22f1783adb1157a91e0a1acdc7338afac2a187",
+        "duration": 126.77401360544218,
+        "bytes": 26060038,
+        "frames": 5590734,
+        "sampleRate": 44100
+      },
+      "style": "Trap",
+      "styleScore": 0.29502612720858046,
+      "warnings": [
+        "段落与小节未经人工确认",
+        "能量使用已有局部曲线作启发式比较，未作跨曲感知校准"
+      ]
+    },
+    {
+      "id": "track-f0697213cb363c437304",
+      "reportId": "71df014b76017169f9850c3c91520f51fbf20c851278c66578c70a8bdd495f19",
+      "provenance": {
+        "masterSha256": "f0697213cb363c4373049e22da02614831bb6fa8bb3bf4c1c5049e822dda2079",
+        "reportSha256": "1c9c4a178e573af253e9b3341d263cec3490c60711d6ce3de6493d2804e706aa",
+        "runId": "run-track-f0697213cb363c437304-f0697213cb36-a268a5c-4cd02aaa",
+        "sectionSource": "songformer",
+        "vocalSha256": "4d440ef26d41afd2752f1d3f429312b0629b39228a4ede42d0fa94a7ee7a661a"
+      },
+      "native": {
+        "url": "media/track-f0697213cb363c437304.flac",
+        "sha256": "fa17fa4fa417e4d833cbf60f4629818f88886b342e7787406f31d5337d2b67e3",
+        "duration": 150,
+        "bytes": 28467243,
+        "frames": 6615000,
+        "sampleRate": 44100
+      },
+      "style": "Grime",
+      "styleScore": 0.5462799161741247,
+      "warnings": [
+        "段落与小节未经人工确认",
+        "能量使用已有局部曲线作启发式比较，未作跨曲感知校准"
+      ]
+    },
+    {
+      "id": "track-120cc0677da8aa7fb3f5",
+      "reportId": "698b10866972a2a70f6b1a16b439a463ba17627c53ffe35aec0bb5084f4392ce",
+      "provenance": {
+        "masterSha256": "120cc0677da8aa7fb3f501b0f28494eb6581c70c17f7423892dc54497e73b45d",
+        "reportSha256": "cc78e871b6e54b6278c71ca62f2f149b766d03ae8d691be1cf7c96e318368242",
+        "runId": "run-track-120cc0677da8aa7fb3f5-120cc0677da8-a268a5c-16d39861",
+        "sectionSource": "songformer",
+        "vocalSha256": "e38a5bd131f473f136a09aa3a6ab0998378a59aede3768024b08a470f3469103"
+      },
+      "native": {
+        "url": "media/track-120cc0677da8aa7fb3f5.flac",
+        "sha256": "a8d2cecce81791e8655819962461d12dafa064840e6f450184655b0850bdba2a",
+        "duration": 119.33,
+        "bytes": 20218778,
+        "frames": 5262453,
+        "sampleRate": 44100
+      },
+      "style": "Trap",
+      "styleScore": 0.21733675346545436,
+      "warnings": [
+        "段落与小节未经人工确认",
+        "能量使用已有局部曲线作启发式比较，未作跨曲感知校准"
+      ]
+    },
+    {
+      "id": "track-dfa2711a5ba3f541fb47",
+      "reportId": "cbf1c02efb1345263a66e68f630374524b98b1bd275ab958d6fb953605717a60",
+      "provenance": {
+        "masterSha256": "dfa2711a5ba3f541fb471ce9c00ad263e9be1e0aecd33e1ac0cab7c9bf79777b",
+        "reportSha256": "e36338255ac51991efc24657e01829182d0751a370fae0ec0de76bb8160e04fe",
+        "runId": "run-track-dfa2711a5ba3f541fb47-dfa2711a5ba3-a268a5c-3d2b19de",
+        "sectionSource": "songformer",
+        "vocalSha256": "537b76b26ba18c11008dcc5503268894162782f70799464e4ec25b9aaf774c8e"
+      },
+      "native": {
+        "url": "media/track-dfa2711a5ba3f541fb47.flac",
+        "sha256": "786a3ad249eebb74112f16ae6d13eb7f2858ec5c56f6e985c954852d179c5412",
+        "duration": 120.51299319727892,
+        "bytes": 21426796,
+        "frames": 5314623,
+        "sampleRate": 44100
+      },
+      "style": "Grime",
+      "styleScore": 0.4486850379054119,
+      "warnings": [
+        "段落与小节未经人工确认",
+        "能量使用已有局部曲线作启发式比较，未作跨曲感知校准",
+        "原始 BPM 标记待确认"
+      ]
+    }
+  ],
+  "sampleRate": 44100,
+  "baseLatency": 0.0032653061224489797,
+  "outputLatency": 0.04,
+  "logs": [
+    {
+      "kind": "context_state",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 1,
+      "wallTime": "2026-09-21T05:41:42.537Z",
+      "contextSec": 0,
+      "state": "running"
+    },
+    {
+      "kind": "stop",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 2,
+      "wallTime": "2026-09-21T05:41:42.567Z",
+      "contextSec": 0
+    },
+    {
+      "kind": "track_start",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 3,
+      "wallTime": "2026-09-21T05:41:43.699Z",
+      "contextSec": 1.1203628117913833,
+      "track": "track-86facefc6cb91411d57e",
+      "sourceOffset": 0,
+      "scheduledAt": 1.2003628117913834,
+      "assetSha256": "ee0a61e1b1c910b7a488eaa46de7f039d66ba0f40732023758c1c52da2640373"
+    },
+    {
+      "kind": "request_received",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 4,
+      "wallTime": "2026-09-21T05:42:13.044Z",
+      "contextSec": 30.46748299319728,
+      "requestId": "live-1789969302524-no8zr3mm:request-1",
+      "intent": {
+        "kind": "next"
+      },
+      "origin": "user",
+      "sourceTrackId": "track-86facefc6cb91411d57e",
+      "sourcePosition": 29.267120181405897,
+      "budgetSec": 30,
+      "deadlineContextSec": 60.46748299319728,
+      "policyVersion": "v3-live-rules-1.audit-1"
+    },
+    {
+      "kind": "intent",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 5,
+      "wallTime": "2026-09-21T05:42:13.044Z",
+      "contextSec": 30.46748299319728,
+      "requestId": "live-1789969302524-no8zr3mm:request-1",
+      "intent": {
+        "kind": "next"
+      },
+      "revision": 2,
+      "sourcePosition": 29.267120181405897,
+      "budget": 30
+    },
+    {
+      "kind": "decision_search",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 6,
+      "wallTime": "2026-09-21T05:42:13.051Z",
+      "contextSec": 30.470385487528343,
+      "requestId": "live-1789969302524-no8zr3mm:request-1",
+      "phase": "ready_assets",
+      "sourcePosition": 29.27002267573696,
+      "remainingBudgetSec": 30,
+      "result": {
+        "candidateCount": 14,
+        "selectedId": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+        "candidates": [
+          {
+            "rank": 1,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 33.86201814058957,
+            "end": 40.58,
+            "score": 0.6737756237130866,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.3770959939531367,
+                "weight": -0.5,
+                "contribution": -0.18854799697656835
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 1,
+                "weight": 0.16,
+                "contribution": 0.16
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "段落边界附近 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 2,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:37.200",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 30.482018140589574,
+            "end": 37.2,
+            "score": 0.5701089570464198,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.26442932728647023,
+                "weight": -0.5,
+                "contribution": -0.13221466364323511
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 3,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:38.880",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 32.16201814058957,
+            "end": 38.88,
+            "score": 0.5421089570464198,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.32042932728647017,
+                "weight": -0.5,
+                "contribution": -0.16021466364323508
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 4,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:42.260",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 35.54201814058957,
+            "end": 42.26,
+            "score": 0.4857756237130865,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.4330959939531367,
+                "weight": -0.5,
+                "contribution": -0.21654799697656835
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 5,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:43.940",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 37.22201814058957,
+            "end": 43.94,
+            "score": 0.4577756237130865,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.4890959939531367,
+                "weight": -0.5,
+                "contribution": -0.24454799697656834
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 6,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:54.100",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 47.38201814058957,
+            "end": 54.1,
+            "score": 0.4484422903797531,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.8277626606198035,
+                "weight": -0.5,
+                "contribution": -0.41388133030990176
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 1,
+                "weight": 0.16,
+                "contribution": 0.16
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "段落边界附近 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 7,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:45.640",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 38.92201814058957,
+            "end": 45.64,
+            "score": 0.42944229037975307,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.5457626606198035,
+                "weight": -0.5,
+                "contribution": -0.27288133030990175
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 8,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:47.340",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 40.622018140589574,
+            "end": 47.34,
+            "score": 0.40110895704641975,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.6024293272864703,
+                "weight": -0.5,
+                "contribution": -0.3012146636432351
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 9,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:49.020",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 42.302018140589574,
+            "end": 49.02,
+            "score": 0.3731089570464197,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.6584293272864702,
+                "weight": -0.5,
+                "contribution": -0.3292146636432351
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 10,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:50.720",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 44.00201814058957,
+            "end": 50.72,
+            "score": 0.3447756237130865,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.7150959939531367,
+                "weight": -0.5,
+                "contribution": -0.35754799697656836
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 11,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:52.400",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 45.68201814058957,
+            "end": 52.4,
+            "score": 0.3167756237130865,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.7710959939531368,
+                "weight": -0.5,
+                "contribution": -0.3855479969765684
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 12,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:55.780",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 49.06201814058957,
+            "end": 55.78,
+            "score": 0.26044229037975314,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.8837626606198035,
+                "weight": -0.5,
+                "contribution": -0.44188133030990173
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 13,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:57.480",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 50.76201814058957,
+            "end": 57.48,
+            "score": 0.23210895704641987,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.94042932728647,
+                "weight": -0.5,
+                "contribution": -0.470214663643235
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 14,
+            "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:59.160",
+            "to": "track-f0697213cb363c437304",
+            "windowId": "w0-4",
+            "start": 52.44201814058957,
+            "end": 59.16,
+            "score": 0.20410895704641985,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.99642932728647,
+                "weight": -0.5,
+                "contribution": -0.498214663643235
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          }
+        ],
+        "exclusions": [
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w0-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w16-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w16-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w23-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w23-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "code": "current_track",
+            "reason": "当前播放曲目不作为下一首",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w0-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w15-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w15-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w24-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w24-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-f0697213cb363c437304",
+            "track": "Cold",
+            "windowId": "w0-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-f0697213cb363c437304",
+            "track": "Cold",
+            "windowId": "w0-4",
+            "code": "start_too_soon",
+            "reason": "A 混入点已过或提前量不足 0.25 秒",
+            "count": 14
+          },
+          {
+            "trackId": "track-f0697213cb363c437304",
+            "track": "Cold",
+            "windowId": "w0-4",
+            "code": "deadline",
+            "reason": "A 退出点超过本次剩余等待预算",
+            "count": 45
+          },
+          {
+            "trackId": "track-f0697213cb363c437304",
+            "track": "Cold",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-f0697213cb363c437304",
+            "track": "Cold",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-f0697213cb363c437304",
+            "track": "Cold",
+            "windowId": "w16-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-f0697213cb363c437304",
+            "track": "Cold",
+            "windowId": "w16-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-f0697213cb363c437304",
+            "track": "Cold",
+            "windowId": "w24-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-f0697213cb363c437304",
+            "track": "Cold",
+            "windowId": "w24-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w0-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w19-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w19-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w32-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w32-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w0-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w14-2",
+            "code": "missing_variant",
+            "reason": "没有匹配当前歌曲速度的进入素材",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w14-4",
+            "code": "missing_variant",
+            "reason": "没有匹配当前歌曲速度的进入素材",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w18-2",
+            "code": "missing_variant",
+            "reason": "没有匹配当前歌曲速度的进入素材",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w18-4",
+            "code": "missing_variant",
+            "reason": "没有匹配当前歌曲速度的进入素材",
+            "count": 1
+          }
+        ],
+        "rejected": [
+          {
+            "track": "FREE BRO",
+            "reason": "未就绪，或等待预算／能量方向／拍网格／窗口长度不满足"
+          },
+          {
+            "track": "RATATA",
+            "reason": "未就绪，或等待预算／能量方向／拍网格／窗口长度不满足"
+          },
+          {
+            "track": "No Me Tocas",
+            "reason": "未就绪，或等待预算／能量方向／拍网格／窗口长度不满足"
+          },
+          {
+            "track": "Crazy Love",
+            "reason": "未就绪，或等待预算／能量方向／拍网格／窗口长度不满足"
+          }
+        ]
+      },
+      "policyVersion": "v3-live-rules-1.audit-1"
+    },
+    {
+      "kind": "plan_scheduled",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 7,
+      "wallTime": "2026-09-21T05:42:13.054Z",
+      "contextSec": 30.479092970521542,
+      "requestId": "live-1789969302524-no8zr3mm:request-1",
+      "planId": "2-track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+      "selection": {
+        "candidateCount": 14,
+        "chosenRank": 1,
+        "tieBreak": "分数降序；同分取更早完成点；仍相同按候选 ID 字典序",
+        "runnerUp": {
+          "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:37.200",
+          "score": 0.5701089570464198,
+          "gap": 0.1036666666666668
+        },
+        "reason": "按规则分降序选择；同分按完成时间及 ID 排序",
+        "strategyReason": "本版本固定采用已认可 V3 的线性淡化和 EQ 模板；只搜索歌曲、进入窗口和交接时间，不在多种混音算法间择优。"
+      },
+      "intent": {
+        "kind": "next"
+      },
+      "requestedAt": 30.46748299319728,
+      "start": 35.062380952380956,
+      "end": 41.780362811791385,
+      "restore": 40.94061473621406,
+      "plan": {
+        "id": "track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+        "from": "track-86facefc6cb91411d57e",
+        "to": "track-f0697213cb363c437304",
+        "window": {
+          "id": "w0-4",
+          "start": 14.14,
+          "end": 21.1,
+          "bars": 4,
+          "role": "verse",
+          "energy": 0.7579178125,
+          "variants": {
+            "track-09371f0f29e2c6a482f0": {
+              "url": "media/track-f0697213cb363c437304-w0-4-09371f0f29e2c6a482f0.flac",
+              "sha256": "de1026bc5ecaa56620edcea3a7bfdcf9fee4ab5e5af4fc8af5bb3ce71dff13c2",
+              "duration": 6.425691609977324,
+              "bytes": 868284,
+              "frames": 283373,
+              "sampleRate": 44100,
+              "rate": 1.08315,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-86facefc6cb91411d57e": {
+              "url": "media/track-f0697213cb363c437304-w0-4-86facefc6cb91411d57e.flac",
+              "sha256": "a20ec20c442c1e1c04c480e32057a28449d9e32066411b5c1a13d16abcceb4d6",
+              "duration": 6.717981859410431,
+              "bytes": 907902,
+              "frames": 296263,
+              "sampleRate": 44100,
+              "rate": 1.0360250000000002,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-6aa43bf8997b97571097": {
+              "url": "media/track-f0697213cb363c437304-w0-4-6aa43bf8997b97571097.flac",
+              "sha256": "a70bdfb05e29f6b5b458f64c4179e51487af61ae2cf8ca21413e67793514ba2c",
+              "duration": 7.68,
+              "bytes": 1003421,
+              "frames": 338688,
+              "sampleRate": 44100,
+              "rate": 0.9062500000000001,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-120cc0677da8aa7fb3f5": {
+              "url": "media/track-f0697213cb363c437304-w0-4-120cc0677da8aa7fb3f5.flac",
+              "sha256": "a55c962cac925dd22c5788f4faa3e627eecb23813e31007983a4edeeb86f563b",
+              "duration": 7.384625850340136,
+              "bytes": 991046,
+              "frames": 325662,
+              "sampleRate": 44100,
+              "rate": 0.9425000000000001,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-dfa2711a5ba3f541fb47": {
+              "url": "media/track-f0697213cb363c437304-w0-4-dfa2711a5ba3f541fb47.flac",
+              "sha256": "4a63aca1c48ccdd33130e1a5fd38ca35275d00fb3d271760cd86c59fcbe9a1ba",
+              "duration": 7.0381179138322,
+              "bytes": 949279,
+              "frames": 310381,
+              "sampleRate": 44100,
+              "rate": 0.9889000000000001,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            }
+          }
+        },
+        "asset": {
+          "url": "media/track-f0697213cb363c437304-w0-4-86facefc6cb91411d57e.flac",
+          "sha256": "a20ec20c442c1e1c04c480e32057a28449d9e32066411b5c1a13d16abcceb4d6",
+          "duration": 6.717981859410431,
+          "bytes": 907902,
+          "frames": 296263,
+          "sampleRate": 44100,
+          "rate": 1.0360250000000002,
+          "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+        },
+        "start": 33.86201814058957,
+        "end": 40.58,
+        "duration": 6.717981859410431,
+        "restore": 39.74025192442267,
+        "rate": 1.0360250000000002,
+        "score": 0.6737756237130866,
+        "midDuck": true,
+        "aVocal": 1,
+        "bVocal": 0.9908045977011497,
+        "aEnergy": 0.9027294331065759,
+        "bEnergy": 0.7579178125,
+        "gridError": 0.042018140589568986,
+        "section": "chorus",
+        "prepared": true,
+        "reason": "段落边界附近 · 4 小节 · 双窗口人声，中频 -5 dB · 素材就绪",
+        "decision": {
+          "policyVersion": "v3-live-rules-1.audit-1",
+          "intent": {
+            "kind": "next"
+          },
+          "positionSourceSec": 29.267120181405897,
+          "budgetSec": 30,
+          "cues": {
+            "aMixStart": {
+              "sourceSec": 33.86201814058957,
+              "rawBarIndex": null,
+              "nearestRawBar": {
+                "rawBarIndex": 12,
+                "sourceSec": 33.82,
+                "distanceSec": 0.042018140589568986
+              },
+              "section": {
+                "start": 26.641,
+                "end": 40.442,
+                "label": "verse"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 2,
+                "label": "verse",
+                "edge": "end",
+                "sourceSec": 40.442,
+                "distanceSec": 6.579981859410431
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            },
+            "aExit": {
+              "sourceSec": 40.58,
+              "rawBarIndex": 16,
+              "nearestRawBar": {
+                "rawBarIndex": 16,
+                "sourceSec": 40.58,
+                "distanceSec": 0
+              },
+              "section": {
+                "start": 40.442,
+                "end": 53.882,
+                "label": "chorus"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 2,
+                "label": "verse",
+                "edge": "end",
+                "sourceSec": 40.442,
+                "distanceSec": 0.13799999999999812
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            },
+            "bEntry": {
+              "sourceSec": 14.14,
+              "rawBarIndex": 0,
+              "nearestRawBar": {
+                "rawBarIndex": 0,
+                "sourceSec": 14.14,
+                "distanceSec": 0
+              },
+              "section": {
+                "start": 14.041,
+                "end": 27.961,
+                "label": "verse"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 0,
+                "label": "intro",
+                "edge": "end",
+                "sourceSec": 14.041,
+                "distanceSec": 0.0990000000000002
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            },
+            "bBodyStart": {
+              "sourceSec": 21.1,
+              "rawBarIndex": 4,
+              "nearestRawBar": {
+                "rawBarIndex": 4,
+                "sourceSec": 21.1,
+                "distanceSec": 0
+              },
+              "section": {
+                "start": 14.041,
+                "end": 27.961,
+                "label": "verse"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 1,
+                "label": "verse",
+                "edge": "end",
+                "sourceSec": 27.961,
+                "distanceSec": 6.860999999999997
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            }
+          },
+          "pointReasons": [
+            "A 在原曲 40.580 秒退出，来自原始小节网格；等待 11.313 秒，预算 30.000 秒。",
+            "B 从原曲 14.140 秒进入，到 21.100 秒完成 4 小节交接；该窗口已具备对应 A 速度的素材。",
+            "按交接终点反推 A 开始点 33.862 秒；距最近原始首拍 42.02 ms，门槛 65 ms。",
+            "A 退出点距段落边界小于 0.4 秒，获得边界加分；段落名称仍需人工确认。"
+          ],
+          "score": {
+            "total": 0.6737756237130866,
+            "components": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.3770959939531367,
+                "weight": -0.5,
+                "contribution": -0.18854799697656835
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.036025000000000196,
+                "weight": -1.4,
+                "contribution": -0.05043500000000027
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.9908045977011497,
+                "weight": -0.3,
+                "contribution": -0.2972413793103449
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 1,
+                "weight": 0.16,
+                "contribution": 0.16
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 1,
+                "weight": 0.05,
+                "contribution": 0.05
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "interpretation": "人为规则排序分，不是音质概率；只比较满足约束的候选",
+            "tieBreak": "分数降序；同分取更早完成点；仍相同按候选 ID 字典序"
+          },
+          "mapping": {
+            "aBpm": 142.9,
+            "bNativeBpm": 137,
+            "rate": 1.0360250000000002,
+            "bSource": [
+              14.14,
+              21.1
+            ],
+            "overlapSec": 6.717981859410431,
+            "equation": "B_source = B_entry + (contextTime - scheduledStart) × rate（名义时间映射，素材经 atempo 与精确长度裁剪／补齐）",
+            "afterHandoff": "B 正文从窗口末端恢复原速"
+          },
+          "features": {
+            "style": {
+              "a": "Trap",
+              "b": "Grime",
+              "aModelScore": 0.1588656467023409,
+              "bModelScore": 0.5462799161741247
+            },
+            "energy": {
+              "a": 0.9027294331065759,
+              "b": 0.7579178125,
+              "aWindow": [
+                29.267120181405897,
+                37.2671201814059
+              ],
+              "bWindow": [
+                21.1,
+                37.1
+              ],
+              "minimumDelta": 0.025,
+              "use": "仅记录，没有参与本次能量方向筛选"
+            },
+            "vocalA": {
+              "sourceStartSec": 33.86201814058957,
+              "sourceEndSec": 40.58,
+              "overlappingIntervals": [
+                [
+                  9.372,
+                  104.9
+                ]
+              ],
+              "paddedUnionFraction": 1,
+              "paddedUnionSec": 6.717981859410429,
+              "presencePassed": true,
+              "basis": "原曲时间轴；区间两侧扩展 0.3 秒，裁剪到交接窗口并合并重叠后计算；B 阈值沿用 V3 的原曲秒数"
+            },
+            "vocalB": {
+              "sourceStartSec": 14.14,
+              "sourceEndSec": 21.1,
+              "overlappingIntervals": [
+                [
+                  13.468,
+                  14.436
+                ],
+                [
+                  15.1,
+                  18.116
+                ],
+                [
+                  18.396,
+                  25.252
+                ]
+              ],
+              "paddedUnionFraction": 0.9908045977011497,
+              "paddedUnionSec": 6.896000000000003,
+              "presencePassed": true,
+              "basis": "原曲时间轴；区间两侧扩展 0.3 秒，裁剪到交接窗口并合并重叠后计算；B 阈值沿用 V3 的原曲秒数"
+            }
+          },
+          "strategy": {
+            "id": "v3_linear_eq",
+            "selectionReason": "本版本固定采用已认可 V3 的线性淡化和 EQ 模板；只搜索歌曲、进入窗口和交接时间，不在多种混音算法间择优。",
+            "alternativesEvaluated": [],
+            "gain": {
+              "a": [
+                0.76,
+                0
+              ],
+              "b": [
+                0,
+                0.76
+              ],
+              "curve": "linear"
+            },
+            "eq": {
+              "lowHz": 140,
+              "highHz": 3600,
+              "midHz": 1200,
+              "midQ": 1.05,
+              "aLowDb": -9,
+              "aHighDb": -1.4,
+              "bLowDb": -7,
+              "bHighDb": 1.2,
+              "lowReason": "沿用 V3 固定低频衰减，控制叠加；本次没有依据频谱遮蔽自适应计算衰减量。",
+              "highReason": "沿用 V3 固定高频参数。"
+            },
+            "midDuck": {
+              "enabled": true,
+              "bMidDb": -5,
+              "reason": "A、B 各自窗口的人声占比均 ≥5%，且扩展后并集时长均 ≥0.5秒，因此衰减 B 中频。"
+            },
+            "restore": {
+              "aSourceSec": 39.74025192442267,
+              "secondsBeforeHandoff": 0.8397480755773268,
+              "reason": "交接结束前半小节，B 从滤波声线性恢复原声。"
+            },
+            "limitations": [
+              "浏览器 Biquad 与原 FFmpeg 非逐样本等价",
+              "人声判断使用各自窗口占比，不等同于两侧逐帧同时唱歌",
+              "没有用调性、和弦、乐器或审美分选择本次模板"
+            ]
+          },
+          "sources": {
+            "a": {
+              "trackId": "track-86facefc6cb91411d57e",
+              "reportId": "fd32ee40219ce80d2c3091c14700729404a113beb63712f398359489d8313500",
+              "nativeSha256": "ee0a61e1b1c910b7a488eaa46de7f039d66ba0f40732023758c1c52da2640373",
+              "provenance": {
+                "masterSha256": "86facefc6cb91411d57e5136e3ab8b9610707c716cc1fe4d507c9166070abe18",
+                "reportSha256": "40d5ace92920e3e5e8fa75c383316fd6a64234296318d9f162f8318f4e07b165",
+                "runId": "run-track-86facefc6cb91411d57e-86facefc6cb9-a268a5c-2d796ff2",
+                "sectionSource": "songformer",
+                "vocalSha256": "f9c83e170af73a87c0ab9c09a9b7dd9305ed33e6032ce68ebaee0d5a38368413"
+              }
+            },
+            "b": {
+              "trackId": "track-f0697213cb363c437304",
+              "reportId": "71df014b76017169f9850c3c91520f51fbf20c851278c66578c70a8bdd495f19",
+              "nativeSha256": "fa17fa4fa417e4d833cbf60f4629818f88886b342e7787406f31d5337d2b67e3",
+              "entrySha256": "a20ec20c442c1e1c04c480e32057a28449d9e32066411b5c1a13d16abcceb4d6",
+              "provenance": {
+                "masterSha256": "f0697213cb363c4373049e22da02614831bb6fa8bb3bf4c1c5049e822dda2079",
+                "reportSha256": "1c9c4a178e573af253e9b3341d263cec3490c60711d6ce3de6493d2804e706aa",
+                "runId": "run-track-f0697213cb363c437304-f0697213cb36-a268a5c-4cd02aaa",
+                "sectionSource": "songformer",
+                "vocalSha256": "4d440ef26d41afd2752f1d3f429312b0629b39228a4ede42d0fa94a7ee7a661a"
+              }
+            }
+          },
+          "warnings": [
+            "段落与小节未经人工确认",
+            "能量使用已有局部曲线作启发式比较，未作跨曲感知校准"
+          ]
+        }
+      },
+      "events": [
+        {
+          "planId": "2-track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+          "requestId": "live-1789969302524-no8zr3mm:request-1",
+          "name": "B 开始混入",
+          "frame": 1546251
+        },
+        {
+          "planId": "2-track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+          "requestId": "live-1789969302524-no8zr3mm:request-1",
+          "name": "B EQ 开始恢复",
+          "frame": 1805481
+        },
+        {
+          "planId": "2-track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+          "requestId": "live-1789969302524-no8zr3mm:request-1",
+          "name": "A 退出 / B 正文接管",
+          "frame": 1842514
+        }
+      ],
+      "eqImplementation": "WebAudio Biquad, V3 gains/frequencies; 20ms outgoing EQ enable smoothing; 4ms head/body edge fades",
+      "limiter": "5ms lookahead browser protection, not original FFmpeg alimiter",
+      "sourceHashes": {
+        "a": "ee0a61e1b1c910b7a488eaa46de7f039d66ba0f40732023758c1c52da2640373",
+        "b": "fa17fa4fa417e4d833cbf60f4629818f88886b342e7787406f31d5337d2b67e3",
+        "entry": "a20ec20c442c1e1c04c480e32057a28449d9e32066411b5c1a13d16abcceb4d6"
+      }
+    },
+    {
+      "kind": "plan_locked",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 8,
+      "wallTime": "2026-09-21T05:42:17.494Z",
+      "contextSec": 34.91990929705216,
+      "requestId": "live-1789969302524-no8zr3mm:request-1",
+      "planId": "2-track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+      "reason": "距混入点不足 150 ms，后续普通请求延后处理"
+    },
+    {
+      "kind": "audio_observation",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 9,
+      "wallTime": "2026-09-21T05:42:17.644Z",
+      "contextSec": 35.06503401360544,
+      "planId": "2-track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+      "requestId": "live-1789969302524-no8zr3mm:request-1",
+      "name": "B 开始混入",
+      "frame": 1546251,
+      "observedFrame": 1546368,
+      "quantumStart": 1546240,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.696749746799469,
+      "plannedContextSec": 35.062380952380956,
+      "observedContextSec": 35.06503401360544,
+      "observationDeltaMs": 2.653061224489796,
+      "messageReceivedContextSec": 35.06503401360544,
+      "basis": "Audio-thread render quantum observation; not measured source onset, device output or Bluetooth latency"
+    },
+    {
+      "kind": "audio_observation",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 10,
+      "wallTime": "2026-09-21T05:42:23.519Z",
+      "contextSec": 40.942585034013604,
+      "planId": "2-track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+      "requestId": "live-1789969302524-no8zr3mm:request-1",
+      "name": "B EQ 开始恢复",
+      "frame": 1805481,
+      "observedFrame": 1805568,
+      "quantumStart": 1805440,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.782252311706543,
+      "plannedContextSec": 40.940612244897956,
+      "observedContextSec": 40.942585034013604,
+      "observationDeltaMs": 1.9727891156462587,
+      "messageReceivedContextSec": 40.942585034013604,
+      "basis": "Audio-thread render quantum observation; not measured source onset, device output or Bluetooth latency"
+    },
+    {
+      "kind": "audio_observation",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 11,
+      "wallTime": "2026-09-21T05:42:24.359Z",
+      "contextSec": 41.78430839002267,
+      "planId": "2-track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+      "requestId": "live-1789969302524-no8zr3mm:request-1",
+      "name": "A 退出 / B 正文接管",
+      "frame": 1842514,
+      "observedFrame": 1842560,
+      "quantumStart": 1842432,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.7860082387924194,
+      "plannedContextSec": 41.780362811791385,
+      "observedContextSec": 41.78140589569161,
+      "observationDeltaMs": 1.0430839002267573,
+      "messageReceivedContextSec": 41.78140589569161,
+      "basis": "Audio-thread render quantum observation; not measured source onset, device output or Bluetooth latency"
+    },
+    {
+      "kind": "handoff_state_commit",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 12,
+      "wallTime": "2026-09-21T05:42:24.360Z",
+      "contextSec": 41.78430839002267,
+      "requestId": "live-1789969302524-no8zr3mm:request-1",
+      "planId": "2-track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580",
+      "to": "track-f0697213cb363c437304",
+      "bodySourceOffset": 21.1,
+      "scheduledContextSec": 41.780362811791385
+    },
+    {
+      "kind": "request_outcome",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 13,
+      "wallTime": "2026-09-21T05:42:24.361Z",
+      "contextSec": 41.78430839002267,
+      "requestId": "live-1789969302524-no8zr3mm:request-1",
+      "outcome": "completed",
+      "reason": "计划交接时点已到，B 正文接管；实际音频处理块观察另见 audio_observation",
+      "planId": "2-track-86facefc6cb91411d57e:track-f0697213cb363c437304:w0-4:40.580"
+    },
+    {
+      "kind": "request_received",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 14,
+      "wallTime": "2026-09-21T05:42:45.312Z",
+      "contextSec": 62.73160997732426,
+      "requestId": "live-1789969302524-no8zr3mm:request-2",
+      "intent": {
+        "kind": "up"
+      },
+      "origin": "user",
+      "sourceTrackId": "track-f0697213cb363c437304",
+      "sourcePosition": 42.05124716553288,
+      "budgetSec": 30,
+      "deadlineContextSec": 92.73160997732427,
+      "policyVersion": "v3-live-rules-1.audit-1"
+    },
+    {
+      "kind": "intent",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 15,
+      "wallTime": "2026-09-21T05:42:45.312Z",
+      "contextSec": 62.73160997732426,
+      "requestId": "live-1789969302524-no8zr3mm:request-2",
+      "intent": {
+        "kind": "up"
+      },
+      "revision": 3,
+      "sourcePosition": 42.05124716553288,
+      "budget": 30
+    },
+    {
+      "kind": "decision_search",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 16,
+      "wallTime": "2026-09-21T05:42:45.319Z",
+      "contextSec": 62.74031746031746,
+      "requestId": "live-1789969302524-no8zr3mm:request-2",
+      "phase": "ready_assets",
+      "sourcePosition": 42.05995464852608,
+      "remainingBudgetSec": 30,
+      "result": {
+        "candidateCount": 14,
+        "selectedId": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+        "candidates": [
+          {
+            "rank": 1,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 52.37634920634921,
+            "end": 55.88,
+            "score": 0.5802092025699179,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.4607649281934997,
+                "weight": -0.5,
+                "contribution": -0.23038246409674984
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 1,
+                "weight": 0.16,
+                "contribution": 0.16
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "段落边界附近 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 2,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:47.180",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 43.67634920634921,
+            "end": 47.18,
+            "score": 0.565209202569918,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.17076492819349956,
+                "weight": -0.5,
+                "contribution": -0.08538246409674978
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 3,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:48.920",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 45.41634920634921,
+            "end": 48.92,
+            "score": 0.5362092025699179,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.22876492819349964,
+                "weight": -0.5,
+                "contribution": -0.11438246409674982
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 4,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:50.640",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 47.13634920634921,
+            "end": 50.64,
+            "score": 0.5075425359032513,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.28609826152683293,
+                "weight": -0.5,
+                "contribution": -0.14304913076341647
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 5,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:52.380",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 48.87634920634921,
+            "end": 52.38,
+            "score": 0.4785425359032513,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.344098261526833,
+                "weight": -0.5,
+                "contribution": -0.1720491307634165
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 6,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:54.140",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 50.63634920634921,
+            "end": 54.14,
+            "score": 0.449209202569918,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.40276492819349957,
+                "weight": -0.5,
+                "contribution": -0.20138246409674979
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 7,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:57.600",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 54.09634920634921,
+            "end": 57.6,
+            "score": 0.39154253590325133,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.5180982615268329,
+                "weight": -0.5,
+                "contribution": -0.25904913076341646
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 8,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:59.360",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 55.85634920634921,
+            "end": 59.36,
+            "score": 0.3622092025699179,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.5767649281934996,
+                "weight": -0.5,
+                "contribution": -0.2883824640967498
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 9,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:69.760",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 66.25634920634921,
+            "end": 69.76,
+            "score": 0.34887586923658453,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.9234315948601665,
+                "weight": -0.5,
+                "contribution": -0.46171579743008323
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 1,
+                "weight": 0.16,
+                "contribution": 0.16
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "段落边界附近 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 10,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:61.100",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 57.59634920634921,
+            "end": 61.1,
+            "score": 0.333209202569918,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.6347649281934996,
+                "weight": -0.5,
+                "contribution": -0.3173824640967498
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 11,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:62.840",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 59.33634920634921,
+            "end": 62.84,
+            "score": 0.30420920256991785,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.6927649281934997,
+                "weight": -0.5,
+                "contribution": -0.34638246409674983
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 12,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:64.560",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 61.05634920634921,
+            "end": 64.56,
+            "score": 0.27554253590325123,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.750098261526833,
+                "weight": -0.5,
+                "contribution": -0.3750491307634165
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 13,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:68.040",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 64.53634920634921,
+            "end": 68.04,
+            "score": 0.21754253590325118,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.8660982615268331,
+                "weight": -0.5,
+                "contribution": -0.43304913076341656
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 14,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:71.520",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 68.0163492063492,
+            "end": 71.52,
+            "score": 0.2170825168754808,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.9820982615268328,
+                "weight": -0.5,
+                "contribution": -0.4910491307634164
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.8082000634259017,
+                "weight": -0.3,
+                "contribution": -0.24246001902777048
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          }
+        ],
+        "exclusions": [
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w0-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w16-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w16-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w23-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "windowId": "w23-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w0-2",
+            "code": "start_too_soon",
+            "reason": "A 混入点已过或提前量不足 0.25 秒",
+            "count": 19
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w0-2",
+            "code": "grid_error",
+            "reason": "反推 A 混入点距原始首拍超过 65 ms",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w0-2",
+            "code": "deadline",
+            "reason": "A 退出点超过本次剩余等待预算",
+            "count": 45
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w16-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w16-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w24-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w24-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w0-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w15-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w15-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w24-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w24-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-f0697213cb363c437304",
+            "track": "Cold",
+            "code": "current_track",
+            "reason": "当前播放曲目不作为下一首",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w0-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w19-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w19-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w32-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w32-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w0-2",
+            "code": "energy_up",
+            "reason": "B 能量 0.536036 低于要求 0.7793710391156462",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w14-2",
+            "code": "missing_variant",
+            "reason": "没有匹配当前歌曲速度的进入素材",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w14-4",
+            "code": "missing_variant",
+            "reason": "没有匹配当前歌曲速度的进入素材",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w18-2",
+            "code": "missing_variant",
+            "reason": "没有匹配当前歌曲速度的进入素材",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "windowId": "w18-4",
+            "code": "missing_variant",
+            "reason": "没有匹配当前歌曲速度的进入素材",
+            "count": 1
+          }
+        ],
+        "rejected": [
+          {
+            "track": "FREE BRO",
+            "reason": "未就绪，或等待预算／能量方向／拍网格／窗口长度不满足"
+          },
+          {
+            "track": "RATATA",
+            "reason": "未就绪，或等待预算／能量方向／拍网格／窗口长度不满足"
+          },
+          {
+            "track": "No Me Tocas",
+            "reason": "未就绪，或等待预算／能量方向／拍网格／窗口长度不满足"
+          },
+          {
+            "track": "Crazy Love",
+            "reason": "未就绪，或等待预算／能量方向／拍网格／窗口长度不满足"
+          }
+        ]
+      },
+      "policyVersion": "v3-live-rules-1.audit-1"
+    },
+    {
+      "kind": "plan_scheduled",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 17,
+      "wallTime": "2026-09-21T05:42:45.323Z",
+      "contextSec": 62.74612244897959,
+      "requestId": "live-1789969302524-no8zr3mm:request-2",
+      "planId": "3-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+      "selection": {
+        "candidateCount": 14,
+        "chosenRank": 1,
+        "tieBreak": "分数降序；同分取更早完成点；仍相同按候选 ID 字典序",
+        "runnerUp": {
+          "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:47.180",
+          "score": 0.565209202569918,
+          "gap": 0.014999999999999902
+        },
+        "reason": "按规则分降序选择；同分按完成时间及 ID 排序",
+        "strategyReason": "本版本固定采用已认可 V3 的线性淡化和 EQ 模板；只搜索歌曲、进入窗口和交接时间，不在多种混音算法间择优。"
+      },
+      "intent": {
+        "kind": "up"
+      },
+      "requestedAt": 62.73160997732426,
+      "start": 73.05671201814059,
+      "end": 76.56036281179138,
+      "restore": 75.68445040303226,
+      "plan": {
+        "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+        "from": "track-f0697213cb363c437304",
+        "to": "track-86facefc6cb91411d57e",
+        "window": {
+          "id": "w0-2",
+          "start": 13.54,
+          "end": 16.92,
+          "bars": 2,
+          "role": "chorus",
+          "energy": 0.8955000000000001,
+          "variants": {
+            "track-09371f0f29e2c6a482f0": {
+              "url": "media/track-86facefc6cb91411d57e-w0-2-09371f0f29e2c6a482f0.flac",
+              "sha256": "2520d9c059af703ee646597894c85a01aee7dadf7d91a0f4e9ed65fa6e0e44e3",
+              "duration": 3.212857142857143,
+              "bytes": 350796,
+              "frames": 141687,
+              "sampleRate": 44100,
+              "rate": 1.0520250000000009,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-6aa43bf8997b97571097": {
+              "url": "media/track-86facefc6cb91411d57e-w0-2-6aa43bf8997b97571097.flac",
+              "sha256": "5fb8f90f65fcd53bd60495b8bf9499a1076a167601b0d17eef1cb0931921e2ea",
+              "duration": 3.84,
+              "bytes": 471139,
+              "frames": 169344,
+              "sampleRate": 44100,
+              "rate": 0.880208333333334,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-f0697213cb363c437304": {
+              "url": "media/track-86facefc6cb91411d57e-w0-2-f0697213cb363c437304.flac",
+              "sha256": "eb378c72fdfb0f56fbbe7d56ed8293f649c700c6e0de968d08502ed1e94e64bb",
+              "duration": 3.5036507936507935,
+              "bytes": 380645,
+              "frames": 154511,
+              "sampleRate": 44100,
+              "rate": 0.9647083333333341,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-120cc0677da8aa7fb3f5": {
+              "url": "media/track-86facefc6cb91411d57e-w0-2-120cc0677da8aa7fb3f5.flac",
+              "sha256": "30da4f92a7ba5e97e82e2d7e0a2ddf4559c787b1ff5c754528107d18a71dddd2",
+              "duration": 3.692312925170068,
+              "bytes": 456175,
+              "frames": 162831,
+              "sampleRate": 44100,
+              "rate": 0.9154166666666673,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-dfa2711a5ba3f541fb47": {
+              "url": "media/track-86facefc6cb91411d57e-w0-2-dfa2711a5ba3f541fb47.flac",
+              "sha256": "62ef4e6f0bc95e2677eb774329aa805a31cb8b1d49e2126e4b938a5b140f02fb",
+              "duration": 3.5190702947845804,
+              "bytes": 382621,
+              "frames": 155191,
+              "sampleRate": 44100,
+              "rate": 0.960483333333334,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            }
+          }
+        },
+        "asset": {
+          "url": "media/track-86facefc6cb91411d57e-w0-2-f0697213cb363c437304.flac",
+          "sha256": "eb378c72fdfb0f56fbbe7d56ed8293f649c700c6e0de968d08502ed1e94e64bb",
+          "duration": 3.5036507936507935,
+          "bytes": 380645,
+          "frames": 154511,
+          "sampleRate": 44100,
+          "rate": 0.9647083333333341,
+          "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+        },
+        "start": 52.37634920634921,
+        "end": 55.88,
+        "duration": 3.5036507936507935,
+        "restore": 55.004087591240875,
+        "rate": 0.9647083333333341,
+        "score": 0.5802092025699179,
+        "midDuck": true,
+        "aVocal": 1,
+        "bVocal": 1,
+        "aEnergy": 0.7543710391156462,
+        "bEnergy": 0.8955000000000001,
+        "gridError": 0.003650793650791684,
+        "section": "verse",
+        "prepared": true,
+        "reason": "段落边界附近 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪",
+        "decision": {
+          "policyVersion": "v3-live-rules-1.audit-1",
+          "intent": {
+            "kind": "up"
+          },
+          "positionSourceSec": 42.05705215419501,
+          "budgetSec": 30,
+          "cues": {
+            "aMixStart": {
+              "sourceSec": 52.37634920634921,
+              "rawBarIndex": null,
+              "nearestRawBar": {
+                "rawBarIndex": 22,
+                "sourceSec": 52.38,
+                "distanceSec": 0.003650793650791684
+              },
+              "section": {
+                "start": 41.882,
+                "end": 55.802,
+                "label": "verse"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 3,
+                "label": "verse",
+                "edge": "end",
+                "sourceSec": 55.802,
+                "distanceSec": 3.4256507936507887
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            },
+            "aExit": {
+              "sourceSec": 55.88,
+              "rawBarIndex": 24,
+              "nearestRawBar": {
+                "rawBarIndex": 24,
+                "sourceSec": 55.88,
+                "distanceSec": 0
+              },
+              "section": {
+                "start": 55.802,
+                "end": 69.723,
+                "label": "verse"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 3,
+                "label": "verse",
+                "edge": "end",
+                "sourceSec": 55.802,
+                "distanceSec": 0.07800000000000296
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            },
+            "bEntry": {
+              "sourceSec": 13.54,
+              "rawBarIndex": 0,
+              "nearestRawBar": {
+                "rawBarIndex": 0,
+                "sourceSec": 13.54,
+                "distanceSec": 0
+              },
+              "section": {
+                "start": 13.321,
+                "end": 26.641,
+                "label": "chorus"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 0,
+                "label": "intro",
+                "edge": "end",
+                "sourceSec": 13.321,
+                "distanceSec": 0.21899999999999942
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            },
+            "bBodyStart": {
+              "sourceSec": 16.92,
+              "rawBarIndex": 2,
+              "nearestRawBar": {
+                "rawBarIndex": 2,
+                "sourceSec": 16.92,
+                "distanceSec": 0
+              },
+              "section": {
+                "start": 13.321,
+                "end": 26.641,
+                "label": "chorus"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 0,
+                "label": "intro",
+                "edge": "end",
+                "sourceSec": 13.321,
+                "distanceSec": 3.599000000000002
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            }
+          },
+          "pointReasons": [
+            "A 在原曲 55.880 秒退出，来自原始小节网格；等待 13.823 秒，预算 30.000 秒。",
+            "B 从原曲 13.540 秒进入，到 16.920 秒完成 2 小节交接；该窗口已具备对应 A 速度的素材。",
+            "按交接终点反推 A 开始点 52.376 秒；距最近原始首拍 3.65 ms，门槛 65 ms。",
+            "A 退出点距段落边界小于 0.4 秒，获得边界加分；段落名称仍需人工确认。"
+          ],
+          "score": {
+            "total": 0.5802092025699179,
+            "components": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.4607649281934997,
+                "weight": -0.5,
+                "contribution": -0.23038246409674984
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 1,
+                "weight": 0.16,
+                "contribution": 0.16
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "interpretation": "人为规则排序分，不是音质概率；只比较满足约束的候选",
+            "tieBreak": "分数降序；同分取更早完成点；仍相同按候选 ID 字典序"
+          },
+          "mapping": {
+            "aBpm": 137,
+            "bNativeBpm": 142.9,
+            "rate": 0.9647083333333341,
+            "bSource": [
+              13.54,
+              16.92
+            ],
+            "overlapSec": 3.5036507936507935,
+            "equation": "B_source = B_entry + (contextTime - scheduledStart) × rate（名义时间映射，素材经 atempo 与精确长度裁剪／补齐）",
+            "afterHandoff": "B 正文从窗口末端恢复原速"
+          },
+          "features": {
+            "style": {
+              "a": "Grime",
+              "b": "Trap",
+              "aModelScore": 0.5462799161741247,
+              "bModelScore": 0.1588656467023409
+            },
+            "energy": {
+              "a": 0.7543710391156462,
+              "b": 0.8955000000000001,
+              "aWindow": [
+                42.05705215419501,
+                50.05705215419501
+              ],
+              "bWindow": [
+                16.92,
+                32.92
+              ],
+              "minimumDelta": 0.025,
+              "use": "方向硬筛选；不是排序加分"
+            },
+            "vocalA": {
+              "sourceStartSec": 52.37634920634921,
+              "sourceEndSec": 55.88,
+              "overlappingIntervals": [
+                [
+                  35.804,
+                  69.764
+                ]
+              ],
+              "paddedUnionFraction": 1,
+              "paddedUnionSec": 3.5036507936507917,
+              "presencePassed": true,
+              "basis": "原曲时间轴；区间两侧扩展 0.3 秒，裁剪到交接窗口并合并重叠后计算；B 阈值沿用 V3 的原曲秒数"
+            },
+            "vocalB": {
+              "sourceStartSec": 13.54,
+              "sourceEndSec": 16.92,
+              "overlappingIntervals": [
+                [
+                  9.372,
+                  104.9
+                ]
+              ],
+              "paddedUnionFraction": 1,
+              "paddedUnionSec": 3.3800000000000026,
+              "presencePassed": true,
+              "basis": "原曲时间轴；区间两侧扩展 0.3 秒，裁剪到交接窗口并合并重叠后计算；B 阈值沿用 V3 的原曲秒数"
+            }
+          },
+          "strategy": {
+            "id": "v3_linear_eq",
+            "selectionReason": "本版本固定采用已认可 V3 的线性淡化和 EQ 模板；只搜索歌曲、进入窗口和交接时间，不在多种混音算法间择优。",
+            "alternativesEvaluated": [],
+            "gain": {
+              "a": [
+                0.76,
+                0
+              ],
+              "b": [
+                0,
+                0.76
+              ],
+              "curve": "linear"
+            },
+            "eq": {
+              "lowHz": 140,
+              "highHz": 3600,
+              "midHz": 1200,
+              "midQ": 1.05,
+              "aLowDb": -9,
+              "aHighDb": -1.4,
+              "bLowDb": -7,
+              "bHighDb": 1.2,
+              "lowReason": "沿用 V3 固定低频衰减，控制叠加；本次没有依据频谱遮蔽自适应计算衰减量。",
+              "highReason": "沿用 V3 固定高频参数。"
+            },
+            "midDuck": {
+              "enabled": true,
+              "bMidDb": -5,
+              "reason": "A、B 各自窗口的人声占比均 ≥5%，且扩展后并集时长均 ≥0.5秒，因此衰减 B 中频。"
+            },
+            "restore": {
+              "aSourceSec": 55.004087591240875,
+              "secondsBeforeHandoff": 0.8759124087591241,
+              "reason": "交接结束前半小节，B 从滤波声线性恢复原声。"
+            },
+            "limitations": [
+              "浏览器 Biquad 与原 FFmpeg 非逐样本等价",
+              "人声判断使用各自窗口占比，不等同于两侧逐帧同时唱歌",
+              "没有用调性、和弦、乐器或审美分选择本次模板"
+            ]
+          },
+          "sources": {
+            "a": {
+              "trackId": "track-f0697213cb363c437304",
+              "reportId": "71df014b76017169f9850c3c91520f51fbf20c851278c66578c70a8bdd495f19",
+              "nativeSha256": "fa17fa4fa417e4d833cbf60f4629818f88886b342e7787406f31d5337d2b67e3",
+              "provenance": {
+                "masterSha256": "f0697213cb363c4373049e22da02614831bb6fa8bb3bf4c1c5049e822dda2079",
+                "reportSha256": "1c9c4a178e573af253e9b3341d263cec3490c60711d6ce3de6493d2804e706aa",
+                "runId": "run-track-f0697213cb363c437304-f0697213cb36-a268a5c-4cd02aaa",
+                "sectionSource": "songformer",
+                "vocalSha256": "4d440ef26d41afd2752f1d3f429312b0629b39228a4ede42d0fa94a7ee7a661a"
+              }
+            },
+            "b": {
+              "trackId": "track-86facefc6cb91411d57e",
+              "reportId": "fd32ee40219ce80d2c3091c14700729404a113beb63712f398359489d8313500",
+              "nativeSha256": "ee0a61e1b1c910b7a488eaa46de7f039d66ba0f40732023758c1c52da2640373",
+              "entrySha256": "eb378c72fdfb0f56fbbe7d56ed8293f649c700c6e0de968d08502ed1e94e64bb",
+              "provenance": {
+                "masterSha256": "86facefc6cb91411d57e5136e3ab8b9610707c716cc1fe4d507c9166070abe18",
+                "reportSha256": "40d5ace92920e3e5e8fa75c383316fd6a64234296318d9f162f8318f4e07b165",
+                "runId": "run-track-86facefc6cb91411d57e-86facefc6cb9-a268a5c-2d796ff2",
+                "sectionSource": "songformer",
+                "vocalSha256": "f9c83e170af73a87c0ab9c09a9b7dd9305ed33e6032ce68ebaee0d5a38368413"
+              }
+            }
+          },
+          "warnings": [
+            "段落与小节未经人工确认",
+            "能量使用已有局部曲线作启发式比较，未作跨曲感知校准"
+          ]
+        }
+      },
+      "events": [
+        {
+          "planId": "3-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+          "requestId": "live-1789969302524-no8zr3mm:request-2",
+          "name": "B 开始混入",
+          "frame": 3221801
+        },
+        {
+          "planId": "3-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+          "requestId": "live-1789969302524-no8zr3mm:request-2",
+          "name": "B EQ 开始恢复",
+          "frame": 3337684
+        },
+        {
+          "planId": "3-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+          "requestId": "live-1789969302524-no8zr3mm:request-2",
+          "name": "A 退出 / B 正文接管",
+          "frame": 3376312
+        }
+      ],
+      "eqImplementation": "WebAudio Biquad, V3 gains/frequencies; 20ms outgoing EQ enable smoothing; 4ms head/body edge fades",
+      "limiter": "5ms lookahead browser protection, not original FFmpeg alimiter",
+      "sourceHashes": {
+        "a": "fa17fa4fa417e4d833cbf60f4629818f88886b342e7787406f31d5337d2b67e3",
+        "b": "ee0a61e1b1c910b7a488eaa46de7f039d66ba0f40732023758c1c52da2640373",
+        "entry": "eb378c72fdfb0f56fbbe7d56ed8293f649c700c6e0de968d08502ed1e94e64bb"
+      }
+    },
+    {
+      "kind": "pause",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 18,
+      "wallTime": "2026-09-21T05:42:45.405Z",
+      "contextSec": 62.82448979591837,
+      "paused": true
+    },
+    {
+      "kind": "context_state",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 19,
+      "wallTime": "2026-09-21T05:42:45.407Z",
+      "contextSec": 62.82448979591837,
+      "state": "suspended"
+    },
+    {
+      "kind": "request_outcome",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 20,
+      "wallTime": "2026-09-21T05:42:58.083Z",
+      "contextSec": 62.82448979591837,
+      "requestId": "live-1789969302524-no8zr3mm:request-2",
+      "outcome": "cancelled",
+      "reason": "用户取消待执行请求"
+    },
+    {
+      "kind": "plan_cancelled",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 21,
+      "wallTime": "2026-09-21T05:42:58.084Z",
+      "contextSec": 62.82448979591837,
+      "requestId": "live-1789969302524-no8zr3mm:request-2",
+      "planId": "3-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+      "reason": "撤销尚未执行的自动化并恢复 A 原始增益"
+    },
+    {
+      "kind": "request_cancelled",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 22,
+      "wallTime": "2026-09-21T05:42:58.084Z",
+      "contextSec": 62.82448979591837
+    },
+    {
+      "kind": "pause",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 23,
+      "wallTime": "2026-09-21T05:43:31.615Z",
+      "contextSec": 62.827392290249435,
+      "paused": false
+    },
+    {
+      "kind": "context_state",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 24,
+      "wallTime": "2026-09-21T05:43:31.618Z",
+      "contextSec": 62.8302947845805,
+      "state": "running"
+    },
+    {
+      "kind": "request_received",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 25,
+      "wallTime": "2026-09-21T05:43:31.646Z",
+      "contextSec": 62.844807256235825,
+      "requestId": "live-1789969302524-no8zr3mm:request-3",
+      "intent": {
+        "kind": "style",
+        "style": "Trap"
+      },
+      "origin": "user",
+      "sourceTrackId": "track-f0697213cb363c437304",
+      "sourcePosition": 42.16444444444444,
+      "budgetSec": 30,
+      "deadlineContextSec": 92.84480725623582,
+      "policyVersion": "v3-live-rules-1.audit-1"
+    },
+    {
+      "kind": "intent",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 26,
+      "wallTime": "2026-09-21T05:43:31.646Z",
+      "contextSec": 62.844807256235825,
+      "requestId": "live-1789969302524-no8zr3mm:request-3",
+      "intent": {
+        "kind": "style",
+        "style": "Trap"
+      },
+      "revision": 5,
+      "sourcePosition": 42.16444444444444,
+      "budget": 30
+    },
+    {
+      "kind": "decision_search",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 27,
+      "wallTime": "2026-09-21T05:43:31.648Z",
+      "contextSec": 62.844807256235825,
+      "requestId": "live-1789969302524-no8zr3mm:request-3",
+      "phase": "ready_assets",
+      "sourcePosition": 42.16444444444444,
+      "remainingBudgetSec": 30,
+      "result": {
+        "candidateCount": 14,
+        "selectedId": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+        "candidates": [
+          {
+            "rank": 1,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 52.37634920634921,
+            "end": 55.88,
+            "score": 0.581999074074075,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.45718518518518536,
+                "weight": -0.5,
+                "contribution": -0.22859259259259268
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 1,
+                "weight": 0.16,
+                "contribution": 0.16
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "段落边界附近 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 2,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:47.180",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 43.67634920634921,
+            "end": 47.18,
+            "score": 0.5669990740740751,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.16718518518518527,
+                "weight": -0.5,
+                "contribution": -0.08359259259259263
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 3,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:48.920",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 45.41634920634921,
+            "end": 48.92,
+            "score": 0.537999074074075,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.22518518518518532,
+                "weight": -0.5,
+                "contribution": -0.11259259259259266
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 4,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:50.640",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 47.13634920634921,
+            "end": 50.64,
+            "score": 0.5093324074074084,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.2825185185185186,
+                "weight": -0.5,
+                "contribution": -0.1412592592592593
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 5,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:52.380",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 48.87634920634921,
+            "end": 52.38,
+            "score": 0.4803324074074084,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.3405185185185187,
+                "weight": -0.5,
+                "contribution": -0.17025925925925936
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 6,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:54.140",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 50.63634920634921,
+            "end": 54.14,
+            "score": 0.4509990740740751,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.3991851851851853,
+                "weight": -0.5,
+                "contribution": -0.19959259259259265
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 7,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:57.600",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 54.09634920634921,
+            "end": 57.6,
+            "score": 0.39333240740740844,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.5145185185185187,
+                "weight": -0.5,
+                "contribution": -0.25725925925925935
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 8,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:59.360",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 55.85634920634921,
+            "end": 59.36,
+            "score": 0.3639990740740751,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.5731851851851852,
+                "weight": -0.5,
+                "contribution": -0.2865925925925926
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 9,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:69.760",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 66.25634920634921,
+            "end": 69.76,
+            "score": 0.35066574074074164,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.9198518518518521,
+                "weight": -0.5,
+                "contribution": -0.45992592592592607
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 1,
+                "weight": 0.16,
+                "contribution": 0.16
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "段落边界附近 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 10,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:61.100",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 57.59634920634921,
+            "end": 61.1,
+            "score": 0.3349990740740751,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.6311851851851853,
+                "weight": -0.5,
+                "contribution": -0.31559259259259265
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 11,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:62.840",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 59.33634920634921,
+            "end": 62.84,
+            "score": 0.30599907407407506,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.6891851851851853,
+                "weight": -0.5,
+                "contribution": -0.3445925925925927
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 12,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:64.560",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 61.05634920634921,
+            "end": 64.56,
+            "score": 0.27733240740740833,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.7465185185185187,
+                "weight": -0.5,
+                "contribution": -0.37325925925925935
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 13,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:68.040",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 64.53634920634921,
+            "end": 68.04,
+            "score": 0.21933240740740828,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.8625185185185188,
+                "weight": -0.5,
+                "contribution": -0.4312592592592594
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          },
+          {
+            "rank": 14,
+            "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:71.520",
+            "to": "track-86facefc6cb91411d57e",
+            "windowId": "w0-2",
+            "start": 68.0163492063492,
+            "end": 71.52,
+            "score": 0.2188723883796379,
+            "prepared": true,
+            "scoreComponents": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.9785185185185185,
+                "weight": -0.5,
+                "contribution": -0.4892592592592592
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 0.8082000634259017,
+                "weight": -0.3,
+                "contribution": -0.24246001902777048
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 0,
+                "weight": 0.16,
+                "contribution": 0
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "reason": "原始小节首拍 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪"
+          }
+        ],
+        "exclusions": [
+          {
+            "trackId": "track-09371f0f29e2c6a482f0",
+            "track": "FREE BRO",
+            "code": "style_mismatch",
+            "reason": "模型风格 Grime 不符合目标 Trap",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w0-2",
+            "code": "start_too_soon",
+            "reason": "A 混入点已过或提前量不足 0.25 秒",
+            "count": 19
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w0-2",
+            "code": "grid_error",
+            "reason": "反推 A 混入点距原始首拍超过 65 ms",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w0-2",
+            "code": "deadline",
+            "reason": "A 退出点超过本次剩余等待预算",
+            "count": 45
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w16-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w16-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w24-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-86facefc6cb91411d57e",
+            "track": "Big Girls",
+            "windowId": "w24-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w0-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w15-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w15-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w24-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-6aa43bf8997b97571097",
+            "track": "RATATA",
+            "windowId": "w24-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-f0697213cb363c437304",
+            "track": "Cold",
+            "code": "current_track",
+            "reason": "当前播放曲目不作为下一首",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w0-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w0-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w8-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w8-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w19-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w19-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w32-2",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-120cc0677da8aa7fb3f5",
+            "track": "No Me Tocas",
+            "windowId": "w32-4",
+            "code": "asset_not_ready",
+            "reason": "素材未解码就绪：B 原曲、B 进入片段",
+            "count": 1
+          },
+          {
+            "trackId": "track-dfa2711a5ba3f541fb47",
+            "track": "Crazy Love",
+            "code": "style_mismatch",
+            "reason": "模型风格 Grime 不符合目标 Trap",
+            "count": 1
+          }
+        ],
+        "rejected": [
+          {
+            "track": "RATATA",
+            "reason": "未就绪，或等待预算／能量方向／拍网格／窗口长度不满足"
+          },
+          {
+            "track": "No Me Tocas",
+            "reason": "未就绪，或等待预算／能量方向／拍网格／窗口长度不满足"
+          }
+        ]
+      },
+      "policyVersion": "v3-live-rules-1.audit-1"
+    },
+    {
+      "kind": "plan_scheduled",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 28,
+      "wallTime": "2026-09-21T05:43:31.650Z",
+      "contextSec": 62.85061224489796,
+      "requestId": "live-1789969302524-no8zr3mm:request-3",
+      "planId": "5-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+      "selection": {
+        "candidateCount": 14,
+        "chosenRank": 1,
+        "tieBreak": "分数降序；同分取更早完成点；仍相同按候选 ID 字典序",
+        "runnerUp": {
+          "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:47.180",
+          "score": 0.5669990740740751,
+          "gap": 0.014999999999999902
+        },
+        "reason": "按规则分降序选择；同分按完成时间及 ID 排序",
+        "strategyReason": "本版本固定采用已认可 V3 的线性淡化和 EQ 模板；只搜索歌曲、进入窗口和交接时间，不在多种混音算法间择优。"
+      },
+      "intent": {
+        "kind": "style",
+        "style": "Trap"
+      },
+      "requestedAt": 62.844807256235825,
+      "start": 73.05671201814059,
+      "end": 76.56036281179138,
+      "restore": 75.68445040303226,
+      "plan": {
+        "id": "track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+        "from": "track-f0697213cb363c437304",
+        "to": "track-86facefc6cb91411d57e",
+        "window": {
+          "id": "w0-2",
+          "start": 13.54,
+          "end": 16.92,
+          "bars": 2,
+          "role": "chorus",
+          "energy": 0.8955000000000001,
+          "variants": {
+            "track-09371f0f29e2c6a482f0": {
+              "url": "media/track-86facefc6cb91411d57e-w0-2-09371f0f29e2c6a482f0.flac",
+              "sha256": "2520d9c059af703ee646597894c85a01aee7dadf7d91a0f4e9ed65fa6e0e44e3",
+              "duration": 3.212857142857143,
+              "bytes": 350796,
+              "frames": 141687,
+              "sampleRate": 44100,
+              "rate": 1.0520250000000009,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-6aa43bf8997b97571097": {
+              "url": "media/track-86facefc6cb91411d57e-w0-2-6aa43bf8997b97571097.flac",
+              "sha256": "5fb8f90f65fcd53bd60495b8bf9499a1076a167601b0d17eef1cb0931921e2ea",
+              "duration": 3.84,
+              "bytes": 471139,
+              "frames": 169344,
+              "sampleRate": 44100,
+              "rate": 0.880208333333334,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-f0697213cb363c437304": {
+              "url": "media/track-86facefc6cb91411d57e-w0-2-f0697213cb363c437304.flac",
+              "sha256": "eb378c72fdfb0f56fbbe7d56ed8293f649c700c6e0de968d08502ed1e94e64bb",
+              "duration": 3.5036507936507935,
+              "bytes": 380645,
+              "frames": 154511,
+              "sampleRate": 44100,
+              "rate": 0.9647083333333341,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-120cc0677da8aa7fb3f5": {
+              "url": "media/track-86facefc6cb91411d57e-w0-2-120cc0677da8aa7fb3f5.flac",
+              "sha256": "30da4f92a7ba5e97e82e2d7e0a2ddf4559c787b1ff5c754528107d18a71dddd2",
+              "duration": 3.692312925170068,
+              "bytes": 456175,
+              "frames": 162831,
+              "sampleRate": 44100,
+              "rate": 0.9154166666666673,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            },
+            "track-dfa2711a5ba3f541fb47": {
+              "url": "media/track-86facefc6cb91411d57e-w0-2-dfa2711a5ba3f541fb47.flac",
+              "sha256": "62ef4e6f0bc95e2677eb774329aa805a31cb8b1d49e2126e4b938a5b140f02fb",
+              "duration": 3.5190702947845804,
+              "bytes": 382621,
+              "frames": 155191,
+              "sampleRate": 44100,
+              "rate": 0.960483333333334,
+              "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+            }
+          }
+        },
+        "asset": {
+          "url": "media/track-86facefc6cb91411d57e-w0-2-f0697213cb363c437304.flac",
+          "sha256": "eb378c72fdfb0f56fbbe7d56ed8293f649c700c6e0de968d08502ed1e94e64bb",
+          "duration": 3.5036507936507935,
+          "bytes": 380645,
+          "frames": 154511,
+          "sampleRate": 44100,
+          "rate": 0.9647083333333341,
+          "mapping": "source interval → FFmpeg atempo → exact target-length trim/pad; no EQ or pair mixing"
+        },
+        "start": 52.37634920634921,
+        "end": 55.88,
+        "duration": 3.5036507936507935,
+        "restore": 55.004087591240875,
+        "rate": 0.9647083333333341,
+        "score": 0.581999074074075,
+        "midDuck": true,
+        "aVocal": 1,
+        "bVocal": 1,
+        "aEnergy": 0.7535635833333334,
+        "bEnergy": 0.8955000000000001,
+        "gridError": 0.003650793650791684,
+        "section": "verse",
+        "prepared": true,
+        "reason": "段落边界附近 · 2 小节 · 双窗口人声，中频 -5 dB · 素材就绪",
+        "decision": {
+          "policyVersion": "v3-live-rules-1.audit-1",
+          "intent": {
+            "kind": "style",
+            "style": "Trap"
+          },
+          "positionSourceSec": 42.16444444444444,
+          "budgetSec": 30,
+          "cues": {
+            "aMixStart": {
+              "sourceSec": 52.37634920634921,
+              "rawBarIndex": null,
+              "nearestRawBar": {
+                "rawBarIndex": 22,
+                "sourceSec": 52.38,
+                "distanceSec": 0.003650793650791684
+              },
+              "section": {
+                "start": 41.882,
+                "end": 55.802,
+                "label": "verse"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 3,
+                "label": "verse",
+                "edge": "end",
+                "sourceSec": 55.802,
+                "distanceSec": 3.4256507936507887
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            },
+            "aExit": {
+              "sourceSec": 55.88,
+              "rawBarIndex": 24,
+              "nearestRawBar": {
+                "rawBarIndex": 24,
+                "sourceSec": 55.88,
+                "distanceSec": 0
+              },
+              "section": {
+                "start": 55.802,
+                "end": 69.723,
+                "label": "verse"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 3,
+                "label": "verse",
+                "edge": "end",
+                "sourceSec": 55.802,
+                "distanceSec": 0.07800000000000296
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            },
+            "bEntry": {
+              "sourceSec": 13.54,
+              "rawBarIndex": 0,
+              "nearestRawBar": {
+                "rawBarIndex": 0,
+                "sourceSec": 13.54,
+                "distanceSec": 0
+              },
+              "section": {
+                "start": 13.321,
+                "end": 26.641,
+                "label": "chorus"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 0,
+                "label": "intro",
+                "edge": "end",
+                "sourceSec": 13.321,
+                "distanceSec": 0.21899999999999942
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            },
+            "bBodyStart": {
+              "sourceSec": 16.92,
+              "rawBarIndex": 2,
+              "nearestRawBar": {
+                "rawBarIndex": 2,
+                "sourceSec": 16.92,
+                "distanceSec": 0
+              },
+              "section": {
+                "start": 13.321,
+                "end": 26.641,
+                "label": "chorus"
+              },
+              "nearestSectionBoundary": {
+                "sectionIndex": 0,
+                "label": "intro",
+                "edge": "end",
+                "sourceSec": 13.321,
+                "distanceSec": 3.599000000000002
+              },
+              "semanticStatus": "未经人工确认；网格索引不是已确认的小节编号"
+            }
+          },
+          "pointReasons": [
+            "A 在原曲 55.880 秒退出，来自原始小节网格；等待 13.716 秒，预算 30.000 秒。",
+            "B 从原曲 13.540 秒进入，到 16.920 秒完成 2 小节交接；该窗口已具备对应 A 速度的素材。",
+            "按交接终点反推 A 开始点 52.376 秒；距最近原始首拍 3.65 ms，门槛 65 ms。",
+            "A 退出点距段落边界小于 0.4 秒，获得边界加分；段落名称仍需人工确认。"
+          ],
+          "score": {
+            "total": 0.581999074074075,
+            "components": [
+              {
+                "key": "base",
+                "label": "基础分",
+                "value": 1,
+                "weight": 1,
+                "contribution": 1
+              },
+              {
+                "key": "waiting",
+                "label": "等待时间占预算比例",
+                "value": 0.45718518518518536,
+                "weight": -0.5,
+                "contribution": -0.22859259259259268
+              },
+              {
+                "key": "tempo",
+                "label": "变速幅度",
+                "value": 0.035291666666665944,
+                "weight": -1.4,
+                "contribution": -0.04940833333333232
+              },
+              {
+                "key": "vocal",
+                "label": "双窗口人声占比乘积",
+                "value": 1,
+                "weight": -0.3,
+                "contribution": -0.3
+              },
+              {
+                "key": "boundary",
+                "label": "靠近 A 段落边界",
+                "value": 1,
+                "weight": 0.16,
+                "contribution": 0.16
+              },
+              {
+                "key": "fourBars",
+                "label": "四小节窗口",
+                "value": 0,
+                "weight": 0.05,
+                "contribution": 0
+              },
+              {
+                "key": "style",
+                "label": "模型风格相同",
+                "value": 0,
+                "weight": 0.04,
+                "contribution": 0
+              }
+            ],
+            "interpretation": "人为规则排序分，不是音质概率；只比较满足约束的候选",
+            "tieBreak": "分数降序；同分取更早完成点；仍相同按候选 ID 字典序"
+          },
+          "mapping": {
+            "aBpm": 137,
+            "bNativeBpm": 142.9,
+            "rate": 0.9647083333333341,
+            "bSource": [
+              13.54,
+              16.92
+            ],
+            "overlapSec": 3.5036507936507935,
+            "equation": "B_source = B_entry + (contextTime - scheduledStart) × rate（名义时间映射，素材经 atempo 与精确长度裁剪／补齐）",
+            "afterHandoff": "B 正文从窗口末端恢复原速"
+          },
+          "features": {
+            "style": {
+              "a": "Grime",
+              "b": "Trap",
+              "aModelScore": 0.5462799161741247,
+              "bModelScore": 0.1588656467023409
+            },
+            "energy": {
+              "a": 0.7535635833333334,
+              "b": 0.8955000000000001,
+              "aWindow": [
+                42.16444444444444,
+                50.16444444444444
+              ],
+              "bWindow": [
+                16.92,
+                32.92
+              ],
+              "minimumDelta": 0.025,
+              "use": "仅记录，没有参与本次能量方向筛选"
+            },
+            "vocalA": {
+              "sourceStartSec": 52.37634920634921,
+              "sourceEndSec": 55.88,
+              "overlappingIntervals": [
+                [
+                  35.804,
+                  69.764
+                ]
+              ],
+              "paddedUnionFraction": 1,
+              "paddedUnionSec": 3.5036507936507917,
+              "presencePassed": true,
+              "basis": "原曲时间轴；区间两侧扩展 0.3 秒，裁剪到交接窗口并合并重叠后计算；B 阈值沿用 V3 的原曲秒数"
+            },
+            "vocalB": {
+              "sourceStartSec": 13.54,
+              "sourceEndSec": 16.92,
+              "overlappingIntervals": [
+                [
+                  9.372,
+                  104.9
+                ]
+              ],
+              "paddedUnionFraction": 1,
+              "paddedUnionSec": 3.3800000000000026,
+              "presencePassed": true,
+              "basis": "原曲时间轴；区间两侧扩展 0.3 秒，裁剪到交接窗口并合并重叠后计算；B 阈值沿用 V3 的原曲秒数"
+            }
+          },
+          "strategy": {
+            "id": "v3_linear_eq",
+            "selectionReason": "本版本固定采用已认可 V3 的线性淡化和 EQ 模板；只搜索歌曲、进入窗口和交接时间，不在多种混音算法间择优。",
+            "alternativesEvaluated": [],
+            "gain": {
+              "a": [
+                0.76,
+                0
+              ],
+              "b": [
+                0,
+                0.76
+              ],
+              "curve": "linear"
+            },
+            "eq": {
+              "lowHz": 140,
+              "highHz": 3600,
+              "midHz": 1200,
+              "midQ": 1.05,
+              "aLowDb": -9,
+              "aHighDb": -1.4,
+              "bLowDb": -7,
+              "bHighDb": 1.2,
+              "lowReason": "沿用 V3 固定低频衰减，控制叠加；本次没有依据频谱遮蔽自适应计算衰减量。",
+              "highReason": "沿用 V3 固定高频参数。"
+            },
+            "midDuck": {
+              "enabled": true,
+              "bMidDb": -5,
+              "reason": "A、B 各自窗口的人声占比均 ≥5%，且扩展后并集时长均 ≥0.5秒，因此衰减 B 中频。"
+            },
+            "restore": {
+              "aSourceSec": 55.004087591240875,
+              "secondsBeforeHandoff": 0.8759124087591241,
+              "reason": "交接结束前半小节，B 从滤波声线性恢复原声。"
+            },
+            "limitations": [
+              "浏览器 Biquad 与原 FFmpeg 非逐样本等价",
+              "人声判断使用各自窗口占比，不等同于两侧逐帧同时唱歌",
+              "没有用调性、和弦、乐器或审美分选择本次模板"
+            ]
+          },
+          "sources": {
+            "a": {
+              "trackId": "track-f0697213cb363c437304",
+              "reportId": "71df014b76017169f9850c3c91520f51fbf20c851278c66578c70a8bdd495f19",
+              "nativeSha256": "fa17fa4fa417e4d833cbf60f4629818f88886b342e7787406f31d5337d2b67e3",
+              "provenance": {
+                "masterSha256": "f0697213cb363c4373049e22da02614831bb6fa8bb3bf4c1c5049e822dda2079",
+                "reportSha256": "1c9c4a178e573af253e9b3341d263cec3490c60711d6ce3de6493d2804e706aa",
+                "runId": "run-track-f0697213cb363c437304-f0697213cb36-a268a5c-4cd02aaa",
+                "sectionSource": "songformer",
+                "vocalSha256": "4d440ef26d41afd2752f1d3f429312b0629b39228a4ede42d0fa94a7ee7a661a"
+              }
+            },
+            "b": {
+              "trackId": "track-86facefc6cb91411d57e",
+              "reportId": "fd32ee40219ce80d2c3091c14700729404a113beb63712f398359489d8313500",
+              "nativeSha256": "ee0a61e1b1c910b7a488eaa46de7f039d66ba0f40732023758c1c52da2640373",
+              "entrySha256": "eb378c72fdfb0f56fbbe7d56ed8293f649c700c6e0de968d08502ed1e94e64bb",
+              "provenance": {
+                "masterSha256": "86facefc6cb91411d57e5136e3ab8b9610707c716cc1fe4d507c9166070abe18",
+                "reportSha256": "40d5ace92920e3e5e8fa75c383316fd6a64234296318d9f162f8318f4e07b165",
+                "runId": "run-track-86facefc6cb91411d57e-86facefc6cb9-a268a5c-2d796ff2",
+                "sectionSource": "songformer",
+                "vocalSha256": "f9c83e170af73a87c0ab9c09a9b7dd9305ed33e6032ce68ebaee0d5a38368413"
+              }
+            }
+          },
+          "warnings": [
+            "段落与小节未经人工确认",
+            "能量使用已有局部曲线作启发式比较，未作跨曲感知校准"
+          ]
+        }
+      },
+      "events": [
+        {
+          "planId": "5-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+          "requestId": "live-1789969302524-no8zr3mm:request-3",
+          "name": "B 开始混入",
+          "frame": 3221801
+        },
+        {
+          "planId": "5-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+          "requestId": "live-1789969302524-no8zr3mm:request-3",
+          "name": "B EQ 开始恢复",
+          "frame": 3337684
+        },
+        {
+          "planId": "5-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+          "requestId": "live-1789969302524-no8zr3mm:request-3",
+          "name": "A 退出 / B 正文接管",
+          "frame": 3376312
+        }
+      ],
+      "eqImplementation": "WebAudio Biquad, V3 gains/frequencies; 20ms outgoing EQ enable smoothing; 4ms head/body edge fades",
+      "limiter": "5ms lookahead browser protection, not original FFmpeg alimiter",
+      "sourceHashes": {
+        "a": "fa17fa4fa417e4d833cbf60f4629818f88886b342e7787406f31d5337d2b67e3",
+        "b": "ee0a61e1b1c910b7a488eaa46de7f039d66ba0f40732023758c1c52da2640373",
+        "entry": "eb378c72fdfb0f56fbbe7d56ed8293f649c700c6e0de968d08502ed1e94e64bb"
+      }
+    },
+    {
+      "kind": "plan_locked",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 29,
+      "wallTime": "2026-09-21T05:43:41.734Z",
+      "contextSec": 72.9338775510204,
+      "requestId": "live-1789969302524-no8zr3mm:request-3",
+      "planId": "5-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+      "reason": "距混入点不足 150 ms，后续普通请求延后处理"
+    },
+    {
+      "kind": "audio_observation",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 30,
+      "wallTime": "2026-09-21T05:43:41.859Z",
+      "contextSec": 73.05868480725624,
+      "planId": "5-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+      "requestId": "live-1789969302524-no8zr3mm:request-3",
+      "name": "B 开始混入",
+      "frame": 3221801,
+      "observedFrame": 3221888,
+      "quantumStart": 3221760,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.7860082387924194,
+      "plannedContextSec": 73.05671201814059,
+      "observedContextSec": 73.05868480725624,
+      "observationDeltaMs": 1.9727891156462587,
+      "messageReceivedContextSec": 73.05868480725624,
+      "basis": "Audio-thread render quantum observation; not measured source onset, device output or Bluetooth latency"
+    },
+    {
+      "kind": "audio_observation",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 31,
+      "wallTime": "2026-09-21T05:43:44.486Z",
+      "contextSec": 75.68544217687075,
+      "planId": "5-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+      "requestId": "live-1789969302524-no8zr3mm:request-3",
+      "name": "B EQ 开始恢复",
+      "frame": 3337684,
+      "observedFrame": 3337728,
+      "quantumStart": 3337600,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.8567329049110413,
+      "plannedContextSec": 75.68444444444444,
+      "observedContextSec": 75.68544217687075,
+      "observationDeltaMs": 0.997732426303855,
+      "messageReceivedContextSec": 75.68544217687075,
+      "basis": "Audio-thread render quantum observation; not measured source onset, device output or Bluetooth latency"
+    },
+    {
+      "kind": "audio_observation",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 32,
+      "wallTime": "2026-09-21T05:43:45.363Z",
+      "contextSec": 76.56199546485261,
+      "planId": "5-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+      "requestId": "live-1789969302524-no8zr3mm:request-3",
+      "name": "A 退出 / B 正文接管",
+      "frame": 3376312,
+      "observedFrame": 3376384,
+      "quantumStart": 3376256,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.8567329049110413,
+      "plannedContextSec": 76.56036281179138,
+      "observedContextSec": 76.56199546485261,
+      "observationDeltaMs": 1.6326530612244898,
+      "messageReceivedContextSec": 76.56199546485261,
+      "basis": "Audio-thread render quantum observation; not measured source onset, device output or Bluetooth latency"
+    },
+    {
+      "kind": "handoff_state_commit",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 33,
+      "wallTime": "2026-09-21T05:43:45.363Z",
+      "contextSec": 76.56199546485261,
+      "requestId": "live-1789969302524-no8zr3mm:request-3",
+      "planId": "5-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880",
+      "to": "track-86facefc6cb91411d57e",
+      "bodySourceOffset": 16.92,
+      "scheduledContextSec": 76.56036281179138
+    },
+    {
+      "kind": "request_outcome",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 34,
+      "wallTime": "2026-09-21T05:43:45.364Z",
+      "contextSec": 76.56199546485261,
+      "requestId": "live-1789969302524-no8zr3mm:request-3",
+      "outcome": "completed",
+      "reason": "计划交接时点已到，B 正文接管；实际音频处理块观察另见 audio_observation",
+      "planId": "5-track-f0697213cb363c437304:track-86facefc6cb91411d57e:w0-2:55.880"
+    },
+    {
+      "kind": "mobile_suspend",
+      "sessionId": "live-1789969302524-no8zr3mm",
+      "sequence": 35,
+      "wallTime": "2026-09-21T05:44:17.107Z",
+      "contextSec": 108.30947845804988,
+      "reason": "App background, audio focus loss or headphones disconnected"
+    }
+  ],
+  "limitations": [
+    "Audio observations locate render quanta, not physical source onset/speaker output",
+    "Single-song tempo assets were prepared ahead; selection/EQ/fade/mixing run live",
+    "Browser DSP is not bit-identical to FFmpeg V3",
+    "Local energy is uncalibrated; all structural candidates need listening confirmation"
+  ]
+}

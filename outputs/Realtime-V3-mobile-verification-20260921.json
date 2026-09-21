@@ -1,0 +1,14 @@
+{
+  "sourceCommit": "279b65da50d436586c220fb38befdb03f6571099",
+  "apkSha256": "34906fa45a05008d27e79d0e9191f948d3e63ee233d342585334f13dafa75bf5",
+  "installedApkMatches": true,
+  "verifiedBundleFiles": 223,
+  "verifiedMediaAssets": 218,
+  "completedRequests": 2,
+  "nonzeroAudioObservations": 6,
+  "maxObservationDeltaMs": 2.6077097505668934,
+  "maxPeak": 0.8075326085090637,
+  "flutterTests": 71,
+  "realtimeTests": 30,
+  "foregroundOnly": true
+}

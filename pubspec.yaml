@@ -1,7 +1,7 @@
 name: harbeat
 description: HarBeat mobile client — music preparation and RK3588 companion.
 publish_to: none
-version: 0.1.0+1
+version: 0.1.6+7
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
@@ -15,11 +15,19 @@ dependencies:
     sdk: flutter
   just_audio: ^0.10.6
   just_audio_background: ^0.0.1-beta.17
+  http: ^1.6.0
   path: ^1.9.1
   path_provider: ^2.1.6
   shared_preferences: ^2.5.5
+  flutter_secure_storage: 10.3.4
+  flutter_soloud: 4.1.7
+  flutter_reactive_ble: 5.5.0
+  permission_handler: 12.0.1
+  url_launcher: 6.3.2
 
 dev_dependencies:
+  integration_test:
+    sdk: flutter
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
@@ -28,3 +36,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/audio/preview.wav
+    - assets/audio/hiphop-six-v3.mp3
+    - assets/nas/catalog.json

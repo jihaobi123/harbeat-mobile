@@ -1,0 +1,2 @@
+# The upstream source manifest hashes bytes, including line endings.
+vendor/realtime-v3/** -text
