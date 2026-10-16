@@ -1,3 +1,4 @@
+import 'package:harbeat/src/theme.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -212,10 +213,11 @@ void main() {
       await c.togglePlayback();
     });
     await tester.pumpWidget(MaterialApp(
+        theme: HB.theme,
         home: AnimatedBuilder(
             animation: c, builder: (_, __) => Shell(controller: c))));
     expect(find.text('PLAY / V3 REALTIME'), findsOneWidget);
-    expect(find.text('MAKE THE\nFLOOR MOVE.'), findsOneWidget);
+    expect(find.text('让身体，跟着节奏。'), findsOneWidget);
     expect(find.text('播放'), findsOneWidget);
     expect(find.text('音乐'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('提高能量 ↑'), 400);

@@ -1,6 +1,12 @@
 part of 'controller.dart';
 
 extension RealtimeFlow on AppController {
+  bool get v3Continuous => v3State['continuous'] is Map;
+  Map<String, dynamic> get continuousState => v3Continuous
+      ? Map<String, dynamic>.from(v3State['continuous'] as Map)
+      : const {};
+  Map<String, dynamic> get continuousSelection => Map<String, dynamic>.from(
+      continuousState['selection'] as Map? ?? const {});
   bool get v3Supported => realtimeEngine.supported;
   bool get v3Busy => v3Loading || v3State['busy'] == true;
   Map<String, dynamic>? get v3Pending => v3State['pending'] is Map
@@ -38,7 +44,7 @@ extension RealtimeFlow on AppController {
     _changed();
   }
 
-  Future<void> enableV3() async {
+  Future<void> enableV3({bool continuous = true}) async {
     if (v3Active ||
         v3Loading ||
         audioBusy ||
@@ -61,7 +67,8 @@ extension RealtimeFlow on AppController {
         v3Error = '实时混音状态连接中断，请切换到标准播放后重试。';
         _changed();
       });
-      final result = await realtimeEngine.command('prepare');
+      final result = await realtimeEngine
+          .command('prepare', {'mode': continuous ? 'continuous' : 'legacy'});
       if (_disposed) return;
       v3Catalog = (result['tracks'] as List)
           .map((t) => Map<String, dynamic>.from(t as Map))
@@ -72,7 +79,7 @@ extension RealtimeFlow on AppController {
             Track(
                 id: 'nas:${t['id']}',
                 title: t['title'],
-                artist: 'HIP-HOP / SIX',
+                artist: t['collection'] as String? ?? 'HIP-HOP / SIX',
                 style: t['style'],
                 bpm: t['bpm'],
                 energy: null,
@@ -112,6 +119,22 @@ extension RealtimeFlow on AppController {
       _changed();
     }
   }
+
+  Future<void> switchV3Mode(bool continuous) async {
+    if (v3Loading || dancePreparing) return;
+    await disableV3();
+    if (!v3Active) await enableV3(continuous: continuous);
+  }
+
+  Future<void> continuousVolume(double value) =>
+      _v3Command('volume', {'value': value});
+  Future<void> continuousAutomatic(bool value) =>
+      _v3Command('automatic', {'enabled': value});
+  Future<void> continuousFilter({String? label, String? collection}) =>
+      _v3Command('filters', {
+        if (label != null) 'label': label,
+        if (collection != null) 'collection': collection,
+      });
 
   Future<void> disableV3() async {
     if (!v3Active || v3Loading) return;
@@ -157,7 +180,8 @@ extension RealtimeFlow on AppController {
 
   Future<void> v3TogglePlayback() async {
     if (v3Loading || (!isPlaying && v3Busy)) return;
-    if (isPlaying) {
+    if (isPlaying ||
+        (v3State['buffering'] == true && v3State['paused'] != true)) {
       await _v3Command('pause');
     } else if (v3State['current'] != null) {
       await _v3Command('resume');
@@ -171,6 +195,22 @@ extension RealtimeFlow on AppController {
   }
 
   Future<void> v3Select(Track track) async {
+    if (v3Continuous && v3Tracks.any((t) => t.id == track.id)) {
+      final entry = v3Catalog.firstWhere((t) => 'nas:${t['id']}' == track.id);
+      if (entry['playStatus'] == 'unavailable') {
+        v3Error = '这首歌的连续播放素材尚未就绪。';
+      } else if (v3State['current'] == null) {
+        nowPlaying = track;
+        queueIndex = queue.indexOf(track.id);
+        position = Duration.zero;
+        duration =
+            Duration(milliseconds: ((entry['duration'] as num) * 1000).round());
+      } else {
+        await _v3Command('select', {'trackId': track.id.substring(4)});
+      }
+      _changed();
+      return;
+    }
     if (danceRunning && v3Tracks.any((t) => t.id == track.id)) {
       intentFeedback = '自动舞程已按顺序准备转场，请使用下一首；换歌单可重新生成舞程。';
       _changed();

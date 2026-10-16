@@ -22,6 +22,8 @@ export class MobileSession {
  async pauseForHost(){
   this.foreground=false;this.generation++
   const p=this.player;if(!p)return
+  p.paused=!!p.active
+  p.cancelPreparation?.()
   // Cancel a pending download so it cannot create a new deck after suspension.
   if(p.busy){if(p.active)p.cancel();else p.stop()}
   if(p.ctx.state!=='closed')await p.ctx.suspend()

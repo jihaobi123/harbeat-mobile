@@ -16,6 +16,7 @@ import 'theme.dart';
 part 'phone_screens.dart';
 part 'backend_screen.dart';
 part 'upload_screen.dart';
+part 'music_widgets.dart';
 
 class HarBeatApp extends StatefulWidget {
   const HarBeatApp({super.key, this.repository, this.localStore, this.audio});
@@ -81,24 +82,34 @@ class Shell extends StatelessWidget {
               child: MiniPlayer(
                   track: controller.nowPlaying!, controller: controller)),
       ])),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: controller.tab,
-        onDestinationSelected: controller.setTab,
-        destinations: const [
-          NavigationDestination(
-              icon: Icon(Icons.tune),
-              selectedIcon: Icon(Icons.tune),
-              label: '播放'),
-          NavigationDestination(
-              icon: Icon(Icons.album_outlined),
-              selectedIcon: Icon(Icons.album),
-              label: '音乐'),
-          NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person),
-              label: '我的'),
-        ],
-      ),
+      bottomNavigationBar: SafeArea(
+          top: false,
+          child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Material(
+                  color: HB.white,
+                  clipBehavior: Clip.antiAlias,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      side: const BorderSide(color: HB.ink, width: 1.5)),
+                  child: NavigationBar(
+                    selectedIndex: controller.tab,
+                    onDestinationSelected: controller.setTab,
+                    destinations: const [
+                      NavigationDestination(
+                          icon: Icon(Icons.tune),
+                          selectedIcon: Icon(Icons.tune),
+                          label: '播放'),
+                      NavigationDestination(
+                          icon: Icon(Icons.album_outlined),
+                          selectedIcon: Icon(Icons.album),
+                          label: '音乐'),
+                      NavigationDestination(
+                          icon: Icon(Icons.person_outline),
+                          selectedIcon: Icon(Icons.person),
+                          label: '我的'),
+                    ],
+                  )))),
     );
   }
 }
@@ -114,24 +125,45 @@ class PageFrame extends StatelessWidget {
   final List<Widget> children;
 
   @override
-  Widget build(BuildContext context) => ListView(
-        padding: const EdgeInsets.fromLTRB(16, 18, 16, 100),
-        children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(label,
-                style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.8)),
-            const Text('H/B  001',
-                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800)),
-          ]),
-          const SizedBox(height: 10),
-          Text(title, style: Theme.of(context).textTheme.displayLarge),
-          const Divider(height: 28, thickness: 3, color: HB.ink),
-          ...children,
-        ],
-      );
+  Widget build(BuildContext context) => Center(
+      child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 128),
+            children: [
+              Row(children: [
+                Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                        color: HB.teal,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: HB.ink, width: 1.5)),
+                    child: const Icon(Icons.graphic_eq_rounded, size: 22)),
+                const SizedBox(width: 8),
+                const Text('HARBEAT',
+                    style: TextStyle(
+                        fontSize: 14,
+                        letterSpacing: 1.6,
+                        fontWeight: FontWeight.w800)),
+                const Spacer(),
+                const ExcludeSemantics(
+                    child: Icon(Icons.auto_awesome_outlined,
+                        color: HB.deepTeal, size: 24)),
+              ]),
+              const SizedBox(height: 20),
+              Text(title, style: Theme.of(context).textTheme.displayLarge),
+              const SizedBox(height: 4),
+              Text(label,
+                  style: const TextStyle(
+                      fontSize: 14,
+                      letterSpacing: 1,
+                      color: HB.muted,
+                      fontWeight: FontWeight.w600)),
+              const SizedBox(height: 24),
+              ...children,
+            ],
+          )));
 }
 
 class MusicScreen extends StatelessWidget {
@@ -139,82 +171,72 @@ class MusicScreen extends StatelessWidget {
   final AppController c;
 
   @override
-  Widget build(BuildContext context) => PageFrame(
-          label: 'MUSIC / PERSONAL',
-          title: 'FIND YOUR\nNEXT MOVE.',
-          children: [
-            Row(
-                children: List.generate(
-                    3,
-                    (i) => Expanded(
-                        child: InkWell(
-                            onTap: () => c.setMusicSection(i),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 11),
-                              decoration: BoxDecoration(
-                                  color: (c.musicSection >= 2
-                                              ? 2
-                                              : c.musicSection) ==
-                                          i
-                                      ? HB.ink
-                                      : Colors.transparent,
-                                  border: Border.all(color: HB.ink)),
-                              alignment: Alignment.center,
-                              child: Text(['推荐', '搜索', '曲库'][i],
-                                  style: TextStyle(
-                                      color: (c.musicSection >= 2
-                                                  ? 2
-                                                  : c.musicSection) ==
-                                              i
-                                          ? HB.white
-                                          : HB.ink,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 12)),
-                            ))))),
-            const SizedBox(height: 20),
-            if (c.musicSection == 0)
-              ..._recommendations(context)
-            else if (c.musicSection == 1)
-              SearchImportPanel(c)
-            else ...[
-              Row(children: [
-                Expanded(
-                    child: HardButton(
-                        label: '已收藏',
-                        color: c.musicSection == 2 ? HB.acid : HB.white,
-                        onPressed: () => c.setMusicSection(2))),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: HardButton(
-                        label: '歌单',
-                        color: c.musicSection == 3 ? HB.acid : HB.white,
-                        onPressed: () => c.setMusicSection(3))),
-              ]),
-              const SizedBox(height: 20),
-              if (c.musicSection == 2)
-                ..._library(context)
-              else
-                ..._playlists(context),
-              const SizedBox(height: 12),
-              HardButton(
-                  label: '导入更多音乐',
-                  color: HB.white,
-                  onPressed: () => c.setMusicSection(1)),
+  Widget build(BuildContext context) =>
+      PageFrame(label: 'MUSIC / PERSONAL', title: '发现下一首心动。', children: [
+        if (c.musicSection != 1) ...[
+          _SearchShortcut(c),
+          const SizedBox(height: 16),
+        ],
+        SegmentedButton<int>(
+            segments: const [
+              ButtonSegment(value: 0, label: Text('推荐')),
+              ButtonSegment(value: 1, label: Text('搜索')),
+              ButtonSegment(value: 2, label: Text('曲库')),
             ],
-          ]);
+            selected: {
+              c.musicSection >= 2 ? 2 : c.musicSection
+            },
+            onSelectionChanged: (selection) =>
+                c.setMusicSection(selection.single),
+            style: SegmentedButton.styleFrom(
+                minimumSize: const Size(48, 48),
+                selectedBackgroundColor: HB.mint,
+                selectedForegroundColor: HB.ink,
+                foregroundColor: HB.muted,
+                backgroundColor: HB.white,
+                side: const BorderSide(color: HB.ink, width: 1.5),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)))),
+        const SizedBox(height: 20),
+        if (c.musicSection == 0)
+          ..._recommendations(context)
+        else if (c.musicSection == 1)
+          SearchImportPanel(c)
+        else ...[
+          Row(children: [
+            Expanded(
+                child: HardButton(
+                    label: '已收藏',
+                    selected: c.musicSection == 2,
+                    color: c.musicSection == 2 ? HB.acid : HB.white,
+                    onPressed: () => c.setMusicSection(2))),
+            const SizedBox(width: 8),
+            Expanded(
+                child: HardButton(
+                    label: '歌单',
+                    selected: c.musicSection == 3,
+                    color: c.musicSection == 3 ? HB.acid : HB.white,
+                    onPressed: () => c.setMusicSection(3))),
+          ]),
+          const SizedBox(height: 20),
+          if (c.musicSection == 2)
+            ..._library(context)
+          else
+            ..._playlists(context),
+          const SizedBox(height: 12),
+          HardButton(
+              label: '导入更多音乐',
+              color: HB.white,
+              onPressed: () => c.setMusicSection(1)),
+        ],
+      ]);
 
   List<Widget> _recommendations(BuildContext context) => [
-        const Text('选好音乐，带进你的练习。',
-            style: TextStyle(fontWeight: FontWeight.w900)),
-        const SizedBox(height: 6),
-        Text(
-            c.nasRepository != null
-                ? 'NAS 预处理音乐 · 原曲歌单与 V3 连续混音。'
-                : c.isRemoteMode
-                    ? '在线曲库 · 播放对应原曲。收藏与歌单保存在本机。'
-                    : '推荐为示例目录，试听共用演示音频；也可以导入自己的音乐。',
-            style: const TextStyle(fontSize: 12)),
-        const SizedBox(height: 20),
+        if (c.nasRepository == null) ...[
+          Text(c.isRemoteMode ? '在线曲库 · 收藏喜欢的音乐。' : '示例目录 · 试听共用演示音频，可导入自己的音乐。',
+              style: const TextStyle(fontSize: 14, color: HB.muted)),
+          const SizedBox(height: 16),
+        ],
         if (c.nasRepository != null) ..._nasRecommendations(context),
         if (c.nasRepository == null)
           HardCard(
@@ -226,7 +248,7 @@ class MusicScreen extends StatelessWidget {
                         children: [
                       const Text('THIS WEEK / PRACTICE',
                           style: TextStyle(
-                              fontSize: 11, fontWeight: FontWeight.w900)),
+                              fontSize: 14, fontWeight: FontWeight.w900)),
                       const SizedBox(height: 32),
                       Text('BODY\nELECTRIC',
                           style: Theme.of(context).textTheme.headlineLarge),
@@ -271,19 +293,13 @@ class MusicScreen extends StatelessWidget {
               padding: EdgeInsets.all(30),
               child: Center(child: CircularProgressIndicator(color: HB.ink)))
         else
-          ...(c.isRemoteMode
-                  ? c.cloudTracks
-                  : c.catalogTracks.where((t) => !t.isNas && !t.isRenderedMix))
-              .map((t) => TrackCard(
-                  track: t,
-                  playing: c.nowPlaying?.id == t.id && c.isPlaying,
-                  saved: c.library.contains(t.id),
-                  onPlay: () async {
-                    await c.play(t);
-                    c.setTab(0);
-                  },
-                  onSave: () => c.save(t),
-                  onOpen: () => _openTrack(context, c, t))),
+          _TrackGallery(
+              c,
+              (c.isRemoteMode
+                      ? c.cloudTracks
+                      : c.catalogTracks
+                          .where((t) => !t.isNas && !t.isRenderedMix))
+                  .toList()),
         if (c.isRemoteMode && c.localTracks.isNotEmpty) ...[
           const SizedBox(height: 20),
           _SectionTitle('本机音乐', action: '${c.localTracks.length} TRACKS'),
@@ -306,78 +322,29 @@ class MusicScreen extends StatelessWidget {
       ];
 
   List<Widget> _nasRecommendations(BuildContext context) => [
-        HardCard(
-            color: HB.orange,
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              const Text('NAS SELECT / MIX V3',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
-              const SizedBox(height: 24),
-              Text('HIP-HOP\nSIX',
-                  style: Theme.of(context).textTheme.headlineLarge),
-              const SizedBox(height: 12),
-              const Text('6 首 · Trap / Grime · 4 分 21 秒',
-                  style: TextStyle(fontWeight: FontWeight.w900)),
-              const SizedBox(height: 8),
-              Text(c.featuredNasTracks.map((t) => t.title).join(' → '),
-                  style: const TextStyle(fontSize: 12)),
-              const SizedBox(height: 16),
-              HardButton(
-                  label: '播放 V3 混音',
-                  color: HB.acid,
-                  onPressed:
-                      c.directionBusy ? null : () => c.playNasSet(mixed: true)),
-              const SizedBox(height: 10),
-              HardButton(
-                  label: '播放六首原曲',
-                  color: HB.white,
-                  onPressed: c.directionBusy || c.featuredNasTracks.length != 6
-                      ? null
-                      : () => c.playNasSet(mixed: false)),
-              const SizedBox(height: 10),
-              const Text('精选已加入歌单。混音已渲染，可离线试听；原曲播放需要网络。',
-                  style: TextStyle(fontSize: 11)),
-              const SizedBox(height: 14),
-              HardButton(
-                  label: c.openingRealtimeLab ? '正在打开…' : 'V3 实时混音',
-                  color: HB.white,
-                  onPressed: c.directionBusy || c.openingRealtimeLab
-                      ? null
-                      : c.openRealtimeLab),
-              const SizedBox(height: 8),
-              const Text('在播放页实时换歌、调能量，六首素材已内置。请保持前台；网页版打开在线试听。',
-                  style: TextStyle(fontSize: 11)),
-              if (c.realtimeLabError != null)
-                Text(c.realtimeLabError!, style: const TextStyle(fontSize: 11)),
-            ])),
+        _SectionTitle('挑一首，开始今天。', action: '${c.nasTracks.length} 首音乐'),
+        _TrackGallery(c, c.nasTracks.take(4).toList()),
+        const SizedBox(height: 8),
+        _FeaturedMixShelf(c),
         const SizedBox(height: 24),
-        _SectionTitle('NAS 推荐曲库', action: '${c.nasTracks.length} TRACKS'),
+        const _SectionTitle('继续发现', action: 'NAS 推荐曲库'),
         Text(
             c.nasLive
                 ? '已连接 Jetson NAS · 按歌曲合并分析版本'
                 : '目录快照 ${c.nasRepository?.snapshotDate ?? ''} · 正在检查更新',
-            style: const TextStyle(fontSize: 11)),
-        const SizedBox(height: 10),
-        HardButton(
-            label: c.nasLoading ? '正在刷新 NAS…' : '刷新 NAS 曲库',
-            color: HB.white,
-            onPressed: c.nasLoading ? null : c.refreshNas),
+            style: const TextStyle(fontSize: 14, color: HB.muted)),
+        TextButton.icon(
+            onPressed: c.nasLoading ? null : c.refreshNas,
+            icon: const Icon(Icons.refresh_rounded, size: 20),
+            label: Text(c.nasLoading ? '正在刷新 NAS…' : '刷新 NAS 曲库')),
         if (c.nasError != null)
           _NetworkNotice(c.nasError!, onRetry: c.refreshNas),
-        const SizedBox(height: 12),
-        ...c.nasTracks.take(c.nasVisibleCount).map((t) => TrackCard(
-            track: t,
-            playing: c.nowPlaying?.id == t.id && c.isPlaying,
-            saved: c.library.contains(t.id),
-            onPlay: () async {
-              await c.play(t);
-              if (c.isPlaying) c.setTab(0);
-            },
-            onSave: () => c.save(t),
-            onOpen: () => _openTrack(context, c, t))),
+        const SizedBox(height: 8),
+        _TrackGallery(
+            c, c.nasTracks.skip(4).take(c.nasVisibleCount - 4).toList()),
         if (c.nasTracks.length > c.nasVisibleCount)
           HardButton(
-              label: '更多 NAS 音乐', color: HB.acid, onPressed: c.showMoreNas),
+              label: '更多 NAS 音乐', color: HB.mint, onPressed: c.showMoreNas),
       ];
 
   List<Widget> _library(BuildContext context) {
@@ -391,7 +358,7 @@ class MusicScreen extends StatelessWidget {
         : items
             .map((t) => TrackCard(
                 track: t,
-                playing: false,
+                playing: c.nowPlaying?.id == t.id && c.isPlaying,
                 saved: true,
                 onPlay: () async {
                   await c.play(t);
@@ -403,59 +370,51 @@ class MusicScreen extends StatelessWidget {
   }
 
   List<Widget> _playlists(BuildContext context) => [
-        ...c.playlists.asMap().entries.map((entry) => Padding(
-              padding: const EdgeInsets.only(bottom: 14),
-              child: HardCard(
-                  color: entry.key.isEven ? HB.blue : HB.orange,
-                  onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                      builder: (_) => AnimatedBuilder(
-                          animation: c,
-                          builder: (_, __) =>
-                              PlaylistDetail(c: c, playlistIndex: entry.key)))),
-                  child: Column(
+        LayoutBuilder(builder: (context, constraints) {
+          final columns = constraints.maxWidth < 300 ||
+                  MediaQuery.textScalerOf(context).scale(16) > 21
+              ? 1
+              : 2;
+          return Column(children: [
+            for (var start = 0; start < c.playlists.length; start += columns)
+              Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('PLAYLIST / 0${entry.key + 1}',
-                            style: TextStyle(
-                                color: entry.key.isEven ? HB.acid : HB.ink,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900)),
-                        const SizedBox(height: 30),
-                        Text(entry.value.name,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineLarge
-                                ?.copyWith(
-                                    color:
-                                        entry.key.isEven ? HB.white : HB.ink)),
-                        Row(children: [
+                        for (var slot = 0; slot < columns; slot++) ...[
+                          if (slot > 0) const SizedBox(width: 16),
                           Expanded(
-                              child: Text(
-                                  '${entry.value.trackIds.length} TRACKS',
-                                  style: TextStyle(
-                                      color: entry.key.isEven
-                                          ? HB.white
-                                          : HB.ink))),
-                          IconButton(
-                              onPressed: () => _renamePlaylist(
-                                  context, entry.key, entry.value.name),
-                              icon: Icon(Icons.edit,
-                                  color: entry.key.isEven ? HB.white : HB.ink),
-                              tooltip: '重命名歌单'),
-                          IconButton(
-                              onPressed: () => _deletePlaylist(
-                                  context, entry.key, entry.value.name),
-                              icon: Icon(Icons.delete_outline,
-                                  color: entry.key.isEven ? HB.white : HB.ink),
-                              tooltip: '删除歌单')
-                        ]),
+                              child: start + slot < c.playlists.length
+                                  ? _playlistFolder(context, start + slot)
+                                  : const SizedBox()),
+                        ],
                       ])),
-            )),
+          ]);
+        }),
         HardButton(
             label: '+ 新建歌单',
             color: HB.white,
             onPressed: () => _createPlaylist(context)),
       ];
+
+  Widget _playlistFolder(BuildContext context, int index) {
+    final playlist = c.playlists[index];
+    return _PlaylistFolder(
+        name: playlist.name,
+        count: playlist.trackIds
+            .where((id) => c.tracks.any((track) => track.id == id))
+            .length,
+        totalCount: playlist.trackIds.length,
+        index: index,
+        onOpen: () => Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => AnimatedBuilder(
+                animation: c,
+                builder: (_, __) =>
+                    PlaylistDetail(c: c, playlistIndex: index)))),
+        onRename: () => _renamePlaylist(context, index, playlist.name),
+        onDelete: () => _deletePlaylist(context, index, playlist.name));
+  }
 
   Future<void> _createPlaylist(BuildContext context) async {
     final name = await _askName(context, '新建歌单', '例如：周五 Cypher');
@@ -495,6 +454,7 @@ class MusicScreen extends StatelessWidget {
         context: context,
         builder: (dialogContext) => AlertDialog(
               shape: const RoundedRectangleBorder(
+                  borderRadius: HB.radius,
                   side: BorderSide(color: HB.ink, width: 2)),
               title: Text(title),
               content: TextField(
@@ -567,17 +527,22 @@ class PlaylistDetail extends StatelessWidget {
               const SizedBox(height: 18),
               Expanded(
                   child: items.isEmpty
-                      ? const _Placeholder(
-                          section: '空歌单', copy: '从歌曲详情把音乐加入这里。')
+                      ? _Placeholder(
+                          section: playlist.trackIds.isEmpty ? '空歌单' : '歌曲暂不可用',
+                          copy: playlist.trackIds.isEmpty
+                              ? '从歌曲详情把音乐加入这里。'
+                              : '${playlist.trackIds.length} 首歌曲尚未加载，刷新曲库后重试。')
                       : ReorderableListView.builder(
                           itemCount: items.length,
                           onReorder: (oldIndex, newIndex) =>
                               c.movePlaylistTrack(
                                   playlistIndex,
-                                  oldIndex,
-                                  newIndex > oldIndex
-                                      ? newIndex - 1
-                                      : newIndex),
+                                  playlist.trackIds.indexOf(items[oldIndex].id),
+                                  playlist.trackIds.indexOf(items[
+                                          newIndex > oldIndex
+                                              ? newIndex - 1
+                                              : newIndex]
+                                      .id)),
                           itemBuilder: (_, index) {
                             final track = items[index];
                             return ListTile(
@@ -624,80 +589,78 @@ class TrackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.only(bottom: 14),
-        child: HardCard(
-            shadow: false,
-            padding: EdgeInsets.zero,
-            child: Column(children: [
-              InkWell(
-                  onTap: onOpen,
+      padding: const EdgeInsets.only(bottom: 12),
+      child: HardCard(
+          padding: EdgeInsets.zero,
+          child: Column(children: [
+            InkWell(
+                onTap: onOpen,
+                child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(children: [
+                      RecordSleeve(size: 52, color: HB.sleeve(track.color)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                            Text(track.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleMedium),
+                            const SizedBox(height: 4),
+                            Text(track.artist,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 14, color: HB.muted)),
+                          ])),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.chevron_right,
+                          size: 20, color: HB.muted),
+                    ]))),
+            Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                        '${track.style} · ${track.bpmLabel} BPM · ${track.resourceLabel}',
+                        style:
+                            const TextStyle(fontSize: 14, color: HB.muted)))),
+            if (playing)
+              const Padding(
+                  padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
                   child: Row(children: [
-                    Container(
-                        width: 84,
-                        height: 92,
-                        color: track.color,
-                        alignment: Alignment.center,
-                        child: Text(
-                            (track.bpm ?? 0) > 0
-                                ? '${track.bpmLabel}\nBPM'
-                                : track.isLocal
-                                    ? 'LOCAL'
-                                    : 'BPM 待分析',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w900, fontSize: 18))),
-                    Expanded(
-                        child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                      '${track.style} · ${track.resourceLabel}',
-                                      style: const TextStyle(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.w900,
-                                          letterSpacing: 1.5)),
-                                  const SizedBox(height: 5),
-                                  Text(track.title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium),
-                                  Text(track.artist,
-                                      style: const TextStyle(fontSize: 11)),
-                                  const SizedBox(height: 7),
-                                  Text(track.reason,
-                                      style: const TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w800)),
-                                ]))),
+                    Icon(Icons.equalizer_rounded, size: 18, color: HB.deepTeal),
+                    SizedBox(width: 6),
+                    Text('正在播放',
+                        style: TextStyle(color: HB.deepTeal, fontSize: 14))
                   ])),
-              const Divider(height: 1, color: HB.ink, thickness: 2),
-              Row(children: [
-                Expanded(
-                    child: TextButton.icon(
-                        onPressed: track.canPlay ? onPlay : null,
-                        icon: Icon(playing ? Icons.pause : Icons.play_arrow),
-                        label: Text(!track.canPlay
-                            ? '暂无音频'
-                            : playing
-                                ? '重新播放'
-                                : '手机播放'))),
-                Container(width: 2, height: 44, color: HB.ink),
-                Expanded(
-                    child: TextButton.icon(
-                        onPressed: saved ? null : onSave,
-                        icon: Icon(saved ? Icons.check : Icons.add),
-                        label: Text(saved
-                            ? '已保存'
-                            : !track.canPlay
-                                ? '收藏信息'
-                                : '加入曲库'))),
-              ]),
-            ])),
-      );
+            const Divider(height: 16),
+            Row(children: [
+              Expanded(
+                  child: TextButton.icon(
+                      onPressed: track.canPlay ? onPlay : null,
+                      icon: Icon(playing
+                          ? Icons.replay_rounded
+                          : Icons.play_arrow_rounded),
+                      label: Text(!track.canPlay
+                          ? '暂无音频'
+                          : playing
+                              ? '重新播放'
+                              : '手机播放'))),
+              Expanded(
+                  child: TextButton.icon(
+                      onPressed: saved ? null : onSave,
+                      icon: Icon(
+                          saved ? Icons.check : Icons.favorite_border_rounded),
+                      label: Text(saved
+                          ? '已保存'
+                          : !track.canPlay
+                              ? '收藏信息'
+                              : '加入曲库'))),
+            ]),
+          ])));
 }
 
 class TrackDetail extends StatelessWidget {
@@ -707,11 +670,14 @@ class TrackDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(backgroundColor: track.color, foregroundColor: HB.ink),
+        appBar: AppBar(backgroundColor: HB.paper, foregroundColor: HB.ink),
         body: ListView(padding: const EdgeInsets.all(16), children: [
           Container(
               height: 260,
-              color: track.color,
+              decoration: BoxDecoration(
+                  color: HB.sleeve(track.color),
+                  borderRadius: HB.radius,
+                  border: Border.all(color: HB.ink, width: 1.5)),
               padding: const EdgeInsets.all(18),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -728,7 +694,7 @@ class TrackDetail extends StatelessWidget {
           Text(track.artist, style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 10),
           Text('${track.resourceLabel} · ${track.analysisLabel}',
-              style: const TextStyle(fontSize: 12)),
+              style: const TextStyle(fontSize: 14)),
           const SizedBox(height: 14),
           Row(children: [
             Expanded(
@@ -758,7 +724,7 @@ class TrackDetail extends StatelessWidget {
                   child: const Text('刷新分析结果')),
             if (track.analysisRunId != null)
               Text('分析版本：${track.analysisRunId}',
-                  style: const TextStyle(fontSize: 11)),
+                  style: const TextStyle(fontSize: 14)),
             const SizedBox(height: 8),
           ],
           Text(track.reason, style: Theme.of(context).textTheme.titleMedium),
@@ -828,58 +794,64 @@ class MiniPlayer extends StatelessWidget {
   final Track track;
   final AppController controller;
   @override
-  Widget build(BuildContext context) => Material(
-      color: Colors.transparent,
-      child: HardCard(
-          color: HB.ink,
-          shadow: false,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            InkWell(
-                onTap: () => controller.setTab(0),
-                child: Row(children: [
-                  Container(width: 35, height: 35, color: track.color),
-                  const SizedBox(width: 9),
-                  Expanded(
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                        Text(track.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                color: HB.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900)),
-                        Text('${track.bpmLabel} BPM · PHONE',
-                            style: const TextStyle(
-                                color: Colors.white60, fontSize: 9))
-                      ])),
-                  IconButton(
-                      onPressed: controller.previousTrack,
-                      icon: const Icon(Icons.skip_previous, color: HB.white),
-                      tooltip: '上一首'),
-                  IconButton(
-                      onPressed: controller.togglePlayback,
-                      icon: Icon(
-                          controller.isPlaying ? Icons.pause : Icons.play_arrow,
-                          color: HB.acid),
-                      tooltip: controller.isPlaying ? '暂停' : '继续播放'),
-                  IconButton(
-                      onPressed: controller.nextTrack,
-                      icon: const Icon(Icons.skip_next, color: HB.white),
-                      tooltip: '下一首')
-                ])),
-            LinearProgressIndicator(
+  Widget build(BuildContext context) => HardCard(
+      color: HB.mint,
+      padding: const EdgeInsets.fromLTRB(12, 8, 8, 6),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Row(children: [
+          Expanded(
+              child: InkWell(
+                  onTap: () => controller.setTab(0),
+                  child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Row(children: [
+                        RecordSleeve(size: 40, color: HB.sleeve(track.color)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                              Text(track.title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700)),
+                              Text(controller.isPlaying ? '正在播放' : '已暂停',
+                                  style: const TextStyle(
+                                      color: HB.muted, fontSize: 14)),
+                            ])),
+                      ])))),
+          IconButton(
+              onPressed: controller.previousTrack,
+              icon: const Icon(Icons.skip_previous_rounded),
+              tooltip: '上一首'),
+          IconButton.filled(
+              onPressed: controller.togglePlayback,
+              style: IconButton.styleFrom(
+                  backgroundColor: HB.apricot, foregroundColor: HB.ink),
+              icon: Icon(controller.isPlaying
+                  ? Icons.pause_rounded
+                  : Icons.play_arrow_rounded),
+              tooltip: controller.isPlaying ? '暂停' : '继续播放'),
+          IconButton(
+              onPressed: controller.nextTrack,
+              icon: const Icon(Icons.skip_next_rounded),
+              tooltip: '下一首'),
+        ]),
+        const SizedBox(height: 6),
+        ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
                 value: controller.duration.inMilliseconds == 0
                     ? 0
                     : (controller.position.inMilliseconds /
                             controller.duration.inMilliseconds)
                         .clamp(0, 1),
                 minHeight: 3,
-                color: HB.acid,
-                backgroundColor: Colors.white24)
-          ])));
+                color: HB.deepTeal,
+                backgroundColor: HB.white)),
+      ]));
 }
 
 class FullPlayer extends StatelessWidget {
@@ -894,7 +866,7 @@ class FullPlayer extends StatelessWidget {
         ? 1.0
         : c.duration.inMilliseconds.toDouble();
     return Scaffold(
-        backgroundColor: track.color,
+        backgroundColor: HB.paper,
         appBar: AppBar(backgroundColor: Colors.transparent),
         body: SafeArea(
             top: false,
@@ -907,7 +879,11 @@ class FullPlayer extends StatelessWidget {
                           const SizedBox(height: 20),
                           Text('NOW / PHONE',
                               style: Theme.of(context).textTheme.titleMedium),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 20),
+                          Center(
+                              child: RecordSleeve(
+                                  size: 160, color: HB.sleeve(track.color))),
+                          const SizedBox(height: 24),
                           Text(track.title,
                               style: Theme.of(context).textTheme.displayLarge),
                           const SizedBox(height: 8),
@@ -920,7 +896,7 @@ class FullPlayer extends StatelessWidget {
                                   .toDouble()
                                   .clamp(0, max),
                               max: max,
-                              activeColor: HB.ink,
+                              activeColor: HB.deepTeal,
                               onChanged: c.danceRunning
                                   ? null
                                   : (value) => c.seek(
@@ -941,7 +917,7 @@ class FullPlayer extends StatelessWidget {
                                           PlaybackMode.sequential),
                                       color: c.playbackMode ==
                                               PlaybackMode.sequential
-                                          ? HB.orange
+                                          ? HB.deepTeal
                                           : HB.ink,
                                       icon: const Icon(
                                           Icons.format_list_numbered)),
@@ -951,7 +927,7 @@ class FullPlayer extends StatelessWidget {
                                           PlaybackMode.repeatOne),
                                       color: c.playbackMode ==
                                               PlaybackMode.repeatOne
-                                          ? HB.orange
+                                          ? HB.deepTeal
                                           : HB.ink,
                                       icon: const Icon(Icons.repeat_one)),
                                   IconButton(
@@ -960,7 +936,7 @@ class FullPlayer extends StatelessWidget {
                                           PlaybackMode.shuffle),
                                       color:
                                           c.playbackMode == PlaybackMode.shuffle
-                                              ? HB.orange
+                                              ? HB.deepTeal
                                               : HB.ink,
                                       icon: const Icon(Icons.shuffle)),
                                 ]),
@@ -978,6 +954,9 @@ class FullPlayer extends StatelessWidget {
                                 IconButton.filled(
                                     tooltip: c.isPlaying ? '暂停播放' : '继续播放',
                                     style: IconButton.styleFrom(
+                                        minimumSize: const Size(72, 72),
+                                        side: const BorderSide(
+                                            color: HB.ink, width: 1.5),
                                         backgroundColor: HB.acid,
                                         foregroundColor: HB.ink),
                                     onPressed: c.togglePlayback,
@@ -1050,7 +1029,7 @@ class _Fact extends StatelessWidget {
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label,
             style: const TextStyle(
-                color: Colors.grey, fontSize: 9, fontWeight: FontWeight.w900)),
+                color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w900)),
         Text(value,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900))
       ]);
@@ -1063,11 +1042,17 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        Text(title, style: Theme.of(context).textTheme.headlineMedium),
-        Text(action,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900))
-      ]));
+      child: Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 12,
+          runSpacing: 4,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.headlineMedium),
+            Text(action,
+                style:
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w900))
+          ]));
 }
 
 class _Placeholder extends StatelessWidget {
@@ -1087,6 +1072,6 @@ class _Placeholder extends StatelessWidget {
             const SizedBox(height: 5),
             Text(copy,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 11))
+                style: const TextStyle(fontSize: 14))
           ]))));
 }

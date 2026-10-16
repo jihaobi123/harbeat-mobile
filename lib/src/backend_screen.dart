@@ -139,7 +139,7 @@ class _BackendScreenState extends State<BackendScreen> {
           appBar: AppBar(title: const Text('音乐服务')),
           body: PageFrame(
               label: 'MUSIC / CONNECT',
-              title: 'YOUR MUSIC.\nCONNECTED.',
+              title: '连接你的音乐世界。',
               children: [
                 Text(
                     registering
@@ -233,7 +233,7 @@ class _BackendScreenState extends State<BackendScreen> {
                       enableSuggestions: false,
                       textInputAction: TextInputAction.next,
                       decoration: const InputDecoration(
-                          labelText: '账号', border: OutlineInputBorder())),
+                          labelText: '账号', border: HB.inputBorder)),
                   const SizedBox(height: 16),
                   TextField(
                       key: const ValueKey('backend-password'),
@@ -249,7 +249,7 @@ class _BackendScreenState extends State<BackendScreen> {
                         if (!busy && !registering) connect();
                       },
                       decoration: const InputDecoration(
-                          labelText: '密码', border: OutlineInputBorder())),
+                          labelText: '密码', border: HB.inputBorder)),
                   if (registering) ...[
                     const SizedBox(height: 16),
                     TextField(
@@ -264,7 +264,7 @@ class _BackendScreenState extends State<BackendScreen> {
                           if (!busy) connect();
                         },
                         decoration: const InputDecoration(
-                            labelText: '确认密码', border: OutlineInputBorder())),
+                            labelText: '确认密码', border: HB.inputBorder)),
                   ],
                 ] else
                   TextField(
@@ -348,12 +348,12 @@ class _BackendScreenState extends State<BackendScreen> {
                           decoration: const InputDecoration(
                               labelText: '服务地址',
                               hintText: 'https://你的服务地址',
-                              border: OutlineInputBorder())),
+                              border: HB.inputBorder)),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<BackendApi>(
                           initialValue: api,
                           decoration: const InputDecoration(
-                              labelText: '接口版本', border: OutlineInputBorder()),
+                              labelText: '接口版本', border: HB.inputBorder),
                           items: const [
                             DropdownMenuItem(
                                 value: BackendApi.legacy,

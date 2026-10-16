@@ -59,7 +59,7 @@ class _CloudUploadScreenState extends State<CloudUploadScreen> {
           appBar: AppBar(title: const Text('上传音乐')),
           body: PageFrame(
               label: 'MUSIC / UPLOAD',
-              title: 'YOUR SOUND.\nEVERYWHERE.',
+              title: '把喜欢的音乐带进来。',
               children: [
                 Text('上传到 ${c.accountName ?? '当前账号'} 的云端曲库。',
                     style: const TextStyle(fontWeight: FontWeight.w900)),
@@ -79,13 +79,13 @@ class _CloudUploadScreenState extends State<CloudUploadScreen> {
                       controller: title,
                       enabled: !c.uploading,
                       decoration: const InputDecoration(
-                          labelText: '歌曲名称', border: OutlineInputBorder())),
+                          labelText: '歌曲名称', border: HB.inputBorder)),
                   const SizedBox(height: 16),
                   TextField(
                       controller: artist,
                       enabled: !c.uploading,
                       decoration: const InputDecoration(
-                          labelText: '艺人', border: OutlineInputBorder())),
+                          labelText: '艺人', border: HB.inputBorder)),
                   const SizedBox(height: 20),
                   HardButton(
                       label: c.uploading ? '上传中…' : '开始上传',

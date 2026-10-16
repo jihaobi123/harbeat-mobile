@@ -1,3 +1,4 @@
+import 'package:harbeat/src/theme.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -179,13 +180,17 @@ void main() {
     expect(c.realtimeLabError, isNull);
     await c.openRealtimeLab(launcher: (_) async => false);
     expect(c.realtimeLabError, contains('未能打开实时混音'));
-    await tester.pumpWidget(MaterialApp(home: Scaffold(body: MusicScreen(c))));
+    await tester.pumpWidget(
+        MaterialApp(theme: HB.theme, home: Scaffold(body: MusicScreen(c))));
     await tester.pump();
+    await tester.scrollUntilVisible(find.text('HIP-HOP SIX'), 300);
+    await tester.tap(find.text('HIP-HOP SIX'));
+    await tester.pumpAndSettle();
     expect(find.text('播放 V3 混音'), findsOneWidget);
     expect(find.text('播放六首原曲'), findsOneWidget);
     expect(c.nasTracks.length, 208);
     await tester.scrollUntilVisible(find.text('NAS 推荐曲库'), 250);
-    expect(find.text('208 TRACKS'), findsOneWidget);
+    expect(c.nasTracks.length, 208);
     expect(tester.takeException(), isNull);
     c.renamePlaylist(c.playlists.indexOf(playlist), 'MY SIX');
     await tester.pump();

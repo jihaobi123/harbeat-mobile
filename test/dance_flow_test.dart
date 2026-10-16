@@ -1,3 +1,4 @@
+import 'package:harbeat/src/theme.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -172,12 +173,15 @@ void main() {
       await c.prepareDance();
     });
     await tester.pumpWidget(MaterialApp(
+        theme: HB.theme,
         home: AnimatedBuilder(
             animation: c, builder: (_, __) => Shell(controller: c))));
+    await tester.scrollUntilVisible(find.text('本次舞程'), 250);
     expect(find.text('本次舞程'), findsOneWidget);
     expect(find.text('音乐风格'), findsOneWidget);
     expect(find.text('大概跳多久'), findsOneWidget);
-    await Scrollable.ensureVisible(tester.element(find.text('开始这场舞程')), alignment: .25);
+    await Scrollable.ensureVisible(tester.element(find.text('开始这场舞程')),
+        alignment: .25);
     await tester.pumpAndSettle();
     expect(find.text('1. NAS A'), findsOneWidget);
     await tester.tap(find.text('开始这场舞程'));

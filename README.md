@@ -1,8 +1,8 @@
 # HarBeat Flutter
 
-手机先完成选歌、播放与方向控制，饰品作为可选快捷控制。根据产品手册 v2 调整交互，保留原有米色背景、蓝/橙/荧光黄、粗黑边、硬阴影和大字标题。
+手机先完成选歌、播放与方向控制，饰品作为可选快捷控制。界面采用浅色背景、青绿与杏黄、细描边圆角卡片；播放、音乐、我的三个主入口保持不变。
 
-最新交付为 **Android Preview 0.1.6+7**：播放页按风格与时长从 NAS 自动选歌，使用手机 V3 引擎连续混音。首次拉取仓库请先阅读 [版本说明与复现步骤](docs/release-0.1.6.md)，Android 打包前需准备 V3 引擎素材。
+当前版本为 **Android Preview 0.1.8+10**：按 2026-10-16 UI 指南更新视觉，同时保留风格/时长舞程与连续混音入口。见 [本次改动和验证说明](docs/ui-refresh-20261016.md)。首次拉取仓库请先阅读 [环境与复现步骤](docs/release-0.1.6.md)，Android 打包前需准备 V3 引擎素材。
 
 ## 运行
 
@@ -47,7 +47,7 @@ python -m http.server 8765 --bind 127.0.0.1 --directory build/web
 
 ### Android 测试安装包
 
-最新产物：`outputs/HarBeat-Preview-20260921-Dance-Set-arm64.apk`，版本 0.1.6 (7)，SHA-256 `9ad83ef2e000ca6981d34fcdf89909eb9b25c4583667be53bd2299ca26fab5bd`。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；只用安全安装器保留数据更新。
+当前产物：`outputs/HarBeat-Preview-20261016-UI-arm64.apk`，版本 0.1.8 (10)，校验值与真机验证见 [交付说明](docs/ui-refresh-20261016.md)。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；只用安全安装器保留数据更新。
 
 默认构建使用并存预览包名，只有显式 `-PharbeatPreview=false` 才使用原包名。此次修复了应用未启用 Kotlin 插件、audio_session 0.2.4 与关闭内置 Kotlin 的兼容问题，以及网络配置缺少 includeSubdomains 属性的发布检查错误。Gradle 限制为 1536MB 堆、1 个 worker 和 2 个可用处理器，避免本机原生内存不足。
 

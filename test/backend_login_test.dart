@@ -1,3 +1,4 @@
+import 'package:harbeat/src/theme.dart';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -172,7 +173,8 @@ void main() {
             })));
     addTearDown(c.dispose);
     await tester.runAsync(c.initialize);
-    await tester.pumpWidget(MaterialApp(home: BackendScreen(c)));
+    await tester
+        .pumpWidget(MaterialApp(theme: HB.theme, home: BackendScreen(c)));
     await tester.enterText(
         find.byKey(const ValueKey('backend-username')), 'fixture');
     await tester.enterText(

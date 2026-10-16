@@ -44,7 +44,7 @@ void main() {
     expect(find.text('音乐'), findsOneWidget);
     expect(find.text('设备'), findsNothing);
     expect(find.text('我的'), findsOneWidget);
-    expect(find.textContaining('MAKE'), findsOneWidget);
+    expect(find.text('让身体，跟着节奏。'), findsOneWidget);
     expect(find.text('开始播放'), findsOneWidget);
     expect(find.text('无需连接设备'), findsOneWidget);
   });
@@ -57,7 +57,7 @@ void main() {
         audio: MemoryAudioService()));
     await tester.tap(find.text('音乐'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('FIND YOUR'), findsOneWidget);
+    expect(find.text('发现下一首心动。'), findsOneWidget);
     expect(find.text('BODY\nELECTRIC'), findsOneWidget);
   });
 
@@ -70,9 +70,16 @@ void main() {
         audio: MemoryAudioService()));
     await tester.tap(find.text('音乐'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('手机播放').first);
+    final play = find.byWidgetPredicate((widget) =>
+        widget is IconButton &&
+        (widget.tooltip?.startsWith('手机播放 ·') ?? false));
+    for (var i = 0; i < 10 && play.evaluate().isEmpty; i++) {
+      await tester.drag(find.byType(ListView).last, const Offset(0, -250));
+      await tester.pumpAndSettle();
+    }
+    await tester.ensureVisible(play.first);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('手机播放').first);
+    await tester.tap(play.first);
     await tester.pumpAndSettle();
     expect(find.text('暂停播放'), findsOneWidget);
     await tester.ensureVisible(find.text('播放队列 →'));

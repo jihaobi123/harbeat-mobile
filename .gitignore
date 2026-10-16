@@ -28,5 +28,10 @@ android/local.properties
 vendor/realtime-v3/node_modules/
 vendor/realtime-v3/dist-mobile/
 vendor/realtime-v3/public/media/
+vendor/realtime-v3/public/continuous/
+vendor/realtime-v3/.source-cache/
 android/app/src/main/assets/realtime/
 services/__pycache__/
+
+# Local Python tooling caches
+__pycache__/

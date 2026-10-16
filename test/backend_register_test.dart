@@ -1,3 +1,4 @@
+import 'package:harbeat/src/theme.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -138,7 +139,8 @@ void main() {
               })));
       addTearDown(c.dispose);
       await tester.runAsync(c.initialize);
-      await tester.pumpWidget(MaterialApp(home: BackendScreen(c)));
+      await tester
+          .pumpWidget(MaterialApp(theme: HB.theme, home: BackendScreen(c)));
       await tester.tap(find.byKey(const ValueKey('backend-auth-mode')));
       await tester.pumpAndSettle();
       expect(find.text('注册账号'), findsOneWidget);

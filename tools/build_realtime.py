@@ -4,6 +4,7 @@ python tools/build_realtime.py --download  # prepare missing media and npm depen
 python tools/build_realtime.py             # verify/build from local inputs
 """
 import argparse, concurrent.futures, hashlib, json, pathlib, shutil, subprocess, urllib.request
+from prepare_continuous import prepare as prepare_continuous
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCE = ROOT / 'vendor/realtime-v3'
@@ -16,6 +17,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--download', action='store_true')
     args = parser.parse_args()
+    prepare_continuous(args.download)
     upstream = json.loads((SOURCE/'upstream.json').read_text())
     for path, digest in upstream['files'].items():
         local = SOURCE/path.removeprefix('web/')
@@ -48,7 +50,9 @@ def main():
     # Only this generated directory may be replaced. Never remove sources or user files.
     assert DEST.resolve() == (ROOT/'android/app/src/main/assets/realtime').resolve()
     if DEST.exists(): shutil.rmtree(DEST)
-    shutil.copytree(SOURCE/'dist-mobile', DEST)
+    # Android's asset merger treats foo.json.gz as foo.json, so shipping both
+    # collides. The offline index uses .json URLs; APK compression handles size.
+    shutil.copytree(SOURCE/'dist-mobile', DEST, ignore=shutil.ignore_patterns('*.json.gz'))
     manifest = {'commit': upstream['commit'], 'catalogSha256': sha((SOURCE/'public/catalog.json').read_bytes()),
                 'assetCount': len(assets), 'mediaBytes': sum(a['bytes'] for a in assets.values()),
                 'engine': 'bundled Web Audio V3', 'foregroundOnly': True,

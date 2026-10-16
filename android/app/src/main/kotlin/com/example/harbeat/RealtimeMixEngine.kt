@@ -30,6 +30,7 @@ import android.widget.Toast
 import androidx.webkit.WebViewAssetLoader
 import org.json.JSONObject
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -95,6 +96,18 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
                 if (request.method == "GET" && uri.scheme == "https" && uri.host == "appassets.androidplatform.net" &&
                     uri.path?.matches(Regex("/dance-assets/[a-f0-9]{64}\\.flac")) == true) {
                     return danceAsset(uri.lastPathSegment!!)
+                }
+                if (request.method == "GET" && uri.scheme == "https" && uri.host == "appassets.androidplatform.net") {
+                    val path = uri.encodedPath ?: ""
+                    val hash = uri.getQueryParameter("sha256") ?: ""
+                    val publishedAudio = path.matches(Regex("/analysis-lab-static/(v3-live-baseline-20260922|v31-candidate-20260923|vocal-overlap-corpus-20260924)/media/[A-Za-z0-9_.-]+\\.flac"))
+                    val registeredAudio = path.matches(Regex("/api/analysis-lab/media/[a-f0-9]{64}"))
+                    if ((publishedAudio || registeredAudio) && hash.matches(Regex("[a-f0-9]{64}"))) {
+                        return verifiedAudio(path, hash)
+                    }
+                    if (path.matches(Regex("/analysis-lab-static/continuous-live-20260924/(library\\.json|details/track-[a-f0-9]{20}\\.json(\\.gz)?)"))) {
+                        return continuousMetadata(path)
+                    }
                 }
                 if (request.method == "GET" && uri.scheme == "https" &&
                     uri.host == "appassets.androidplatform.net" &&
@@ -174,7 +187,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
         activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
     fun command(method: String, args: Map<*, *>, result: MethodChannel.Result) {
-        if (disposed || method !in listOf("prepare", "configure", "start", "pause", "resume", "stop", "seek", "request", "cancel", "export")) {
+        if (disposed || method !in listOf("prepare", "configure", "start", "pause", "resume", "stop", "seek", "request", "cancel", "export", "select", "volume", "automatic", "filters")) {
             result.error("unavailable", "不支持的播放器操作", null); return
         }
         val id = ++sequence
@@ -192,12 +205,41 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
     }
 
     /** The WebView can read only content-addressed assets from the owner's NAS relay. */
-    @Synchronized private fun danceAsset(name: String): WebResourceResponse {
+    private fun danceAsset(name: String) = verifiedAudio("/api/analysis-lab/dance/assets/$name", name.removeSuffix(".flac"))
+
+    private fun continuousMetadata(path: String): WebResourceResponse {
+        val connection = URL("https://8.136.120.255$path").openConnection() as HttpURLConnection
+        return try {
+            connection.connectTimeout = 10000
+            connection.readTimeout = 20000
+            connection.instanceFollowRedirects = false
+            if (connection.responseCode != 200) {
+                WebResourceResponse("text/plain", "UTF-8", 404, "Unavailable", emptyMap(), ByteArrayInputStream(ByteArray(0)))
+            } else {
+                val bytes = ByteArrayOutputStream()
+                connection.inputStream.use { input ->
+                    val buffer = ByteArray(65536)
+                    while (true) {
+                        val n = input.read(buffer); if (n < 0) break
+                        check(bytes.size() + n <= 16 * 1024 * 1024)
+                        bytes.write(buffer, 0, n)
+                    }
+                }
+                WebResourceResponse(if (path.endsWith(".gz")) "application/gzip" else "application/json", null,
+                    200, "OK", mapOf("X-Content-Type-Options" to "nosniff"), ByteArrayInputStream(bytes.toByteArray()))
+            }
+        } catch (_: Exception) {
+            WebResourceResponse("text/plain", "UTF-8", 503, "Unavailable", emptyMap(), ByteArrayInputStream(ByteArray(0)))
+        } finally { connection.disconnect() }
+    }
+
+    @Synchronized private fun verifiedAudio(path: String, hash: String): WebResourceResponse {
         try {
             val root = File(activity.cacheDir, "dance-v1").apply { mkdirs() }
+            val name = "$hash.flac"
             val file = File(root, name)
             if (!file.isFile) {
-                val connection = URL("https://8.136.120.255/api/analysis-lab/dance/assets/$name").openConnection() as HttpURLConnection
+                val connection = URL("https://8.136.120.255$path").openConnection() as HttpURLConnection
                 connection.connectTimeout = 15000
                 connection.readTimeout = 45000
                 connection.instanceFollowRedirects = false
