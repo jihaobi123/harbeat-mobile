@@ -62,6 +62,7 @@ class Track {
     this.qualityFlags = const [],
     this.analysis = const {},
     this.previewUrl,
+    this.coverUrl,
     this.detailLoaded = false,
   });
 
@@ -85,7 +86,34 @@ class Track {
   final List<String> qualityFlags;
   final Map<String, dynamic> analysis;
   final String? previewUrl;
+  final String? coverUrl;
   final bool detailLoaded;
+
+  /// Artwork can change independently of the verified audio/analysis version.
+  Track withCoverUrl(String? value) => Track(
+        id: id,
+        title: title,
+        artist: artist,
+        style: style,
+        bpm: bpm,
+        energy: energy,
+        reason: reason,
+        color: color,
+        availability: availability,
+        musicalKey: musicalKey,
+        backendId: backendId,
+        durationMs: durationMs,
+        analysisStatus: analysisStatus,
+        analysisRunId: analysisRunId,
+        manifestSha256: manifestSha256,
+        vocalSummary: vocalSummary,
+        needsReview: needsReview,
+        qualityFlags: qualityFlags,
+        analysis: analysis,
+        previewUrl: previewUrl,
+        coverUrl: value,
+        detailLoaded: detailLoaded,
+      );
   bool get isRemote => backendId != null;
   bool get isNas => id.startsWith('nas:');
   bool get isRenderedMix => id.startsWith('mix:');

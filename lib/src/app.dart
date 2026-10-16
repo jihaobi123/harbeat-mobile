@@ -404,6 +404,11 @@ class MusicScreen extends StatelessWidget {
         totalCount: playlist.trackIds.length,
         index: index,
         heroTag: 'playlist:${playlist.id}',
+        coverUrl: playlist.trackIds
+            .map(
+                (id) => c.tracks.where((t) => t.id == id).firstOrNull?.coverUrl)
+            .whereType<String>()
+            .firstOrNull,
         onOpen: () =>
             _openVinylPage(context, PlaylistDetail(c: c, playlistIndex: index)),
         onRename: () => _renamePlaylist(context, index, playlist.name),
@@ -529,7 +534,10 @@ class TrackCard extends StatelessWidget {
                 child: Padding(
                     padding: const EdgeInsets.all(12),
                     child: Row(children: [
-                      RecordSleeve(size: 52, color: HB.sleeve(track.color)),
+                      RecordSleeve(
+                          size: 52,
+                          color: HB.sleeve(track.color),
+                          coverUrl: track.coverUrl),
                       const SizedBox(width: 12),
                       Expanded(
                           child: Column(
@@ -736,7 +744,10 @@ class MiniPlayer extends StatelessWidget {
                   child: ConstrainedBox(
                       constraints: const BoxConstraints(minHeight: 48),
                       child: Row(children: [
-                        RecordSleeve(size: 40, color: HB.sleeve(track.color)),
+                        RecordSleeve(
+                            size: 40,
+                            color: HB.sleeve(track.color),
+                            coverUrl: controller.currentTrack(track).coverUrl),
                         const SizedBox(width: 10),
                         Expanded(
                             child: Column(
@@ -813,7 +824,9 @@ class FullPlayer extends StatelessWidget {
                           const SizedBox(height: 20),
                           Center(
                               child: RecordSleeve(
-                                  size: 160, color: HB.sleeve(track.color))),
+                                  size: 160,
+                                  color: HB.sleeve(track.color),
+                                  coverUrl: c.currentTrack(track).coverUrl)),
                           const SizedBox(height: 24),
                           Text(track.title,
                               style: Theme.of(context).textTheme.displayLarge),

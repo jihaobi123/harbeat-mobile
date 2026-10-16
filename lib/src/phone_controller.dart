@@ -7,7 +7,9 @@ extension PhoneFlow on AppController {
       ? v3Busy
       : pendingIntent != null || applyingDirection || audioBusy;
   bool get accessoryConnected => accessoryStatus == AccessoryStatus.connected;
-  Track? get displayTrack => nowPlaying ?? _candidate(energy, mixStyle);
+  Track? get displayTrack => nowPlaying == null
+      ? _candidate(energy, mixStyle)
+      : currentTrack(nowPlaying!);
 
   void editDirection({int? energy, String? style}) {
     if (directionBusy) return;

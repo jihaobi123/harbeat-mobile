@@ -272,6 +272,7 @@ class _PlaybackCard extends StatelessWidget {
           Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
             RecordSleeve(
                 size: 88,
+                coverUrl: track?.coverUrl,
                 color: track == null ? HB.mint : HB.sleeve(track.color)),
             const SizedBox(width: 16),
             Expanded(

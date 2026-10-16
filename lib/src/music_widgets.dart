@@ -54,7 +54,7 @@ class _BinderPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-/// Original graphic sleeve artwork: deliberately no pretend photo or waveform.
+/// The NAS cover sits inside the existing paper sleeve; graphics are a fallback.
 class _GenreArtwork extends StatelessWidget {
   const _GenreArtwork({required this.track, required this.index});
   final Track track;
@@ -67,40 +67,43 @@ class _GenreArtwork extends StatelessWidget {
             borderRadius: BorderRadius.circular(11),
             child: AspectRatio(
                 aspectRatio: 1.05,
-                child: Stack(fit: StackFit.expand, children: [
-                  CustomPaint(
-                      painter: _SleevePainter(
-                          palette[index % palette.length], index)),
-                  Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text('HARBEAT / SELECT',
-                                style: TextStyle(
-                                    fontSize: 9,
-                                    letterSpacing: 1,
-                                    fontWeight: FontWeight.w800)),
-                            FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                    track.style
-                                        .toUpperCase()
-                                        .replaceAll('-', '\n'),
+                child: TrackArtwork(
+                    url: track.coverUrl,
+                    fallback: Stack(fit: StackFit.expand, children: [
+                      CustomPaint(
+                          painter: _SleevePainter(
+                              palette[index % palette.length], index)),
+                      Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text('HARBEAT / SELECT',
+                                    style: TextStyle(
+                                        fontSize: 9,
+                                        letterSpacing: 1,
+                                        fontWeight: FontWeight.w800)),
+                                FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                        track.style
+                                            .toUpperCase()
+                                            .replaceAll('-', '\n'),
+                                        style: const TextStyle(
+                                            fontSize: 30,
+                                            height: .98,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: -1))),
+                                Text(
+                                    'SIDE ${String.fromCharCode(65 + index % 26)}',
                                     style: const TextStyle(
-                                        fontSize: 30,
-                                        height: .98,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: -1))),
-                            Text('SIDE ${String.fromCharCode(65 + index % 26)}',
-                                style: const TextStyle(
-                                    fontSize: 10,
-                                    letterSpacing: 2,
-                                    fontWeight: FontWeight.w700)),
-                          ])),
-                ]))));
+                                        fontSize: 10,
+                                        letterSpacing: 2,
+                                        fontWeight: FontWeight.w700)),
+                              ])),
+                    ])))));
   }
 }
 
@@ -346,10 +349,12 @@ class _PlaylistFolder extends StatelessWidget {
       required this.totalCount,
       required this.index,
       required this.heroTag,
+      this.coverUrl,
       required this.onOpen,
       required this.onRename,
       required this.onDelete});
   final String name, heroTag;
+  final String? coverUrl;
   final int count, totalCount, index;
   final VoidCallback onOpen, onRename, onDelete;
 
@@ -360,6 +365,7 @@ class _PlaylistFolder extends StatelessWidget {
             count == totalCount ? '$count 首音乐' : '$count / $totalCount 首可用',
         index: index,
         heroTag: heroTag,
+        coverUrl: coverUrl,
         onOpen: onOpen,
         actions: [
           IconButton(

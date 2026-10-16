@@ -214,11 +214,47 @@ class HardButton extends StatelessWidget {
       ));
 }
 
-/// Decorative record sleeve; never an analysed waveform or actual album cover.
+/// Bounded image decode, with the existing artwork retained while loading or
+/// when a cover is unavailable. The surrounding widget supplies the shape.
+class TrackArtwork extends StatelessWidget {
+  const TrackArtwork({super.key, required this.url, required this.fallback});
+  final String? url;
+  final Widget fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    final uri = Uri.tryParse(url ?? '');
+    if (uri == null ||
+        !['https', 'http'].contains(uri.scheme) ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty) {
+      return fallback;
+    }
+    return ExcludeSemantics(child: LayoutBuilder(builder: (context, box) {
+      final width = box.maxWidth.isFinite ? box.maxWidth : 256.0;
+      final pixels = (width * MediaQuery.devicePixelRatioOf(context))
+          .ceil()
+          .clamp(64, 1024);
+      return Image.network(url!,
+          key: ValueKey(url),
+          fit: BoxFit.cover,
+          width: double.infinity,
+          height: double.infinity,
+          cacheWidth: pixels,
+          errorBuilder: (_, __, ___) => fallback,
+          frameBuilder: (_, child, frame, synchronous) =>
+              frame == null ? fallback : child);
+    }));
+  }
+}
+
+/// Real cover where available; the graphic record is the missing-cover fallback.
 class RecordSleeve extends StatelessWidget {
-  const RecordSleeve({super.key, this.size = 80, this.color = HB.mint});
+  const RecordSleeve(
+      {super.key, this.size = 80, this.color = HB.mint, this.coverUrl});
   final double size;
   final Color color;
+  final String? coverUrl;
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
       child: Container(
@@ -228,30 +264,35 @@ class RecordSleeve extends StatelessWidget {
               color: color,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: HB.ink, width: 1.5)),
-          child: Center(
-              child: Container(
-                  width: size * .7,
-                  height: size * .7,
-                  decoration: const BoxDecoration(
-                      shape: BoxShape.circle, color: HB.ink),
-                  child: Center(
+          child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: TrackArtwork(
+                  url: coverUrl,
+                  fallback: Center(
                       child: Container(
-                          width: size * .43,
-                          height: size * .43,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(color: HB.muted),
-                              color: HB.ink),
+                          width: size * .7,
+                          height: size * .7,
+                          decoration: const BoxDecoration(
+                              shape: BoxShape.circle, color: HB.ink),
                           child: Center(
                               child: Container(
-                                  width: size * .22,
-                                  height: size * .22,
-                                  decoration: const BoxDecoration(
+                                  width: size * .43,
+                                  height: size * .43,
+                                  decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: HB.apricot),
-                                  child: const Center(
-                                      child: Icon(Icons.circle,
-                                          size: 4, color: HB.ink))))))))));
+                                      border: Border.all(color: HB.muted),
+                                      color: HB.ink),
+                                  child: Center(
+                                      child: Container(
+                                          width: size * .22,
+                                          height: size * .22,
+                                          decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: HB.apricot),
+                                          child: const Center(
+                                              child: Icon(Icons.circle,
+                                                  size: 4,
+                                                  color: HB.ink))))))))))));
 }
 
 class PlaybackButton extends StatelessWidget {

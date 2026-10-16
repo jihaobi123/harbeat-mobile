@@ -15,16 +15,18 @@ void _openVinylPage(BuildContext context, Widget page) {
   ));
 }
 
-/// Collection artwork is an original graphic sleeve, not album metadata.
+/// A real cover in its sleeve, with an exposed record and a matching label.
 class _VinylDisplay extends StatelessWidget {
   const _VinylDisplay(
       {required this.title,
       required this.subtitle,
       required this.index,
       required this.heroTag,
+      this.coverUrl,
       required this.onOpen,
       this.actions = const []});
   final String title, subtitle, heroTag;
+  final String? coverUrl;
   final int index;
   final VoidCallback onOpen;
   final List<Widget> actions;
@@ -47,70 +49,72 @@ class _VinylDisplay extends StatelessWidget {
                         AspectRatio(
                             aspectRatio: 1.05,
                             child: LayoutBuilder(
-                                builder: (_, box) =>
-                                    Stack(clipBehavior: Clip.none, children: [
-                                      Positioned(
-                                          right: 0,
-                                          top: 2,
-                                          width: box.maxWidth * .86,
-                                          height: box.maxWidth * .86,
-                                          child: Hero(
-                                              tag: heroTag,
-                                              child: _VinylDisc(color: color))),
-                                      Positioned(
-                                          left: 0,
-                                          right: box.maxWidth * .23,
-                                          bottom: 5,
-                                          height: box.maxHeight * .79,
-                                          child: Container(
-                                              decoration: BoxDecoration(
-                                                  color: color,
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                  border: Border.all(
-                                                      color: HB.ink,
-                                                      width: 1.5),
-                                                  boxShadow: const [
-                                                    BoxShadow(
-                                                        color: HB.ink,
-                                                        offset: Offset(0, 3))
-                                                  ]),
-                                              padding: const EdgeInsets.all(12),
-                                              child: ExcludeSemantics(
-                                                  child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: [
-                                                    const Text('HARBEAT',
-                                                        textScaler: TextScaler
-                                                            .noScaling,
-                                                        style: TextStyle(
-                                                            fontSize: 9,
-                                                            letterSpacing: 1.5,
-                                                            fontWeight:
-                                                                FontWeight
-                                                                    .w800)),
-                                                    Icon(
-                                                        index.isEven
-                                                            ? Icons
-                                                                .graphic_eq_rounded
-                                                            : Icons
-                                                                .album_outlined,
-                                                        size: 40,
-                                                        color: HB.deepTeal),
-                                                    Text(
-                                                        'VOL. ${(index + 1).toString().padLeft(2, '0')}',
-                                                        textScaler: TextScaler
-                                                            .noScaling,
-                                                        style: const TextStyle(
-                                                            fontSize: 11,
-                                                            letterSpacing: 2)),
-                                                  ])))),
-                                    ]))),
+                                builder:
+                                    (_, box) => Stack(
+                                            clipBehavior: Clip.none,
+                                            children: [
+                                              Positioned(
+                                                  right: 0,
+                                                  top: 2,
+                                                  width: box.maxWidth * .86,
+                                                  height: box.maxWidth * .86,
+                                                  child: Hero(
+                                                      tag: heroTag,
+                                                      child: _VinylDisc(
+                                                          color: color,
+                                                          coverUrl: coverUrl))),
+                                              Positioned(
+                                                  left: 0,
+                                                  right: box.maxWidth * .23,
+                                                  bottom: 5,
+                                                  height: box.maxHeight * .79,
+                                                  child: Container(
+                                                      decoration: BoxDecoration(
+                                                          color: color,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(12),
+                                                          border: Border.all(
+                                                              color: HB.ink,
+                                                              width: 1.5),
+                                                          boxShadow: const [
+                                                            BoxShadow(
+                                                                color: HB.ink,
+                                                                offset: Offset(
+                                                                    0, 3))
+                                                          ]),
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              2),
+                                                      child: ExcludeSemantics(
+                                                          child: ClipRRect(
+                                                              borderRadius: BorderRadius.circular(9),
+                                                              child: TrackArtwork(
+                                                                  url: coverUrl,
+                                                                  fallback: Padding(
+                                                                      padding: const EdgeInsets.all(10),
+                                                                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                                                                        const Text(
+                                                                            'HARBEAT',
+                                                                            textScaler: TextScaler
+                                                                                .noScaling,
+                                                                            style: TextStyle(
+                                                                                fontSize: 9,
+                                                                                letterSpacing: 1.5,
+                                                                                fontWeight: FontWeight.w800)),
+                                                                        Icon(
+                                                                            index.isEven
+                                                                                ? Icons.graphic_eq_rounded
+                                                                                : Icons.album_outlined,
+                                                                            size: 40,
+                                                                            color: HB.deepTeal),
+                                                                        Text(
+                                                                            'VOL. ${(index + 1).toString().padLeft(2, '0')}',
+                                                                            textScaler:
+                                                                                TextScaler.noScaling,
+                                                                            style: const TextStyle(fontSize: 11, letterSpacing: 2)),
+                                                                      ]))))))),
+                                            ]))),
                         const SizedBox(height: 12),
                         Text(title,
                             maxLines: 2,
@@ -166,6 +170,7 @@ class _SavedVinylShelf extends StatelessWidget {
                                 : _VinylDisplay(
                                     title: items[start + slot].title,
                                     subtitle: items[start + slot].artist,
+                                    coverUrl: items[start + slot].coverUrl,
                                     index: start + slot,
                                     heroTag: 'saved:${items[start + slot].id}',
                                     onOpen: () => _openVinylPage(
@@ -194,9 +199,11 @@ class _SavedVinylPage extends StatelessWidget {
 }
 
 class _VinylDisc extends StatefulWidget {
-  const _VinylDisc({this.color = HB.apricot, this.playing = false});
+  const _VinylDisc(
+      {this.color = HB.apricot, this.playing = false, this.coverUrl});
   final Color color;
   final bool playing;
+  final String? coverUrl;
   @override
   State<_VinylDisc> createState() => _VinylDiscState();
 }
@@ -239,9 +246,28 @@ class _VinylDiscState extends State<_VinylDisc>
           child: RotationTransition(
               key: const ValueKey('vinyl-rotation'),
               turns: spin,
-              child: CustomPaint(
-                  painter: _VinylPainter(widget.color),
-                  size: const Size.square(160)))));
+              child: Stack(alignment: Alignment.center, children: [
+                CustomPaint(
+                    painter: _VinylPainter(widget.color),
+                    size: const Size.square(160)),
+                Positioned.fill(
+                    child: Center(
+                        child: FractionallySizedBox(
+                            widthFactor: .38,
+                            heightFactor: .38,
+                            child: ClipOval(
+                                child: TrackArtwork(
+                                    url: widget.coverUrl,
+                                    fallback: const SizedBox.expand()))))),
+                if (widget.coverUrl != null)
+                  Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                          color: HB.paper,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: HB.ink, width: 1))),
+              ]))));
 }
 
 class _VinylPainter extends CustomPainter {
@@ -546,8 +572,8 @@ class _VinylPlaylistPageState extends State<_VinylPlaylistPage>
                                                                 railWidth >= 120
                                                                     ? 12
                                                                     : largeText
-                                                                        ? -48
-                                                                        : -60,
+                                                                        ? -32
+                                                                        : -48,
                                                             width: largeText
                                                                 ? 112
                                                                 : 160,
@@ -558,6 +584,9 @@ class _VinylPlaylistPageState extends State<_VinylPlaylistPage>
                                                                 tag: widget
                                                                     .heroTag,
                                                                 child: _VinylDisc(
+                                                                    coverUrl:
+                                                                        current
+                                                                            ?.coverUrl,
                                                                     color: HB
                                                                         .apricot,
                                                                     playing:
@@ -748,7 +777,8 @@ class _LinkedTrackTile extends StatelessWidget {
                   child: Padding(
                       padding: const EdgeInsets.fromLTRB(14, 16, 4, 16),
                       child: Row(children: [
-                        RecordSleeve(size: 38, color: color),
+                        RecordSleeve(
+                            size: 38, color: color, coverUrl: track.coverUrl),
                         const SizedBox(width: 10),
                         Expanded(
                             child: Column(
