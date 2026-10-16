@@ -345,99 +345,31 @@ class _PlaylistFolder extends StatelessWidget {
       required this.count,
       required this.totalCount,
       required this.index,
+      required this.heroTag,
       required this.onOpen,
       required this.onRename,
       required this.onDelete});
-  final String name;
-  final int count;
-  final int totalCount;
-  final int index;
+  final String name, heroTag;
+  final int count, totalCount, index;
   final VoidCallback onOpen, onRename, onDelete;
+
   @override
-  Widget build(BuildContext context) {
-    final color =
-        [HB.mint, HB.lavender, HB.peach, const Color(0xFFD9E8FB)][index % 4];
-    return Padding(
-        padding: const EdgeInsets.only(top: 26, bottom: 5),
-        child: Stack(clipBehavior: Clip.none, children: [
-          Positioned(
-              top: -25,
-              left: 16,
-              right: 16,
-              height: 55,
-              child: ExcludeSemantics(
-                  child: Transform.rotate(
-                      angle: index.isEven ? -.07 : .07,
-                      child: Container(
-                          decoration: BoxDecoration(
-                              color: HB.white,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: HB.ink, width: 1.5)),
-                          child: const Align(
-                              alignment: Alignment.topRight,
-                              child: Padding(
-                                  padding: EdgeInsets.all(6),
-                                  child: Icon(Icons.album_outlined,
-                                      size: 20))))))),
-          Positioned(
-              top: -14,
-              left: 0,
-              width: 70,
-              height: 32,
-              child: DecoratedBox(
-                  decoration: BoxDecoration(
-                      color: color,
-                      borderRadius:
-                          const BorderRadius.vertical(top: Radius.circular(10)),
-                      border: Border.all(color: HB.ink, width: 1.5)))),
-          HardCard(
-              color: color,
-              padding: const EdgeInsets.fromLTRB(12, 18, 12, 6),
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    InkWell(
-                        onTap: onOpen,
-                        child: Semantics(
-                            button: true,
-                            label: '打开歌单 $name',
-                            child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(Icons.library_music_outlined,
-                                      size: 28, color: HB.deepTeal),
-                                  const SizedBox(height: 16),
-                                  SizedBox(
-                                      height: MediaQuery.textScalerOf(context)
-                                              .scale(16) *
-                                          3,
-                                      child: Text(name,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: const TextStyle(
-                                              fontSize: 16,
-                                              height: 1.5,
-                                              fontWeight: FontWeight.w800))),
-                                  Text(
-                                      count == totalCount
-                                          ? '$count 首音乐'
-                                          : '$count / $totalCount 首可用',
-                                      style: const TextStyle(
-                                          fontSize: 14, color: HB.muted)),
-                                ]))),
-                    const SizedBox(height: 8),
-                    Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                      IconButton(
-                          onPressed: onRename,
-                          icon: const Icon(Icons.edit_outlined, size: 20),
-                          tooltip: '重命名歌单'),
-                      IconButton(
-                          onPressed: onDelete,
-                          icon: const Icon(Icons.delete_outline_rounded,
-                              size: 20),
-                          tooltip: '删除歌单'),
-                    ]),
-                  ])),
-        ]));
-  }
+  Widget build(BuildContext context) => _VinylDisplay(
+        title: name,
+        subtitle:
+            count == totalCount ? '$count 首音乐' : '$count / $totalCount 首可用',
+        index: index,
+        heroTag: heroTag,
+        onOpen: onOpen,
+        actions: [
+          IconButton(
+              onPressed: onRename,
+              icon: const Icon(Icons.edit_outlined, size: 20),
+              tooltip: '重命名歌单'),
+          IconButton(
+              onPressed: onDelete,
+              icon: const Icon(Icons.delete_outline_rounded, size: 20),
+              tooltip: '删除歌单'),
+        ],
+      );
 }

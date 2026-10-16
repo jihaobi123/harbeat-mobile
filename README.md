@@ -2,7 +2,7 @@
 
 手机先完成选歌、播放与方向控制，饰品作为可选快捷控制。界面采用浅色背景、青绿与杏黄、细描边圆角卡片；播放、音乐、我的三个主入口保持不变。
 
-当前版本为 **Android Preview 0.1.8+10**：按 2026-10-16 UI 指南更新视觉，同时保留风格/时长舞程与连续混音入口。见 [本次改动和验证说明](docs/ui-refresh-20261016.md)。首次拉取仓库请先阅读 [环境与复现步骤](docs/release-0.1.6.md)，Android 打包前需准备 V3 引擎素材。
+当前版本为 **Android Preview 0.1.9+11**：收藏与歌单采用黑胶陈列，展开后左侧唱片轨道、右侧挂环歌曲清单；保留风格/时长舞程与连续混音入口。见 [本次改动和验证说明](docs/vinyl-playlists-20261016.md)。首次拉取仓库请先阅读 [环境与复现步骤](docs/release-0.1.6.md)，Android 打包前需准备 V3 引擎素材。
 
 ## 运行
 
@@ -47,7 +47,7 @@ python -m http.server 8765 --bind 127.0.0.1 --directory build/web
 
 ### Android 测试安装包
 
-当前产物：`outputs/HarBeat-Preview-20261016-UI-arm64.apk`，版本 0.1.8 (10)，校验值与真机验证见 [交付说明](docs/ui-refresh-20261016.md)。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；只用安全安装器保留数据更新。
+当前产物：`outputs/HarBeat-Preview-20261016-Vinyl-arm64.apk`，版本 0.1.9 (11)，校验值与真机验证见 [交付说明](docs/vinyl-playlists-20261016.md)。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；只用安全安装器保留数据更新。
 
 默认构建使用并存预览包名，只有显式 `-PharbeatPreview=false` 才使用原包名。此次修复了应用未启用 Kotlin 插件、audio_session 0.2.4 与关闭内置 Kotlin 的兼容问题，以及网络配置缺少 includeSubdomains 属性的发布检查错误。Gradle 限制为 1536MB 堆、1 个 worker 和 2 个可用处理器，避免本机原生内存不足。
 

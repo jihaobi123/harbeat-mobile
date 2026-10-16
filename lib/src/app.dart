@@ -17,6 +17,7 @@ part 'phone_screens.dart';
 part 'backend_screen.dart';
 part 'upload_screen.dart';
 part 'music_widgets.dart';
+part 'vinyl_widgets.dart';
 
 class HarBeatApp extends StatefulWidget {
   const HarBeatApp({super.key, this.repository, this.localStore, this.audio});
@@ -119,9 +120,11 @@ class PageFrame extends StatelessWidget {
       {super.key,
       required this.label,
       required this.title,
+      this.scrollKey,
       required this.children});
   final String label;
   final String title;
+  final String? scrollKey;
   final List<Widget> children;
 
   @override
@@ -129,6 +132,7 @@ class PageFrame extends StatelessWidget {
       child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 720),
           child: ListView(
+            key: ValueKey(scrollKey ?? label),
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 128),
             children: [
               Row(children: [
@@ -171,65 +175,68 @@ class MusicScreen extends StatelessWidget {
   final AppController c;
 
   @override
-  Widget build(BuildContext context) =>
-      PageFrame(label: 'MUSIC / PERSONAL', title: '发现下一首心动。', children: [
-        if (c.musicSection != 1) ...[
-          _SearchShortcut(c),
-          const SizedBox(height: 16),
-        ],
-        SegmentedButton<int>(
-            segments: const [
-              ButtonSegment(value: 0, label: Text('推荐')),
-              ButtonSegment(value: 1, label: Text('搜索')),
-              ButtonSegment(value: 2, label: Text('曲库')),
+  Widget build(BuildContext context) => PageFrame(
+          label: 'MUSIC / PERSONAL',
+          title: '发现下一首心动。',
+          scrollKey: 'music-${c.musicSection}',
+          children: [
+            if (c.musicSection != 1) ...[
+              _SearchShortcut(c),
+              const SizedBox(height: 16),
             ],
-            selected: {
-              c.musicSection >= 2 ? 2 : c.musicSection
-            },
-            onSelectionChanged: (selection) =>
-                c.setMusicSection(selection.single),
-            style: SegmentedButton.styleFrom(
-                minimumSize: const Size(48, 48),
-                selectedBackgroundColor: HB.mint,
-                selectedForegroundColor: HB.ink,
-                foregroundColor: HB.muted,
-                backgroundColor: HB.white,
-                side: const BorderSide(color: HB.ink, width: 1.5),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)))),
-        const SizedBox(height: 20),
-        if (c.musicSection == 0)
-          ..._recommendations(context)
-        else if (c.musicSection == 1)
-          SearchImportPanel(c)
-        else ...[
-          Row(children: [
-            Expanded(
-                child: HardButton(
-                    label: '已收藏',
-                    selected: c.musicSection == 2,
-                    color: c.musicSection == 2 ? HB.acid : HB.white,
-                    onPressed: () => c.setMusicSection(2))),
-            const SizedBox(width: 8),
-            Expanded(
-                child: HardButton(
-                    label: '歌单',
-                    selected: c.musicSection == 3,
-                    color: c.musicSection == 3 ? HB.acid : HB.white,
-                    onPressed: () => c.setMusicSection(3))),
-          ]),
-          const SizedBox(height: 20),
-          if (c.musicSection == 2)
-            ..._library(context)
-          else
-            ..._playlists(context),
-          const SizedBox(height: 12),
-          HardButton(
-              label: '导入更多音乐',
-              color: HB.white,
-              onPressed: () => c.setMusicSection(1)),
-        ],
-      ]);
+            SegmentedButton<int>(
+                segments: const [
+                  ButtonSegment(value: 0, label: Text('推荐')),
+                  ButtonSegment(value: 1, label: Text('搜索')),
+                  ButtonSegment(value: 2, label: Text('曲库')),
+                ],
+                selected: {
+                  c.musicSection >= 2 ? 2 : c.musicSection
+                },
+                onSelectionChanged: (selection) =>
+                    c.setMusicSection(selection.single),
+                style: SegmentedButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    selectedBackgroundColor: HB.mint,
+                    selectedForegroundColor: HB.ink,
+                    foregroundColor: HB.muted,
+                    backgroundColor: HB.white,
+                    side: const BorderSide(color: HB.ink, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)))),
+            const SizedBox(height: 20),
+            if (c.musicSection == 0)
+              ..._recommendations(context)
+            else if (c.musicSection == 1)
+              SearchImportPanel(c)
+            else ...[
+              Row(children: [
+                Expanded(
+                    child: HardButton(
+                        label: '已收藏',
+                        selected: c.musicSection == 2,
+                        color: c.musicSection == 2 ? HB.acid : HB.white,
+                        onPressed: () => c.setMusicSection(2))),
+                const SizedBox(width: 8),
+                Expanded(
+                    child: HardButton(
+                        label: '歌单',
+                        selected: c.musicSection == 3,
+                        color: c.musicSection == 3 ? HB.acid : HB.white,
+                        onPressed: () => c.setMusicSection(3))),
+              ]),
+              const SizedBox(height: 20),
+              if (c.musicSection == 2)
+                ..._library(context)
+              else
+                ..._playlists(context),
+              const SizedBox(height: 12),
+              HardButton(
+                  label: '导入更多音乐',
+                  color: HB.white,
+                  onPressed: () => c.setMusicSection(1)),
+            ],
+          ]);
 
   List<Widget> _recommendations(BuildContext context) => [
         if (c.nasRepository == null) ...[
@@ -355,18 +362,7 @@ class MusicScreen extends StatelessWidget {
             const SizedBox(height: 12),
             HardButton(label: '去选音乐', onPressed: () => c.setMusicSection(0))
           ]
-        : items
-            .map((t) => TrackCard(
-                track: t,
-                playing: c.nowPlaying?.id == t.id && c.isPlaying,
-                saved: true,
-                onPlay: () async {
-                  await c.play(t);
-                  c.setTab(0);
-                },
-                onSave: () {},
-                onOpen: () => _openTrack(context, c, t)))
-            .toList();
+        : [_SavedVinylShelf(c, items)];
   }
 
   List<Widget> _playlists(BuildContext context) => [
@@ -407,11 +403,9 @@ class MusicScreen extends StatelessWidget {
             .length,
         totalCount: playlist.trackIds.length,
         index: index,
-        onOpen: () => Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => AnimatedBuilder(
-                animation: c,
-                builder: (_, __) =>
-                    PlaylistDetail(c: c, playlistIndex: index)))),
+        heroTag: 'playlist:${playlist.id}',
+        onOpen: () =>
+            _openVinylPage(context, PlaylistDetail(c: c, playlistIndex: index)),
         onRename: () => _renamePlaylist(context, index, playlist.name),
         onDelete: () => _deletePlaylist(context, index, playlist.name));
   }
@@ -480,95 +474,32 @@ class PlaylistDetail extends StatelessWidget {
   final int playlistIndex;
 
   @override
-  Widget build(BuildContext context) {
-    if (playlistIndex >= c.playlists.length) {
-      return const Scaffold(body: Center(child: Text('歌单已删除')));
-    }
-    final playlist = c.playlists[playlistIndex];
-    final items = playlist.trackIds
-        .map((id) => c.tracks.where((track) => track.id == id).firstOrNull)
-        .whereType<Track>()
-        .toList();
-    return Scaffold(
-        appBar: AppBar(backgroundColor: HB.paper),
-        body: Padding(
-            padding: const EdgeInsets.all(16),
-            child:
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(playlist.name,
-                  style: Theme.of(context).textTheme.displayLarge),
-              const SizedBox(height: 10),
-              Row(children: [
-                Expanded(
-                    child: HardButton(
-                        label: '播放全部',
-                        onPressed: !items.any((t) => t.canPlay)
-                            ? null
-                            : () {
-                                c.setQueue(playlist.trackIds);
-                                c.play(items.firstWhere((t) => t.canPlay));
-                                c.setTab(0);
-                                Navigator.pop(context);
-                              })),
-                const SizedBox(width: 8),
-                Expanded(
-                    child: HardButton(
-                        label: '加入播放队列',
-                        color: HB.white,
-                        onPressed: !items.any((t) => t.canPlay)
-                            ? null
-                            : () {
-                                c.setQueue([...c.queue, ...playlist.trackIds]);
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('可用音频已加入播放队列')));
-                              }))
-              ]),
-              const SizedBox(height: 18),
-              Expanded(
-                  child: items.isEmpty
-                      ? _Placeholder(
-                          section: playlist.trackIds.isEmpty ? '空歌单' : '歌曲暂不可用',
-                          copy: playlist.trackIds.isEmpty
-                              ? '从歌曲详情把音乐加入这里。'
-                              : '${playlist.trackIds.length} 首歌曲尚未加载，刷新曲库后重试。')
-                      : ReorderableListView.builder(
-                          itemCount: items.length,
-                          onReorder: (oldIndex, newIndex) =>
-                              c.movePlaylistTrack(
-                                  playlistIndex,
-                                  playlist.trackIds.indexOf(items[oldIndex].id),
-                                  playlist.trackIds.indexOf(items[
-                                          newIndex > oldIndex
-                                              ? newIndex - 1
-                                              : newIndex]
-                                      .id)),
-                          itemBuilder: (_, index) {
-                            final track = items[index];
-                            return ListTile(
-                                key: ValueKey(track.id),
-                                tileColor: index.isEven ? HB.white : HB.paper,
-                                leading: Container(
-                                    width: 42,
-                                    height: 42,
-                                    color: track.color,
-                                    alignment: Alignment.center,
-                                    child: Text(track.bpmLabel,
-                                        style: const TextStyle(
-                                            fontWeight: FontWeight.w900))),
-                                title: Text(track.title,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w900)),
-                                subtitle: Text(
-                                    '${track.artist} · ${track.resourceLabel}'),
-                                trailing: IconButton(
-                                    onPressed: () => c.removeFromPlaylist(
-                                        playlistIndex, track.id),
-                                    icon: const Icon(Icons.close),
-                                    tooltip: '从歌单移除'));
-                          }))
-            ])));
-  }
+  Widget build(BuildContext context) => AnimatedBuilder(
+      animation: c,
+      builder: (_, __) {
+        if (playlistIndex >= c.playlists.length) {
+          return Scaffold(
+              appBar: AppBar(), body: const Center(child: Text('歌单已删除')));
+        }
+        final playlist = c.playlists[playlistIndex];
+        final items = playlist.trackIds
+            .map((id) => c.tracks.where((track) => track.id == id).firstOrNull)
+            .whereType<Track>()
+            .toList();
+        return _VinylPlaylistPage(
+          c: c,
+          title: playlist.name,
+          items: items,
+          heroTag: 'playlist:${playlist.id}',
+          missingCount: playlist.trackIds.length - items.length,
+          onRemove: (track) => c.removeFromPlaylist(playlistIndex, track.id),
+          onReorder: (oldIndex, newIndex) => c.movePlaylistTrack(
+              playlistIndex,
+              playlist.trackIds.indexOf(items[oldIndex].id),
+              playlist.trackIds.indexOf(
+                  items[newIndex > oldIndex ? newIndex - 1 : newIndex].id)),
+        );
+      });
 }
 
 class TrackCard extends StatelessWidget {
