@@ -33,3 +33,15 @@ powershell -File tools/install_preview.ps1 -Apk build/app/outputs/flutter-apk/ap
 - 手机测试时仍无可用网络，NAS 原曲播放会显示连接错误；本次不宣称通过在线音频复测。原算法没有改动。
 - ARM64 APK：`outputs/HarBeat-Preview-20261016-Vinyl-arm64.apk`，332,266,962 bytes。
 - SHA-256：`b5f041796607e870867a6e030f92bc54e5b92c808ac3976ea34e62d577d817fe`。
+
+## 真机动效恢复（2026-10-16）
+
+用户反馈手机没有过渡动画后，检查发现 MIX 4 的 `animator_duration_scale`、`transition_animation_scale`、`window_animation_scale` 均为 `0`。其中关闭 Animator 动画会使 Flutter 的 `MediaQuery.disableAnimationsOf(context)` 返回减少动态效果状态，唱片展开直接显示最终布局，黑胶旋转也按无障碍设计停止。
+
+在用户要求恢复动效后，已将这台测试手机的三项动画缩放恢复为 `1`（正常速度），并在原有 0.1.9+11 安装包上录屏确认：
+
+- 收藏唱片展开时有共享唱片移动、页面淡入、左侧轨道及右侧歌曲卡片进入过渡；返回时唱片回到陈列架。
+- 本地 QA 音频播放期间黑胶持续旋转，暂停后保持在暂停时的角度。
+- 无需重新构建或安装 APK；本次没有修改播放或混音逻辑。
+
+如再次遇到所有动效消失，先检查 Android「开发者选项」中的窗口动画缩放、过渡动画缩放、Animator 时长缩放，以及系统无障碍的减少动态效果设置。视觉验收应在正常动画速度下进行；如果测试临时关闭了动画，完成后恢复测试前的设置。应用继续尊重用户主动选择的减少动态效果偏好，安装程序不自动修改系统设置。
