@@ -16,13 +16,13 @@ class PreviewHandler(SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_GET(self):
-        if not self.path.startswith('/api/analysis-lab/'):
+        if not self.path.startswith(('/api/analysis-lab/', '/analysis-lab-static/mobile-artwork-v1/')):
             return super().do_GET()
         # Development-only, loopback-bound, fixed upstream and read-only paths.
         # Never forward cookies, Authorization, user-supplied URLs or write verbs.
         if self.headers.get('Host') not in ('127.0.0.1:8765','localhost:8765') or self.headers.get('Origin') not in (None,'http://127.0.0.1:8765','http://localhost:8765'):
             return self.send_error(403)
-        if not re.fullmatch(r'/api/analysis-lab/(reports(?:/[a-f0-9]{64})?|media/[a-f0-9]{64})',self.path):
+        if not re.fullmatch(r'(?:/api/analysis-lab/(reports(?:/[a-f0-9]{64})?|media/[a-f0-9]{64})|/analysis-lab-static/mobile-artwork-v1/(?:catalog\.json|[a-f0-9]{64}\.jpg))',self.path):
             return self.send_error(404)
         headers={'Accept-Encoding':'identity'}
         value=self.headers.get('Range')

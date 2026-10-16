@@ -90,10 +90,12 @@ class Track {
   final bool detailLoaded;
 
   /// Artwork can change independently of the verified audio/analysis version.
-  Track withCoverUrl(String? value) => Track(
+  Track withCoverUrl(String? value, {String? artworkArtist}) => Track(
         id: id,
         title: title,
-        artist: artist,
+        artist: artist == 'NAS 音乐库' && artworkArtist?.isNotEmpty == true
+            ? artworkArtist!
+            : artist,
         style: style,
         bpm: bpm,
         energy: energy,

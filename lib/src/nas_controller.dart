@@ -32,6 +32,10 @@ extension NasFlow on AppController {
   }
 
   List<Track> get nasTracks => tracks.where((t) => t.isNas).toList();
+  List<Track> get nasDisplayTracks => [
+        ...nasTracks.where((t) => t.coverUrl != null),
+        ...nasTracks.where((t) => t.coverUrl == null),
+      ];
   List<Track> get featuredNasTracks => _byIds(nasRepository?.featuredIds ?? []);
   void _ensureNasPlaylist() {
     final ids = nasRepository?.featuredIds ?? [];

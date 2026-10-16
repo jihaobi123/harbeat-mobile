@@ -330,7 +330,7 @@ class MusicScreen extends StatelessWidget {
 
   List<Widget> _nasRecommendations(BuildContext context) => [
         _SectionTitle('挑一首，开始今天。', action: '${c.nasTracks.length} 首音乐'),
-        _TrackGallery(c, c.nasTracks.take(4).toList()),
+        _TrackGallery(c, c.nasDisplayTracks.take(4).toList()),
         const SizedBox(height: 8),
         _FeaturedMixShelf(c),
         const SizedBox(height: 24),
@@ -348,7 +348,7 @@ class MusicScreen extends StatelessWidget {
           _NetworkNotice(c.nasError!, onRetry: c.refreshNas),
         const SizedBox(height: 8),
         _TrackGallery(
-            c, c.nasTracks.skip(4).take(c.nasVisibleCount - 4).toList()),
+            c, c.nasDisplayTracks.skip(4).take(c.nasVisibleCount - 4).toList()),
         if (c.nasTracks.length > c.nasVisibleCount)
           HardButton(
               label: '更多 NAS 音乐', color: HB.mint, onPressed: c.showMoreNas),

@@ -2,7 +2,7 @@
 
 手机先完成选歌、播放与方向控制，饰品作为可选快捷控制。界面采用浅色背景、青绿与杏黄、细描边圆角卡片；播放、音乐、我的三个主入口保持不变。
 
-当前版本为 **Android Preview 0.1.9+11**：收藏与歌单采用黑胶陈列，展开后左侧唱片轨道、右侧挂环歌曲清单；保留风格/时长舞程与连续混音入口。见 [本次改动和验证说明](docs/vinyl-playlists-20261016.md)。首次拉取仓库请先阅读 [环境与复现步骤](docs/release-0.1.6.md)，Android 打包前需准备 V3 引擎素材。
+当前版本为 **Android Preview 0.1.10+12**：NAS 真实封面接入首页、收藏封套、黑胶中心、歌单和播放器；保留挂环卡片、展开过渡、风格/时长舞程与连续混音入口。见 [封面接入和验证说明](docs/nas-cover-integration-20261016.md) 与 [黑胶界面说明](docs/vinyl-playlists-20261016.md)。首次拉取仓库请先阅读 [环境与复现步骤](docs/release-0.1.6.md)，Android 打包前需准备 V3 引擎素材。
 
 ## 运行
 
@@ -47,7 +47,7 @@ python -m http.server 8765 --bind 127.0.0.1 --directory build/web
 
 ### Android 测试安装包
 
-当前产物：`outputs/HarBeat-Preview-20261016-Vinyl-arm64.apk`，版本 0.1.9 (11)，校验值与真机验证见 [交付说明](docs/vinyl-playlists-20261016.md)。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；只用安全安装器保留数据更新。
+当前产物：`outputs/HarBeat-Preview-20261016-Covers-arm64.apk`，版本 0.1.10 (12)，校验值与真机验证见 [交付说明](docs/nas-cover-integration-20261016.md)。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；只用安全安装器保留数据更新。
 
 默认构建使用并存预览包名，只有显式 `-PharbeatPreview=false` 才使用原包名。此次修复了应用未启用 Kotlin 插件、audio_session 0.2.4 与关闭内置 Kotlin 的兼容问题，以及网络配置缺少 includeSubdomains 属性的发布检查错误。Gradle 限制为 1536MB 堆、1 个 worker 和 2 个可用处理器，避免本机原生内存不足。
 
@@ -73,7 +73,7 @@ flutter build apk --release --target-platform android-arm64
 
 ## 实现边界
 
-- 推荐页接入 NAS 曲库并按目录歌曲 ID 合并分析版本；快照含 208 首，启动后后台刷新。个人上传曲库与 NAS 曲库分别保留。六首 Hip-Hop 精选及完整 V3 混音见 [接入与算法说明](docs/nas-hiphop-v3-20260920.md)。旧演示目录仍共用 `assets/audio/preview.wav`，不会用于 NAS 播放。
+- 推荐页接入 NAS 曲库并按目录歌曲 ID 合并分析版本；快照含 391 首，其中 172 首有真实封面，启动后后台刷新在线目录与封面。个人上传曲库与 NAS 曲库分别保留。六首 Hip-Hop 精选及完整 V3 混音见 [接入与算法说明](docs/nas-hiphop-v3-20260920.md)。旧演示目录仍共用 `assets/audio/preview.wav`，不会用于 NAS 播放。
 - “播放 V3 混音”保留原完整离线试听；Android V3 入口现已进入原 Flutter 播放页，通过本机引擎实时混音。新增风格/时长舞程使用 NAS 的可用曲库，不限原六首。详见 [自动舞程接入与验证](docs/dance-set-20260921.md)。网页和 iOS 仍使用原外部试听入口。
 - Android/iOS 使用 SoLoud 共享音频时钟执行双路原曲交叉淡化；“下一首 / 混入”支持当前队列，方向请求使用已分析风格/能量候选。下载完成后才按音频时钟规划切换。网页只做单曲播放；4 秒调度仅留在显式单元测试替身中。
 - 16 拍预览按示例 BPM 截取音频开头并循环，最多到音频末尾，未做真实下拍对齐；未分析的本地文件不开放此功能。

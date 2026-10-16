@@ -24,6 +24,8 @@ class NasCatalogRepository {
   final Map<String, Track> _details = {};
   final Map<String, String> _detailReports = {};
   final Map<String, Map<String, dynamic>> _pinned = {};
+  final Map<String, Map<String, dynamic>> _artwork = {};
+  static const artworkPath = '/analysis-lab-static/mobile-artwork-v1';
   List<String> featuredIds = [];
   String snapshotDate = '';
   static const playlistId = 'nas-hiphop-v3-20260920';
@@ -49,6 +51,7 @@ class NasCatalogRepository {
 
   Future<List<Track>> bootstrap() async {
     final data = _map(jsonDecode(await _snapshotLoader()));
+    _readArtwork(data['artwork']);
     snapshotDate = data['date'] as String;
     featuredIds = (data['featured_ids'] as List).cast<String>();
     final reports = (data['reports'] as List).map(_map).toList();
@@ -64,14 +67,18 @@ class NasCatalogRepository {
       _details[item.key] = _parseDetail(item.value, row);
       _detailReports[item.key] = row['id'] as String;
     }
-    return tracks.map((t) => _details[t.id] ?? t).toList();
+    return tracks
+        .map((t) => _withArtwork(_details[t.id] ?? t, _index[t.id]!))
+        .toList();
   }
 
-  Future<dynamic> _get(String path) async {
+  Future<dynamic> _get(String path, {int timeoutSeconds = 35}) async {
     final request = http.Request('GET', baseUri.resolve(path))
       ..followRedirects = false;
-    final response = await http.Response.fromStream(await _client.send(request))
-        .timeout(const Duration(seconds: 35));
+    final response = await _client
+        .send(request)
+        .then(http.Response.fromStream)
+        .timeout(Duration(seconds: timeoutSeconds));
     if (response.statusCode != 200) {
       throw BackendException('NAS 曲库暂不可用（${response.statusCode}），请重试。');
     }
@@ -79,9 +86,54 @@ class NasCatalogRepository {
   }
 
   Future<List<Track>> refresh() async {
+    final artwork = _refreshArtwork();
     final data = await _get('/api/analysis-lab/reports');
     if (data is! List) throw const BackendException('NAS 目录格式不匹配。');
+    await artwork;
     return _readIndex(data.map(_map).toList());
+  }
+
+  Future<void> _refreshArtwork() async {
+    try {
+      _readArtwork(await _get('$artworkPath/catalog.json', timeoutSeconds: 10));
+    } catch (_) {
+      // A cover outage must not prevent music or discard the previous catalog.
+    }
+  }
+
+  void _readArtwork(dynamic value) {
+    final data = _map(value);
+    if (data['schema'] != 'harbeat.mobile-artwork.v1' ||
+        data['tracks'] is! List) {
+      return;
+    }
+    final next = <String, Map<String, dynamic>>{};
+    for (final raw in (data['tracks'] as List).take(10000)) {
+      final item = _map(raw);
+      final id = _string(item['catalog_track_id']) ?? '';
+      final sha = _string(item['audio_sha256']) ?? '';
+      final image = _string(item['cover_sha256']) ?? '';
+      if ((id.isEmpty || _catalogId.hasMatch(id)) &&
+          _hash.hasMatch(sha) &&
+          _hash.hasMatch(image)) {
+        next[id.isEmpty ? '*/$sha' : 'nas:$id/$sha'] = item;
+      }
+    }
+    _artwork
+      ..clear()
+      ..addAll(next);
+  }
+
+  Track _withArtwork(Track track, Map<String, dynamic> row) {
+    final sha = _map(row['audio'])['sha256'];
+    final image = _artwork['${track.id}/$sha'] ?? _artwork['*/$sha'];
+    return track.withCoverUrl(
+        image == null
+            ? null
+            : baseUri
+                .resolve('$artworkPath/${image['cover_sha256']}.jpg')
+                .toString(),
+        artworkArtist: _string(image?['artist']));
   }
 
   List<Track> _readIndex(List<Map<String, dynamic>> rows) {
@@ -110,9 +162,9 @@ class NasCatalogRepository {
     final tracks = next.entries.map((e) {
       if (_detailReports[e.key] == e.value['id'] &&
           _details.containsKey(e.key)) {
-        return _details[e.key]!;
+        return _withArtwork(_details[e.key]!, e.value);
       }
-      return _summary(e.key, e.value);
+      return _withArtwork(_summary(e.key, e.value), e.value);
     }).toList();
     tracks
         .sort((a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
@@ -145,13 +197,13 @@ class NasCatalogRepository {
     if (!force &&
         _detailReports[track.id] == row['id'] &&
         _details.containsKey(track.id)) {
-      return _details[track.id]!;
+      return _withArtwork(_details[track.id]!, row);
     }
     final report = _map(await _get('/api/analysis-lab/reports/${row['id']}'));
     final result = _parseDetail(report, row);
     _details[track.id] = result;
     _detailReports[track.id] = row['id'] as String;
-    return result;
+    return _withArtwork(result, row);
   }
 
   Track _parseDetail(Map<String, dynamic> r, Map<String, dynamic> row) {

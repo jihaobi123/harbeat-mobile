@@ -42,13 +42,13 @@ class CaptureAudio extends MemoryAudioService {
 
 void main() {
   test(
-      'NAS versions collapse into 208 songs; six are pinned to their render reports',
+      'NAS versions collapse into 391 songs; six are pinned to their render reports',
       () async {
     final r = repo();
     addTearDown(r.close);
     final tracks = await r.bootstrap();
-    expect(tracks.length, 208);
-    expect(tracks.map((t) => t.id).toSet().length, 208);
+    expect(tracks.length, 391);
+    expect(tracks.map((t) => t.id).toSet().length, 391);
     expect(r.featuredIds.length, 6);
     for (final id in r.featuredIds) {
       final t = tracks.singleWhere((t) => t.id == id);
@@ -59,7 +59,7 @@ void main() {
       expect(t.analysis['vocal_activity']['status'], 'ready');
     }
     final refreshed = await r.refresh();
-    expect(refreshed.length, 208);
+    expect(refreshed.length, 391);
     expect(
         refreshed.singleWhere((t) => t.id == r.featuredIds.first).analysisRunId,
         tracks.singleWhere((t) => t.id == r.featuredIds.first).analysisRunId);
@@ -127,7 +127,11 @@ void main() {
   test('legacy NAS music is playable without inventing unbound timing',
       () async {
     final doc = legacy();
+    // Bind this historical report to its own index, independently of newer
+    // production reports for the same song in the bundled snapshot.
+    final data = fixture()..['reports'] = [doc];
     final r = repo(
+        seed: jsonEncode(data),
         handler: (_) async =>
             http.Response.bytes(utf8.encode(jsonEncode(doc)), 200));
     addTearDown(r.close);
@@ -188,9 +192,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('播放 V3 混音'), findsOneWidget);
     expect(find.text('播放六首原曲'), findsOneWidget);
-    expect(c.nasTracks.length, 208);
+    expect(c.nasTracks.length, 391);
     await tester.scrollUntilVisible(find.text('NAS 推荐曲库'), 250);
-    expect(c.nasTracks.length, 208);
+    expect(c.nasTracks.length, 391);
     expect(tester.takeException(), isNull);
     c.renamePlaylist(c.playlists.indexOf(playlist), 'MY SIX');
     await tester.pump();
