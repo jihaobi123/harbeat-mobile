@@ -68,3 +68,7 @@ it('compares start times across different overlap lengths before choosing a cue'
  const result=nearbyPlan(a,b,10)
  expect(result?.start).toBe(12);expect(result?.window.id).toBe('long')
 })
+it('keeps a caller acceptance gate when selecting the actual nearby cue',async()=>{
+ const s=setup();await mixNearby({...s,acceptPlan:(plan:any)=>plan.start>=20} as any)
+ expect(s.player.arm.mock.calls[0][0].plan.start).toBeGreaterThanOrEqual(20)
+})

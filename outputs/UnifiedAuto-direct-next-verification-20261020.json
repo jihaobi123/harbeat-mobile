@@ -1,0 +1,507 @@
+{
+  "schema": "harbeat.mobile-direct-next-verification.v1",
+  "date": "2026-10-20",
+  "baseCommit": "6cb435e",
+  "branch": "codex/metric-mix-mobile-20261020",
+  "testedPage": "http://127.0.0.1:8766/",
+  "tab": "existing user tab, not a separate test page",
+  "bundle": "metric-engine-BquBIxcl.js",
+  "bundleSha256": "93f841cdf4d7c74fc5800db012710bab389998fdd5b81e5b7681be00fe97794f",
+  "rawSessionSha256": "04d31c526877fa845c8fdf35ecf910ec1d8adcde4d6c77727d978fce90301acb",
+  "tests": {
+    "typescriptPassed": 224,
+    "typescriptSkipped": 3,
+    "flutterPassed": 115,
+    "analyze": "no issues",
+    "typecheck": "passed",
+    "webBuild": "passed",
+    "review": "passed; explicit fallback, preferred retention and uncommitted automatic arm cancellation covered"
+  },
+  "cases": [
+    {
+      "origin": "user-direction",
+      "style": "Hip-Hop",
+      "energyLevel": 3,
+      "plan": {
+        "from": "track-c627eee8f3d2862aa161",
+        "to": "track-86141f55b6b1219e1c38",
+        "windowId": "w24-2",
+        "start": 31.63820861678004,
+        "end": 36.12,
+        "duration": 4.481791383219955,
+        "rate": 0.9996000000000008,
+        "bStart": 80.77,
+        "bEnd": 85.25,
+        "beatErrorMs": 41.79138321995879
+      },
+      "method": "original",
+      "nearbyRequest": {
+        "kind": "nearby_request",
+        "at": "2026-10-20T15:05:38.284Z",
+        "from": "track-c627eee8f3d2862aa161",
+        "to": "track-86141f55b6b1219e1c38",
+        "sourcePosition": 28.620498866213154
+      },
+      "waitUntilMixSeconds": 3.017709750566887,
+      "observations": [
+        {
+          "kind": "audio_observation",
+          "at": "2026-10-20T15:05:41.301Z",
+          "name": "交接开始",
+          "frame": 1756761,
+          "planId": "9a5136f5cd369f3818560b2a829af2c880ade3577260a3e7300400e27366e015",
+          "requestId": "original",
+          "observedFrame": 1756800,
+          "quantumStart": 1756672,
+          "quantumFrames": 128,
+          "late": 0,
+          "limiterDelayFrames": 221,
+          "peak": 0.6000000238418579,
+          "limiterGainAtObservation": 1,
+          "sessionMinimumLimiterGain": 1
+        },
+        {
+          "kind": "audio_observation",
+          "at": "2026-10-20T15:05:45.781Z",
+          "name": "B正文接管",
+          "frame": 1954408,
+          "planId": "9a5136f5cd369f3818560b2a829af2c880ade3577260a3e7300400e27366e015",
+          "requestId": "original",
+          "observedFrame": 1954432,
+          "quantumStart": 1954304,
+          "quantumFrames": 128,
+          "late": 0,
+          "limiterDelayFrames": 221,
+          "peak": 0.7675939798355103,
+          "limiterGainAtObservation": 1,
+          "sessionMinimumLimiterGain": 1
+        }
+      ],
+      "recommendation": {
+        "id": "track-86141f55b6b1219e1c38",
+        "title": "Straight (Battle Beat)",
+        "style": "Hip-Hop",
+        "energyLevel": 3,
+        "reason": "完整 2 小节 · 接管后 16 秒能量接近当前方向 · chorus附近",
+        "energy": {
+          "beforeDb": -8.635885033554771,
+          "afterDb": [
+            -10.779258290719033,
+            -10.83511030474609,
+            -11.59164293527577,
+            -10.293963500918341
+          ],
+          "deltasDb": [
+            -2.143373257164262,
+            -2.1992252711913185,
+            -2.9557579017209985,
+            -1.6580784673635698
+          ],
+          "targetDeltaDb": 0
+        },
+        "score": 0.672970875979291,
+        "qualityScore": 0.9416639229024955,
+        "energyPenalty": 0.2686930469232045,
+        "policy": "mobile-direction-quality-v1",
+        "qualityPolicy": "mobile-direction-nearby-v1",
+        "cue": {
+          "start": 31.63820861678004,
+          "end": 36.12,
+          "bStart": 80.77,
+          "bEnd": 85.25,
+          "bars": 2
+        },
+        "alternatives": [
+          {
+            "id": "track-86141f55b6b1219e1c38",
+            "title": "Straight (Battle Beat)",
+            "start": 29.418208616780042,
+            "windowId": "w24-2",
+            "score": 0.7463148953840031
+          },
+          {
+            "id": "track-d2d58531421de0eb9690",
+            "title": "HIPHOP",
+            "start": 29.418208616780042,
+            "windowId": "w8-2",
+            "score": 0.7213291357600649
+          },
+          {
+            "id": "track-cf23264f7eb3b1a888d1",
+            "title": "Pandaaaaaa",
+            "start": 29.418208616780042,
+            "windowId": "w24-2",
+            "score": 0.6387386123911603
+          }
+        ]
+      },
+      "renderSha256": "9a5136f5cd369f3818560b2a829af2c880ade3577260a3e7300400e27366e015"
+    },
+    {
+      "origin": "automatic",
+      "style": "Hip-Hop",
+      "energyLevel": 3,
+      "plan": {
+        "from": "track-86141f55b6b1219e1c38",
+        "to": "track-d2d58531421de0eb9690",
+        "windowId": "w0-4",
+        "start": 143.56802721088434,
+        "end": 152.54,
+        "duration": 8.971972789115647,
+        "rate": 1.0098125000000002,
+        "bStart": 9.1,
+        "bEnd": 18.16,
+        "beatErrorMs": 22.413464983713993
+      },
+      "method": "filter",
+      "nearbyRequest": null,
+      "waitUntilMixSeconds": null,
+      "observations": [
+        {
+          "kind": "audio_observation",
+          "at": "2026-10-20T15:06:44.101Z",
+          "name": "交接开始",
+          "frame": 4526233,
+          "planId": "861b04cb89ac86544ba7e609cde1f305bc1a9591b2ffa8166931bc5a214cdbf1",
+          "requestId": "filter",
+          "observedFrame": 4526336,
+          "quantumStart": 4526208,
+          "quantumFrames": 128,
+          "late": 0,
+          "limiterDelayFrames": 221,
+          "peak": 0.7675939798355103,
+          "limiterGainAtObservation": 1,
+          "sessionMinimumLimiterGain": 1
+        },
+        {
+          "kind": "audio_observation",
+          "at": "2026-10-20T15:06:53.072Z",
+          "name": "B正文接管",
+          "frame": 4921897,
+          "planId": "861b04cb89ac86544ba7e609cde1f305bc1a9591b2ffa8166931bc5a214cdbf1",
+          "requestId": "filter",
+          "observedFrame": 4921984,
+          "quantumStart": 4921856,
+          "quantumFrames": 128,
+          "late": 0,
+          "limiterDelayFrames": 221,
+          "peak": 0.7675939798355103,
+          "limiterGainAtObservation": 1,
+          "sessionMinimumLimiterGain": 1
+        }
+      ],
+      "recommendation": {
+        "id": "track-d2d58531421de0eb9690",
+        "title": "HIPHOP",
+        "style": "Hip-Hop",
+        "energyLevel": 3,
+        "reason": "完整 4 小节 · 接管后 16 秒能量接近当前方向 · outro附近",
+        "energy": {
+          "beforeDb": -10.21761890732944,
+          "afterDb": [
+            -10.33610949820205,
+            -10.802786975155614,
+            -10.485358278223726,
+            -10.279067351911271
+          ],
+          "deltasDb": [
+            -0.11849059087261082,
+            -0.5851680678261744,
+            -0.26773937089428657,
+            -0.061448444581831296
+          ],
+          "targetDeltaDb": 0
+        },
+        "score": 1.068437209364479,
+        "qualityScore": 1.099422603589726,
+        "energyPenalty": 0.030985394225247154,
+        "policy": "mobile-direction-quality-v1",
+        "qualityPolicy": "continuous-auto-quality-v1",
+        "cue": {
+          "start": 143.56802721088434,
+          "end": 152.54,
+          "bStart": 9.1,
+          "bEnd": 18.16,
+          "bars": 4
+        },
+        "alternatives": [
+          {
+            "id": "track-d2d58531421de0eb9690",
+            "title": "HIPHOP",
+            "start": 143.56802721088434,
+            "windowId": "w0-4",
+            "score": 1.068437209364479
+          },
+          {
+            "id": "track-d2d58531421de0eb9690",
+            "title": "HIPHOP",
+            "start": 148.05401360544218,
+            "windowId": "w0-2",
+            "score": 1.014740181686579
+          },
+          {
+            "id": "track-d2d58531421de0eb9690",
+            "title": "HIPHOP",
+            "start": 148.05401360544218,
+            "windowId": "w8-2",
+            "score": 0.9649406540049168
+          }
+        ]
+      },
+      "renderSha256": "861b04cb89ac86544ba7e609cde1f305bc1a9591b2ffa8166931bc5a214cdbf1"
+    },
+    {
+      "origin": "user-next",
+      "style": "Hip-Hop",
+      "energyLevel": 3,
+      "plan": {
+        "from": "track-d2d58531421de0eb9690",
+        "to": "track-cf23264f7eb3b1a888d1",
+        "windowId": "w8-2",
+        "start": 40.83718820861678,
+        "end": 45.34,
+        "duration": 4.50281179138322,
+        "rate": 1.013144166666666,
+        "bStart": 34.749,
+        "bEnd": 39.311,
+        "beatErrorMs": 37.18820861678296
+      },
+      "method": "original",
+      "nearbyRequest": {
+        "kind": "nearby_request",
+        "at": "2026-10-20T15:07:13.037Z",
+        "from": "track-d2d58531421de0eb9690",
+        "to": "track-cf23264f7eb3b1a888d1",
+        "sourcePosition": 38.12532879818593
+      },
+      "waitUntilMixSeconds": 2.711859410430847,
+      "observations": [
+        {
+          "kind": "audio_observation",
+          "at": "2026-10-20T15:07:15.749Z",
+          "name": "交接开始",
+          "frame": 5921961,
+          "planId": "5bbcc4a0fe9bd05f2f974da7eb16f84787fb0af23e1ac86da9064fb6f98e6bf0",
+          "requestId": "original",
+          "observedFrame": 5922048,
+          "quantumStart": 5921920,
+          "quantumFrames": 128,
+          "late": 0,
+          "limiterDelayFrames": 221,
+          "peak": 0.7675939798355103,
+          "limiterGainAtObservation": 1,
+          "sessionMinimumLimiterGain": 1
+        },
+        {
+          "kind": "audio_observation",
+          "at": "2026-10-20T15:07:20.256Z",
+          "name": "B正文接管",
+          "frame": 6120535,
+          "planId": "5bbcc4a0fe9bd05f2f974da7eb16f84787fb0af23e1ac86da9064fb6f98e6bf0",
+          "requestId": "original",
+          "observedFrame": 6120576,
+          "quantumStart": 6120448,
+          "quantumFrames": 128,
+          "late": 0,
+          "limiterDelayFrames": 221,
+          "peak": 0.7675939798355103,
+          "limiterGainAtObservation": 1,
+          "sessionMinimumLimiterGain": 1
+        }
+      ],
+      "recommendation": {
+        "id": "track-cf23264f7eb3b1a888d1",
+        "title": "Pandaaaaaa",
+        "style": "Hip-Hop",
+        "energyLevel": 3,
+        "reason": "完整 2 小节 · 接管后 16 秒能量接近当前方向 · chorus附近",
+        "energy": {
+          "beforeDb": -10.447317995491474,
+          "afterDb": [
+            -11.35046446184919,
+            -11.838982509657974,
+            -10.762148507928895,
+            -12.028393556009204
+          ],
+          "deltasDb": [
+            -0.9031464663577164,
+            -1.3916645141665,
+            -0.3148305124374211,
+            -1.5810755605177302
+          ],
+          "targetDeltaDb": 0
+        },
+        "score": 0.9578377283805026,
+        "qualityScore": 1.0835592399848837,
+        "energyPenalty": 0.12572151160438105,
+        "policy": "mobile-direction-quality-v1",
+        "qualityPolicy": "mobile-direction-nearby-v1",
+        "cue": {
+          "start": 40.83718820861678,
+          "end": 45.34,
+          "bStart": 34.749,
+          "bEnd": 39.311,
+          "bars": 2
+        },
+        "alternatives": [
+          {
+            "id": "track-cf23264f7eb3b1a888d1",
+            "title": "Pandaaaaaa",
+            "start": 38.55718820861678,
+            "windowId": "w8-2",
+            "score": 0.8189535992371022
+          },
+          {
+            "id": "track-8cc99b421fe47b03e7ca",
+            "title": "POPPING SEASON 01",
+            "start": 47.61718820861678,
+            "windowId": "w24-2",
+            "score": 0.39871386498796435
+          },
+          {
+            "id": "track-42f027ee822c71afddf2",
+            "title": "MOP - Ante Up...Bang[Edit Beats]",
+            "start": 47.61718820861678,
+            "windowId": "w12-2",
+            "score": 0.32222188601901447
+          }
+        ]
+      },
+      "renderSha256": "5bbcc4a0fe9bd05f2f974da7eb16f84787fb0af23e1ac86da9064fb6f98e6bf0"
+    },
+    {
+      "origin": "user-direction",
+      "style": "Hip-Hop",
+      "energyLevel": 3,
+      "plan": {
+        "from": "track-642bd1ac0da727a3b53b",
+        "to": "track-8cc99b421fe47b03e7ca",
+        "windowId": "w0-4",
+        "start": 32.45843537414966,
+        "end": 41.61,
+        "duration": 9.151564625850341,
+        "rate": 0.9998281250000003,
+        "bStart": 18.27,
+        "bEnd": 27.42,
+        "beatErrorMs": 31.03188292460146
+      },
+      "method": "original",
+      "nearbyRequest": {
+        "kind": "nearby_request",
+        "at": "2026-10-20T15:11:09.824Z",
+        "from": "track-642bd1ac0da727a3b53b",
+        "to": "track-8cc99b421fe47b03e7ca",
+        "sourcePosition": 13.681360544217682
+      },
+      "waitUntilMixSeconds": 18.777074829931976,
+      "observations": [
+        {
+          "kind": "audio_observation",
+          "at": "2026-10-20T15:11:28.601Z",
+          "name": "交接开始",
+          "frame": 12194597,
+          "planId": "c1642b5c965c409319fb2ad77dec759896c667e292cbc36ec68464b7e4ab6b73",
+          "requestId": "original",
+          "observedFrame": 12194688,
+          "quantumStart": 12194560,
+          "quantumFrames": 128,
+          "late": 0,
+          "limiterDelayFrames": 221,
+          "peak": 0.7675939798355103,
+          "limiterGainAtObservation": 1,
+          "sessionMinimumLimiterGain": 1
+        },
+        {
+          "kind": "audio_observation",
+          "at": "2026-10-20T15:11:37.753Z",
+          "name": "B正文接管",
+          "frame": 12598181,
+          "planId": "c1642b5c965c409319fb2ad77dec759896c667e292cbc36ec68464b7e4ab6b73",
+          "requestId": "original",
+          "observedFrame": 12598272,
+          "quantumStart": 12598144,
+          "quantumFrames": 128,
+          "late": 0,
+          "limiterDelayFrames": 221,
+          "peak": 0.7675939798355103,
+          "limiterGainAtObservation": 1,
+          "sessionMinimumLimiterGain": 1
+        }
+      ],
+      "recommendation": {
+        "id": "track-8cc99b421fe47b03e7ca",
+        "title": "POPPING SEASON 01",
+        "style": "Hip-Hop",
+        "energyLevel": 3,
+        "reason": "完整 4 小节 · 接管后 16 秒能量接近当前方向 · verse附近",
+        "energy": {
+          "beforeDb": -12.613029731021596,
+          "afterDb": [
+            -18.253107948487717,
+            -17.22659934422504,
+            -17.80723496576749,
+            -16.45527595644501
+          ],
+          "deltasDb": [
+            -5.640078217466121,
+            -4.613569613203444,
+            -5.194205234745892,
+            -3.8422462254234144
+          ],
+          "targetDeltaDb": 0
+        },
+        "score": 0.24040106747664847,
+        "qualityScore": 0.8191040462018145,
+        "energyPenalty": 0.5787029787251661,
+        "policy": "mobile-direction-quality-v1",
+        "qualityPolicy": "mobile-direction-nearby-v1",
+        "cue": {
+          "start": 32.45843537414966,
+          "end": 41.61,
+          "bStart": 18.27,
+          "bEnd": 27.42,
+          "bars": 4
+        },
+        "alternatives": [
+          {
+            "id": "track-8cc99b421fe47b03e7ca",
+            "title": "POPPING SEASON 01",
+            "start": 32.45843537414966,
+            "windowId": "w0-4",
+            "score": 0.23965125644112317
+          },
+          {
+            "id": "track-42f027ee822c71afddf2",
+            "title": "MOP - Ante Up...Bang[Edit Beats]",
+            "start": 32.45843537414966,
+            "windowId": "w12-4",
+            "score": -0.03433512462476196
+          },
+          {
+            "id": "track-27ef0a8826d2066a5c3d",
+            "title": "DJ Alien-Track 17",
+            "start": 32.45843537414966,
+            "windowId": "w0-4",
+            "score": -0.1000410660420814
+          }
+        ]
+      },
+      "renderSha256": "c1642b5c965c409319fb2ad77dec759896c667e292cbc36ec68464b7e4ab6b73"
+    }
+  ],
+  "negativeCases": [
+    "house direction had no tempo-compatible candidate and kept current song",
+    "KPOP at the end of Pandaaaaaa had no reliable nearby cue; current song continued"
+  ],
+  "cleanup": {
+    "playback": "stopped after export",
+    "styleRestored": "Hip-Hop",
+    "energyRestored": 4,
+    "automatic": true
+  },
+  "limitations": [
+    "audio worklet timing is not output-device latency or subjective listening quality",
+    "same clock with original eligible-stem/local-original rules; no new DSP effect",
+    "no APK built or physical Android connected"
+  ]
+}

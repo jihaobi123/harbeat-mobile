@@ -82,7 +82,6 @@ extension SmartPlaybackFlow on AppController {
   }
 
   Future<void> recommendNext() async {
-    smartAutomatic = true;
     await _v3Command('recommend');
     _changed();
   }

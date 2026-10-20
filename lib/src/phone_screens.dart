@@ -272,8 +272,8 @@ class _ListeningDirection extends StatelessWidget {
             value: c.smartAutomatic,
             title: const Text('自动接歌',
                 style: TextStyle(fontWeight: FontWeight.w700)),
-            subtitle: const Text('自动选下一首、找接点，在合适的小节衔接。',
-                style: TextStyle(fontSize: 14)),
+            subtitle:
+                const Text('不操作时，在最佳混音接点自动衔接。', style: TextStyle(fontSize: 14)),
             onChanged: c.v3Loading
                 ? null
                 : (value) => c.setSmartDirection(automatic: value)),
@@ -351,7 +351,7 @@ class _NextRecommendation extends StatelessWidget {
               child: Text(
                   c.v3Error ??
                       state['notice']?.toString() ??
-                      '点击播放后自动准备，无需切换播放模式。',
+                      '点击下一首或调整能量、风格，会直接安排衔接。',
                   style: const TextStyle(fontSize: 14))),
           if (rec['reason'] != null) ...[
             const SizedBox(height: 8),
@@ -386,7 +386,7 @@ class _NextRecommendation extends StatelessWidget {
                 child: TextButton.icon(
                     onPressed: pending != null ? null : c.recommendNext,
                     icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('换一个推荐'))),
+                    label: const Text('播放下一首'))),
         ]));
   }
 }
@@ -492,41 +492,43 @@ class _PlaybackCard extends StatelessWidget {
               ]),
           Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
             Expanded(
-                child: TextButton(
-                    style: TextButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 12)),
-                    onPressed: c.v3Metric
-                        ? c.isPlaying &&
-                                !c.v3Busy &&
-                                c.metricState['nearbyWorking'] != true &&
-                                c.v3Pending == null &&
-                                c.metricState['selected'] != null
-                            ? c.metricMixSoon
-                            : null
-                        : c.v3Active
-                            ? c.v3Metric || c.v3Continuous
+                child: c.v3Metric
+                    ? Column(mainAxisSize: MainAxisSize.min, children: [
+                        const Icon(Icons.timelapse, size: 24, color: HB.muted),
+                        const SizedBox(height: 8),
+                        Text(c.smartAutomatic ? '自动接歌' : '自动接歌已关',
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(color: HB.muted)),
+                      ])
+                    : TextButton(
+                        style: TextButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 4, vertical: 12)),
+                        onPressed: c.v3Active
+                            ? c.v3Continuous
                                 ? null
                                 : c.cycleV3Budget
                             : c.directionBusy || track?.isRenderedMix == true
                                 ? null
                                 : c.togglePracticeLoop,
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(c.v3Active ? Icons.timelapse : Icons.repeat_rounded,
-                          size: 24),
-                      const SizedBox(height: 8),
-                      Text(
-                          c.v3Active
-                              ? c.v3Metric
-                                  ? '最近接点切歌'
-                                  : c.v3Continuous
+                        child:
+                            Column(mainAxisSize: MainAxisSize.min, children: [
+                          Icon(
+                              c.v3Active
+                                  ? Icons.timelapse
+                                  : Icons.repeat_rounded,
+                              size: 24),
+                          const SizedBox(height: 8),
+                          Text(
+                              c.v3Active
+                                  ? c.v3Continuous
                                       ? '等待 18s'
                                       : '等待 ${c.v3Budget}s'
-                              : c.loopPreview
-                                  ? '结束循环'
-                                  : '循环 16 拍',
-                          textAlign: TextAlign.center),
-                    ]))),
+                                  : c.loopPreview
+                                      ? '结束循环'
+                                      : '循环 16 拍',
+                              textAlign: TextAlign.center),
+                        ]))),
             Expanded(
                 child: PlaybackButton(
                     label: c.isPlaying
@@ -557,7 +559,7 @@ class _PlaybackCard extends StatelessWidget {
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
                       const Icon(Icons.skip_next_rounded, size: 24),
                       const SizedBox(height: 8),
-                      Text(c.v3Metric ? '换个推荐' : '下一首 / 混入',
+                      Text(c.v3Metric ? '下一首' : '下一首 / 混入',
                           textAlign: TextAlign.center),
                     ]))),
           ]),
@@ -571,7 +573,7 @@ class _PlaybackCard extends StatelessWidget {
           Text(
               c.v3Active
                   ? c.v3Metric
-                      ? '播放原曲时自动准备下一首；在选定的小节衔接。切到后台或锁屏会暂停。'
+                      ? '不操作时自动在最佳接点衔接；点击下一首或调整方向，会尽快混入。切到后台或锁屏会暂停。'
                       : '选点、EQ 和双轨混音实时执行。锁屏或离开 App 会暂停。'
                   : track?.isRenderedMix == true
                       ? 'V3 已渲染试听 · 6 首连续混音，当前播放无需联网。'

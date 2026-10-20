@@ -6,7 +6,7 @@ import {canArm} from '../metric-upstream/metric-mix/plan'
 import type {Prepared, Method} from '../metric-upstream/metric-mix/types'
 import type {Track,Plan} from '../metric-upstream/realtime/planner'
 import {nativeSegment} from '../metric-upstream/continuous/segments'
-import {shortlist,rankChoices,SMART_POLICY} from './smart-selection'
+import {shortlist,rankChoices,rankNearbyChoices,choiceForPlan,SMART_POLICY,NEARBY_DIRECTION_POLICY,type SmartChoice} from './smart-selection'
 import type {Host} from './session'
 import {mixNearby,nearbyPlan} from './nearby'
 import {localOriginal,preloadOriginal} from './local-original'
@@ -87,6 +87,7 @@ export class MetricRun {
  private explicit:string|null=null;private recent:string[]=[];private excludedPlans=new Set<string>()
  private excludedTracks=new Set<string>()
  private warmController:AbortController|null=null;private warmKey='';private warmRunning=false;private warmAt=0
+ private userIntent:{kind:'user-next'|'user-direction';preferred:string|null}|null=null
  private nearbyTask:Promise<void>|null=null
  private retryAt=0;private autoTask:Promise<void>|null=null;private lastResult:Prepared|null=null
  private history:Record<string,unknown>[]=[]
@@ -99,7 +100,7 @@ export class MetricRun {
   if(current&&current.id!==this.lastCurrent){
    if(this.lastCurrent){
     this.revision++;this.request?.abort();this.request=null;this.working=false
-    this.lastResult=this.result;this.result=null;this.pair=null;this.recommendation=null;this.phase='idle'
+    this.userIntent=null;this.lastResult=this.result;this.result=null;this.pair=null;this.recommendation=null;this.phase='idle'
     this.selected=null;this.explicit=null;this.notice='已进入 '+current.title+'，继续按你的方向推荐'
    }
    this.lastCurrent=current.id;this.recent.push(current.id);this.recent=this.recent.slice(-8)
@@ -120,6 +121,7 @@ export class MetricRun {
   return this.player
  }
  async start(id:string){
+  this.userIntent=null
   if(this.player?.transition)throw Error('请先完成交接或停止，再更换当前歌曲')
   this.invalidate();const token=this.revision;this.working=true;this.update()
   try{
@@ -147,10 +149,11 @@ export class MetricRun {
   if(value.automatic!==undefined)this.automatic=value.automatic
   // Once scheduled, the shared clock finishes that handoff. New preferences
   // apply to the following song; never stop A or partially replace automation.
-  if(this.player?.transition||this.phase==='armed'){this.notice='当前交接完成后采用新的音乐方向';this.update();return}
+  if(this.player?.transition){this.notice='当前交接完成后采用新的音乐方向';this.update();return}
   const enabled=this.automatic
   this.invalidate(value.automatic===false?false:true)
-  if(changed){this.explicit=null;this.selected=null}
+  if(changed){this.explicit=null;this.selected=null;this.userIntent=this.player?.current?{kind:'user-direction',preferred:null}:null}
+  else if(value.automatic===false)this.userIntent=null
   this.retryAt=0;this.excludedPlans.clear();this.excludedTracks.clear()
   this.notice=enabled?'方向已更新，正在自动寻找下一首':'自动接歌已关闭，当前歌曲继续播放'
   this.update()
@@ -200,14 +203,15 @@ export class MetricRun {
   }catch(e){if(token===this.revision&&(e as Error).name!=='AbortError')this.error=(e as Error).message}
   finally{if(token===this.revision){this.working=false;this.update()}}
  }
- private async recommend(){
+ private async recommend(intent?:{kind:'user-next'|'user-direction';preferred:string|null}){
   const p=this.player,a=p?.current,entry=this.index.tracks.find(t=>t.id===a?.id)
   if(!p||!a||!entry)return
+  const ready=this.result?{result:this.result,method:this.method}:undefined
   this.invalidate();const token=this.revision,controller=this.request=new AbortController()
   const valid=()=>this.alive&&token===this.revision&&p.current?.id===a.id
   this.working=true;this.phase='selecting';this.notice='正在按风格、能量和接点比较下一首';this.update()
   try{
-   const picks=shortlist(this.index.tracks,entry,this.targetStyle,this.recent,this.excludedTracks,this.explicit)
+   const picks=shortlist(this.index.tracks,entry,this.targetStyle,this.recent,this.excludedTracks,intent?null:this.explicit,intent?.preferred)
    if(!picks.length)throw Error('当前风格没有速度相容的下一首，试试其他风格')
    const loaded:Track[]=[]
    // At most two metadata reads at a time; one failed source does not erase
@@ -217,21 +221,25 @@ export class MetricRun {
     if(!valid())return
     for(const r of group)if(r.status==='fulfilled')loaded.push(r.value)
    }
-   const ranked=rankChoices(a,loaded,p.position+35,this.energyLevel,p.cache.ready)
+   const energy=this.energyLevel,ranked=intent?rankNearbyChoices(a,loaded,p.position,energy):rankChoices(a,loaded,p.position+35,energy,p.cache.ready)
    if(!valid())return
    const choices=ranked.choices.filter(c=>!this.excludedPlans.has(c.plan.id))
+   if(intent?.preferred)choices.sort((x,y)=>Number(y.track.id===intent.preferred)-Number(x.track.id===intent.preferred))
    if(!choices.length)throw Error('这个风格与能量方向暂时没有可靠接点，当前音乐继续播放；可以换个方向')
    let lastError='',expired=false
    for(const choice of choices.slice(0,3)){
     if(!valid())return
-    if(choice.plan.start<p.position+12){
+    if(!intent&&choice.plan.start<p.position+12){
      this.excludedPlans.add(choice.plan.id);expired=true;lastError='准备期间接点已过，将重新寻找后续可用窗口';continue
     }
     const b=choice.track
-    this.selected=b.id;this.phase='preparing'
-    this.recommendation={id:b.id,title:b.title,style:this.targetStyle,energyLevel:this.energyLevel,reason:choice.reason,energy:choice.energy,score:choice.score,qualityScore:choice.plan.score,energyPenalty:choice.plan.score-choice.score,policy:SMART_POLICY,qualityPolicy:'continuous-auto-quality-v1',
-     cue:{start:choice.plan.start,end:choice.plan.end,bStart:choice.plan.window.start,bEnd:choice.plan.window.end,bars:choice.plan.window.bars},
+    const describe=(chosen:SmartChoice)=>{
+    this.selected=chosen.track.id;this.phase='preparing'
+    this.recommendation={id:chosen.track.id,title:chosen.track.title,style:this.targetStyle,energyLevel:this.energyLevel,reason:chosen.reason,energy:chosen.energy,score:chosen.score,qualityScore:chosen.plan.score,energyPenalty:chosen.plan.score-chosen.score,policy:SMART_POLICY,qualityPolicy:intent?NEARBY_DIRECTION_POLICY:'continuous-auto-quality-v1',
+     cue:{start:chosen.plan.start,end:chosen.plan.end,bStart:chosen.plan.window.start,bEnd:chosen.plan.window.end,bars:chosen.plan.window.bars},
      alternatives:choices.slice(0,3).map(c=>({id:c.track.id,title:c.track.title,start:c.plan.start,windowId:c.plan.window.id,score:c.score}))}
+    }
+    describe(choice)
     this.notice='为 '+b.title+' 准备最合适的分轨转场';this.update()
     // A cloud queue/read or audio download must not keep an obsolete cue in
     // charge. This stops local waiting; the server has no job-cancel endpoint.
@@ -239,8 +247,19 @@ export class MetricRun {
     const cancel=()=>candidate.abort(controller.signal.reason)
     controller.signal.addEventListener('abort',cancel,{once:true})
     if(controller.signal.aborted)cancel()
-    const deadline=setInterval(()=>{if(!canArm(choice.plan,p.current?.id??null,p.position))candidate.abort(expiredCue())},250)
+    const deadline=intent?undefined:setInterval(()=>{if(!canArm(choice.plan,p.current?.id??null,p.position))candidate.abort(expiredCue())},250)
     try{
+     if(intent){
+      const outcome=await mixNearby({player:p,a,b,signal:candidate.signal,ready,
+       acceptPlan:plan=>!!choiceForPlan(a,b,plan,energy),
+       onCandidate:plan=>{if(valid()){const actual=choiceForPlan(a,b,plan,energy);if(actual)describe(actual)}},
+       prepare:(plan,signal)=>this.renderOriginal(p,a,b,plan,signal),
+       onStatus:message=>{if(valid()){this.notice=message;this.update()}}})
+      if(!valid())return
+      this.adopt(outcome.result,a,b,intent.kind);this.method=outcome.method;this.phase='armed';this.notice='已按当前音乐方向安排最近合格接点'
+      this.history.push({kind:'handoff_requested',origin:intent.kind,jobId:outcome.result.id,method:outcome.method,sourcePosition:p.position,at:new Date().toISOString()});this.history=this.history.slice(-12)
+      this.library.trim(new Set([a.id,b.id]),10);this.retryAt=0;return
+     }
      const result=await abortable(this.cloud(a,b,choice.plan,candidate.signal),candidate.signal)
      if(!valid())return
      if(!canArm(result.plan,p.current?.id??null,p.position))throw expiredCue()
@@ -281,12 +300,20 @@ export class MetricRun {
  tick(){
   this.warmNearby()
   const p=this.player
-  if(!this.alive||!this.automatic||!p?.playing||p.paused||p.busy||p.buffering||p.transition||this.working||this.autoTask)return
+  if(!this.alive||!p?.playing||p.paused||p.busy||p.buffering||p.transition||this.working||this.autoTask||this.nearbyTask)return
+  if(this.userIntent){
+   const intent=this.userIntent;this.userIntent=null
+   const task=this.recommend(intent).finally(()=>{if(this.autoTask===task)this.autoTask=null})
+   this.autoTask=task;return
+  }
+  if(!this.automatic)return
   if(this.result&&this.result.plan.from===p.current?.id){
    if(!canArm(this.result.plan,p.current!.id,p.position)){this.invalidate();this.retryAt=0;return}
    if(this.result.plan.start-p.position>10)return
-   this.phase='armed';this.notice='已准备好，正在安排自动交接'
-   const task=this.apply(false,'automatic').then(()=>{this.phase='armed';this.notice='即将在选定小节接入下一首'}).catch(e=>{
+   this.phase='scheduling';this.notice='已准备好，正在安排自动交接'
+   const operation=this.apply(false,'automatic'),token=this.revision
+   const task=operation.then(()=>{if(token===this.revision&&p.transition){this.phase='armed';this.notice='即将在选定小节接入下一首'}}).catch(e=>{
+    if(token!==this.revision)return
     this.invalidate();this.error=(e as Error).message;this.retryAt=Date.now()+3000
    }).finally(()=>{if(this.autoTask===task)this.autoTask=null;this.update()})
    this.autoTask=task;return
@@ -319,24 +346,26 @@ export class MetricRun {
  }
  requestNext(){
   if(this.player?.transition)throw Error('正在交接，稍后可以继续换歌')
-  if(this.selected)this.excludedTracks.add(this.selected)
-  this.automatic=true;this.explicit=null;this.selected=null
-  this.invalidate();this.retryAt=0;this.notice=this.player?.playing?'正在换一个推荐，当前歌曲继续播放':'继续播放后，为你换一个推荐';this.update()
+  const preferred=this.selected
+  this.invalidate(false);this.userIntent={kind:'user-next',preferred};this.excludedPlans.clear();this.excludedTracks.clear();this.retryAt=0
+  this.notice=this.player?.playing?'正在按当前方向接入下一首':'继续播放后，按当前方向接入下一首';this.update()
  }
+
  selectMethod(method:Method){if(this.player?.transition||this.player?.busy)throw Error('请等待本次交接完成');if(!this.result?.assets[method]||!this.result.decision.methods[method]?.eligible)throw Error('该方法没有通过本轮检查');this.method=method;this.update()}
  async apply(audition=false,origin='manual'){
   if(!this.result||!this.pair||this.working||this.player?.transition)throw Error('请先准备本次交接')
+  this.request?.abort();const controller=this.request=new AbortController()
   const result=this.result,pair=this.pair,method=this.method,token=++this.revision;this.working=true;this.update()
-  try{const p=await this.ensure();if(!this.alive||token!==this.revision)return;if(audition)await p.audition(result,method,pair.a,pair.b);else await p.arm(result,method,pair.b)
+  try{const p=await this.ensure();if(!this.alive||token!==this.revision)return;if(audition)await p.audition(result,method,pair.a,pair.b);else await p.arm(result,method,pair.b,controller.signal)
    if(p.transition?.result.id===result.id){this.history.push({kind:'handoff_requested',origin,jobId:result.id,method,sourcePosition:p.position,at:new Date().toISOString()});this.history=this.history.slice(-12)}
   }finally{if(token===this.revision){this.working=false;this.update()}}
  }
- pause(){this.invalidate(false);this.player?.pause();this.phase=this.result?'ready':'idle';this.notice='已暂停，继续播放后按你的方向自动推荐';this.save();this.update()}
+ pause(){this.userIntent=null;this.invalidate(false);this.player?.pause();this.phase=this.result?'ready':'idle';this.notice='已暂停，继续播放后按你的方向自动推荐';this.save();this.update()}
  async resume(){const p=await this.ensure();await p.resume();this.retryAt=0}
- async seek(position:number){if(this.player?.transition)throw Error('请先完成交接或停止，再调整位置');this.invalidate();this.excludedPlans.clear();this.retryAt=0;const paused=this.player?.paused;await this.player?.seek(position);if(paused)this.player?.pause()}
- cancel(){if(this.player?.transition)throw Error('已安排交接，暂停可暂停时间轴，停止可取消');this.invalidate();this.retryAt=Date.now()+30000;this.notice='已取消这次准备，当前歌曲继续播放';this.update()}
- stop(){this.invalidate();this.player?.stop();this.lastCurrent=null;this.retryAt=0;this.notice='已停止';this.save();this.update()}
- pauseForHost(){this.invalidate(false);if(this.player?.busy){this.player.stop();this.notice='已暂停准备，回到前台后重新开始'}else this.player?.pause();this.save()}
+ async seek(position:number){this.userIntent=null;if(this.player?.transition)throw Error('请先完成交接或停止，再调整位置');this.invalidate();this.excludedPlans.clear();this.retryAt=0;const paused=this.player?.paused;await this.player?.seek(position);if(paused)this.player?.pause()}
+ cancel(){this.userIntent=null;if(this.player?.transition)throw Error('已安排交接，暂停可暂停时间轴，停止可取消');this.invalidate();this.retryAt=Date.now()+30000;this.notice='已取消这次准备，当前歌曲继续播放';this.update()}
+ stop(){this.userIntent=null;this.invalidate();this.player?.stop();this.lastCurrent=null;this.retryAt=0;this.notice='已停止';this.save();this.update()}
+ pauseForHost(){this.userIntent=null;this.invalidate(false);if(this.player?.busy){this.player.stop();this.notice='已暂停准备，回到前台后重新开始'}else this.player?.pause();this.save()}
  setVolume(value:number){if(!Number.isFinite(value))throw Error('音量无效');this.volume=Math.max(0,Math.min(1,value));this.player?.setVolume(this.volume);this.update()}
  filters(value:{label?:string;query?:string}){this.label=value.label??this.label;this.query=value.query??this.query;this.update()}
  export(){return {...this.player?.export(),schema:'harbeat.metric-mix-session.v1',release:METRIC_RELEASE,automaticPolicy:SMART_POLICY,direction:{style:this.targetStyle,energy:this.energyLevel,automatic:this.automatic},history:this.history,selectedResult:this.result??this.lastResult,selectedMethod:this.method,exportedAt:new Date().toISOString()}}

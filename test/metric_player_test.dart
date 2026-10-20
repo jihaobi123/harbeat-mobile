@@ -65,7 +65,8 @@ void main() {
     expect(c.nowPlaying!.id, 'nas:track-b');
     expect(audio.actions.where((m) => m.startsWith('play:')), isEmpty);
   });
-  testWidgets('nearby action is available during playback without restarting A',
+  testWidgets(
+      'Next directly requests a handoff while the left indicator stays automatic',
       (tester) async {
     tester.view.physicalSize = const Size(390, 1200);
     tester.view.devicePixelRatio = 1;
@@ -78,14 +79,17 @@ void main() {
       await c.enableV3(mode: 'metric');
       await c.togglePlayback();
       await c.metricSelectNext('track-b');
+      await c.setSmartDirection(automatic: false);
     });
     await tester.pumpWidget(MaterialApp(
         theme: HB.theme,
         home: AnimatedBuilder(
             animation: c, builder: (_, __) => Shell(controller: c))));
-    await tester.tap(find.text('最近接点切歌'));
+    expect(find.text('最近接点切歌'), findsNothing);
+    await tester.tap(find.text('下一首'));
     await tester.pumpAndSettle();
-    expect(engine.calls.last, 'mixSoon');
+    expect(engine.calls.last, 'recommend');
+    expect(c.smartAutomatic, false);
     expect(engine.calls.where((m) => m == 'start'), hasLength(1));
     await tester.pumpWidget(const SizedBox());
     c.dispose();

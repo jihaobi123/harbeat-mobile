@@ -2,14 +2,14 @@ import {afterEach,expect,it,vi} from 'vitest'
 import {qualityTrack} from '../metric-upstream/continuous/qualityFixture'
 import {MetricRun} from './metric'
 const job='c'.repeat(64),runs:MetricRun[]=[]
-function setup(options:{waitLocal?:()=>Promise<any>;waitCloud?:()=>Promise<any>;waitMetadata?:(id:string)=>Promise<void>;cloudRunning?:boolean;waitAsset?:()=>Promise<void>;loadAsset?:(asset:any,signal?:AbortSignal)=>Promise<any>;failAsset?:boolean}={}){
+function setup(options:{waitArm?:()=>Promise<void>;waitLocal?:()=>Promise<any>;waitCloud?:()=>Promise<any>;waitMetadata?:(id:string)=>Promise<void>;cloudRunning?:boolean;waitAsset?:()=>Promise<void>;loadAsset?:(asset:any,signal?:AbortSignal)=>Promise<any>;failAsset?:boolean}={}){
  const tracks=['a','b','c'].map(id=>qualityTrack(id))
  for(const t of tracks)t.windows[0].variants=Object.fromEntries(tracks.map(a=>[a.id,{...t.windows[0].variants.a}]))
  const index:any={schema:'harbeat.continuous-library.v1',tracks:tracks.map(t=>({...t,detailUrl:t.id,playStatus:'ready',mixStatus:'ready',styleLabels:t.id==='c'?['House']:['Hip-Hop'],collection:'NAS'}))}
  let payload:any,failed=false
  const p:any={ctx:{resume:async()=>{}},current:null,position:0,transition:null,busy:false,playing:false,paused:false,buffering:false,logs:[],
   cache:{ready:new Set(),load:vi.fn(async(asset:any,signal?:AbortSignal)=>{if(options.loadAsset)return options.loadAsset(asset,signal);await options.waitAsset?.();if(options.failAsset&&!failed){failed=true;throw Error('one window unavailable')}return {}})},
-  initialize:async()=>{},start:vi.fn(async(t:any)=>{p.current=t;p.playing=true;p.changed()}),arm:vi.fn(async(r:any,m:any,b:any)=>{p.transition={result:r,method:m,b}}),
+  initialize:async()=>{},start:vi.fn(async(t:any)=>{p.current=t;p.playing=true;p.changed()}),arm:vi.fn(async(r:any,m:any,b:any,signal?:AbortSignal)=>{await options.waitArm?.();signal?.throwIfAborted();p.transition={result:r,method:m,b}}),
   pause:vi.fn(()=>{p.paused=true;p.playing=false}),resume:vi.fn(async()=>{p.paused=false;p.playing=true}),stop:vi.fn(()=>{p.current=null;p.playing=false}),
   setVolume:vi.fn(),dispose:vi.fn(),export:()=>({logs:[]})}
  const result=()=>({schema:'harbeat.metric-mix-result.v1',id:job,status:'ready',policyVersion:'metric-mix-v1.0',codeVersion:'d'.repeat(64),
@@ -94,7 +94,8 @@ it('a changed direction can prepare immediately while superseded metadata remain
   run.direction({style:'Hip-Hop'});await run.start('a');run.tick()
   await vi.waitFor(()=>expect(read).toHaveBeenCalledWith('b',expect.any(URL)))
   run.direction({style:'House'})
-  await vi.waitFor(()=>{run.tick();expect(host.prepareMetric).toHaveBeenCalledTimes(1)},{timeout:300,interval:10})
+  await vi.waitFor(()=>{run.tick();expect(p.arm).toHaveBeenCalledTimes(1)},{timeout:300,interval:10})
+  expect(host.prepareMetric).not.toHaveBeenCalled()
   await finished(run);expect(run.result?.plan.to).toBe('c');expect(p.start).toHaveBeenCalledTimes(1)
  }finally{release()}
 })
@@ -151,4 +152,60 @@ it('preloads the selected nearby material even with automatic handoffs disabled'
  const {run,p,host,render}=setup();run.direction({automatic:false});await run.start('a');run.choose('b');run.tick()
  await vi.waitFor(()=>expect(p.cache.load).toHaveBeenCalled())
  expect(run.working).toBe(false);expect(host.prepareMetric).not.toHaveBeenCalled();expect(render).not.toHaveBeenCalled();expect(p.arm).not.toHaveBeenCalled()
+})
+
+it('Next directly arms a nearby handoff without a cloud job or enabling automatic',async()=>{
+ const {run,p,host}=setup();run.direction({automatic:false});await run.start('a');run.requestNext();run.tick();await finished(run)
+ expect(p.arm).toHaveBeenCalledTimes(1);expect(p.arm.mock.calls[0][0].plan.start).toBeLessThan(15)
+ expect(host.prepareMetric).not.toHaveBeenCalled();expect(run.automatic).toBe(false);expect(p.start).toHaveBeenCalledTimes(1)
+})
+it('a live style change immediately selects and mixes that style at a nearby cue',async()=>{
+ const {run,p,host}=setup();await run.start('a');run.direction({style:'House'});run.tick();await finished(run)
+ expect(p.arm).toHaveBeenCalledTimes(1);expect(p.arm.mock.calls[0][0].plan.to).toBe('c')
+ expect(p.arm.mock.calls[0][0].plan.start).toBeLessThan(15);expect(host.prepareMetric).not.toHaveBeenCalled()
+})
+it('a live energy change uses the existing four-block energy gate at the nearby cue',async()=>{
+ const {run,p,host,tracks}=setup();tracks[1].alignment!.bandFrames[0].rmsDbfs=-12
+ run.direction({style:'Hip-Hop'});await run.start('a');run.direction({energy:5});run.tick();await finished(run)
+ expect(p.arm).toHaveBeenCalledTimes(1);expect(p.arm.mock.calls[0][0].plan.to).toBe('b')
+ expect((run.recommendation?.energy as any).deltasDb).toEqual([3,3,3,3]);expect(host.prepareMetric).not.toHaveBeenCalled()
+})
+it('a quick direction with no matching energy keeps A playing without an invented fallback',async()=>{
+ const {run,p,host}=setup();await run.start('a');run.direction({energy:5});run.tick();await finished(run)
+ expect(run.phase).toBe('no_match');expect(p.arm).not.toHaveBeenCalled();expect(host.prepareMetric).not.toHaveBeenCalled();expect(p.start).toHaveBeenCalledTimes(1)
+})
+it('the latest direction supersedes a pending Next metadata request',async()=>{
+ let release!:()=>void;const waiting=new Promise<void>(r=>release=r)
+ const {run,p,host,read}=setup({waitMetadata:id=>id==='b'?waiting:Promise.resolve()})
+ try{
+  await run.start('a');run.requestNext();run.tick();await vi.waitFor(()=>expect(read).toHaveBeenCalledWith('b',expect.any(URL)))
+  run.direction({style:'House'})
+  await vi.waitFor(()=>{run.tick();expect(p.arm).toHaveBeenCalledTimes(1)},{timeout:500,interval:10})
+  expect(p.arm.mock.calls[0][0].plan.to).toBe('c');expect(host.prepareMetric).not.toHaveBeenCalled()
+ }finally{release()}
+})
+it('a paused direction waits for resume and then uses the new direction nearby',async()=>{
+ const {run,p}=setup();await run.start('a');run.pause();run.direction({style:'House'});run.tick();expect(p.arm).not.toHaveBeenCalled()
+ await run.resume();run.tick();await finished(run);expect(p.arm).toHaveBeenCalledTimes(1);expect(p.arm.mock.calls[0][0].plan.to).toBe('c')
+})
+it('Next uses the displayed suitable song instead of requiring another apply button',async()=>{
+ const {run,p,host}=setup();await run.start('a');run.choose('b');run.requestNext();run.tick();await finished(run)
+ expect(p.arm).toHaveBeenCalledTimes(1);expect(p.arm.mock.calls[0][0].plan.to).toBe('b');expect(host.prepareMetric).not.toHaveBeenCalled()
+})
+
+it('Next can replace an unsuitable manually displayed song with a matching alternative',async()=>{
+ const {run,p,tracks}=setup();await run.start('a');run.choose('b');tracks[1].alignment!.bars=[];run.requestNext();run.tick();await finished(run)
+ expect(p.arm).toHaveBeenCalledTimes(1);expect(p.arm.mock.calls[0][0].plan.to).toBe('c')
+})
+it('a style change cancels an automatic arm still loading before the clock is committed',async()=>{
+ let release!:()=>void;const hold=new Promise<void>(r=>release=r)
+ const {run,p}=setup({waitArm:()=>hold});await run.start('a');run.tick();await finished(run)
+ p.position=run.result!.plan.start-9;run.tick();await vi.waitFor(()=>expect(p.arm).toHaveBeenCalledTimes(1));expect(p.transition).toBeNull()
+ run.direction({style:'House'});release()
+ await vi.waitFor(()=>{run.tick();expect(p.transition?.b.id).toBe('c')},{timeout:1000,interval:10})
+ expect(p.arm.mock.calls[0][3]?.aborted).toBe(true);expect(p.start).toHaveBeenCalledTimes(1)
+})
+it('Next retains a displayed eligible song even if it was played recently',async()=>{
+ const {run,p}=setup();await run.start('b');run.stop();await run.start('a');run.choose('b');run.requestNext();run.tick();await finished(run)
+ expect(p.arm).toHaveBeenCalledTimes(1);expect(p.arm.mock.calls[0][0].plan.to).toBe('b')
 })

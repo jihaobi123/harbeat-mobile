@@ -1,6 +1,6 @@
 import {expect,it} from 'vitest'
 import {qualityTrack} from '../metric-upstream/continuous/qualityFixture'
-import {measuredLevel,rankChoices,shortlist} from './smart-selection'
+import {measuredLevel,rankChoices,rankNearbyChoices,shortlist} from './smart-selection'
 const track=(id:string,db=-15)=>{const t=qualityTrack(id);t.alignment!.bandFrames[0].rmsDbfs=db;return t}
 it('uses library style labels, excludes current/recent songs and retains exact overrides',()=>{
  const row=(id:string,styleLabels=['Hip-Hop'],bpm=120):any=>({id,styleLabels,bpm,playStatus:'ready',mixStatus:'ready'})
@@ -34,4 +34,17 @@ it('keeps the accepted full-beat gate, full overlap and the worker speed limit',
  expect(rankChoices(a,[b],35,3).best).toBeNull()
  b.windows[0].variants.a.rate=1;b.alignment!.bars[0].beats[1]+=.12
  expect(rankChoices(a,[b],35,3).best).toBeNull()
+})
+
+it('nearby direction evaluates energy on the actual entry instead of a later automatic window',()=>{
+ const a=track('a'),b=track('b')
+ b.windows=[b.windows[0],{...b.windows[0],id:'high-entry',start:24,end:32}]
+ b.alignment!.bandFrames=[{...b.alignment!.bandFrames[0],end:32},{...b.alignment!.bandFrames[0],start:32,rmsDbfs:-12}]
+ const p=rankNearbyChoices(a,[b],0,5).best!
+ expect(p.plan.window.id).toBe('high-entry');expect(p.plan.start).toBeLessThan(15);expect(p.energy.deltasDb).toEqual([3,3,3,3])
+ expect(rankChoices(a,[b],35,5).best!.plan.end).toBeGreaterThanOrEqual(78*.65)
+})
+it('nearby ranking excludes incompatible energy without altering source metadata',()=>{
+ const a=track('a'),b=track('b'),before=JSON.stringify([a,b])
+ expect(rankNearbyChoices(a,[b],0,5).best).toBeNull();expect(JSON.stringify([a,b])).toBe(before)
 })
