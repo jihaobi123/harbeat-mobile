@@ -195,7 +195,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
         activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
     fun command(method: String, args: Map<*, *>, result: MethodChannel.Result) {
-        if (disposed || method !in listOf("prepare", "configure", "start", "pause", "resume", "stop", "seek", "request", "cancel", "export", "select", "volume", "automatic", "filters", "metricPrepare", "metricMethod", "metricApply")) {
+        if (disposed || method !in listOf("prepare", "configure", "start", "pause", "resume", "stop", "seek", "request", "cancel", "export", "select", "volume", "automatic", "filters", "metricPrepare", "metricMethod", "metricApply", "direction", "recommend")) {
             result.error("unavailable", "不支持的播放器操作", null); return
         }
         if (method == "prepare") {

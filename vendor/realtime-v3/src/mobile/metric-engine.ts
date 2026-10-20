@@ -35,7 +35,9 @@ window.HarBeatEngine={async dispatch({id,method,args}){try{
    case 'cancel':run.cancel();break
    case 'volume':run.setVolume(Number(args.value));break
    case 'filters':run.filters(args);break
-   case 'request':if(args.intent?.kind!=='next')throw Error('智能分轨请先选择下一首，再按指标准备交接');await run.apply();break
+   case 'direction':run.direction(args);break
+   case 'recommend':run.requestNext();break
+   case 'request':if(args.intent?.kind!=='next')throw Error('请选择目标风格和能量');run.requestNext();break
    case 'export':window.HarBeatHost?.exportLog(JSON.stringify(run.export(),null,2),'json');break
    default:throw Error('智能分轨不支持此操作')
   }
@@ -43,5 +45,5 @@ window.HarBeatEngine={async dispatch({id,method,args}){try{
  publish();window.HarBeatEngineHost.reply(id,JSON.stringify({ok:true,state:snapshot(),...(method==='prepare'?{tracks:run!.index.tracks.map(info)}:{})}))
  }catch(e){error=(e as Error).message;publish();window.HarBeatEngineHost.reply(id,JSON.stringify({ok:false,error}))}}}
 if(webHost)window.addEventListener('message',event=>{if(event.source!==parent||event.origin!==origin||typeof event.data!=='string')return;let data;try{data=JSON.parse(event.data)}catch{return}if(data?.token!==token)return;if(data?.harbeat==='metric-command'&&Number.isInteger(data.id)&&typeof data.method==='string')void window.HarBeatEngine.dispatch({id:data.id,method:data.method,args:data.args??{}});else if(data?.harbeat==='metric-lifecycle'&&!data.active)run?.pauseForHost()})
-setInterval(publish,250)
+setInterval(()=>{run?.tick();publish()},250)
 publish()

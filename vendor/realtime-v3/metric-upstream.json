@@ -22,7 +22,8 @@
     "web/src/metric-mix/transport.ts": "f810e6e1fbda76815af021b3363c6de3c3cbf91b7cacde4ba45ea83e64d3599f",
     "web/src/continuous/segments.ts": "da40a6c237234c11a597845878e0bb02b2992c540d98714d2f2fcca31ee85c8d",
     "web/src/realtime/cache.ts": "aa89c95c327ea2184c86e3974790b097b19789f6a46ea1f361ab527e4429ad3b",
-    "web/src/realtime/encodedCache.ts": "ccf3a71cd59dd6a6a0bd795720de30b5fba048b4db3422e51a570dba9cf0c745"
+    "web/src/realtime/encodedCache.ts": "ccf3a71cd59dd6a6a0bd795720de30b5fba048b4db3422e51a570dba9cf0c745",
+    "web/src/continuous/qualityPlan.ts": "2a92c09d1c8cfdb9ed1b6ef61a25579b879d384f7099dca54fef5f311dc1f55c"
   },
   "clockSha256": "da4c97488f80b3f5272055991111d50069746997d2f1bd1732ca5ee55f5328d7"
 }

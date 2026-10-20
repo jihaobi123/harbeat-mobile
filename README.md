@@ -2,7 +2,7 @@
 
 手机先完成选歌、播放与方向控制，饰品作为可选快捷控制。界面采用浅色背景、青绿与杏黄、细描边圆角卡片；播放、音乐、我的三个主入口保持不变。
 
-当前版本为 **Android Preview 0.1.11+13**：原播放页新增「智能分轨」，接入最新指标驱动转场策略；Android 与网页使用同一套音频引擎，云端准备短转场、客户端连续播放 A/转场/B。保留 NAS 封面、黑胶卡片、过渡动效及 Android 原有连续混音和风格/时长舞程。见 [本次接入与验证说明](docs/smart-mix-mobile-20261020.md)、[封面接入说明](docs/nas-cover-integration-20261016.md) 与 [黑胶界面说明](docs/vinyl-playlists-20261016.md)。首次拉取仓库请先阅读 [环境与复现步骤](docs/release-0.1.6.md)，Android 打包前需准备 V3 引擎素材。本次手机未连接，真实设备验收待补。
+当前版本为 **Android Preview 0.1.12+14**：播放与混音合成同一个界面，选择风格和能量后自动推荐下一首、选择完整接点、准备分轨转场并自动接歌。原曲和转场由同一音频时钟连续播放，无需切换模式或逐次确认。保留 NAS 封面、黑胶卡片和过渡动效，手动试听及原舞程收进更多工具。见 [统一播放与网络验证](docs/unified-playback-20261020.md)、[算法接入说明](docs/smart-mix-mobile-20261020.md)、[封面接入说明](docs/nas-cover-integration-20261016.md)。首次拉取仓库请先阅读 [环境与复现步骤](docs/release-0.1.6.md)，Android 打包前需准备引擎素材。本次手机未连接，真实设备验收待补。
 
 ## 运行
 
@@ -27,6 +27,8 @@ python tools/serve_preview.py --port 8766
 
 `app.dart` 与 `phone_screens.dart` 负责页面，`AppController` 和 `phone_controller.dart` 共用播放与饰品动作状态，`AudioService` 负责音频，`LocalStore` 负责持久化。
 
+`smart_controller.dart` 按歌曲是否具备发布分析资料选择内部播放引擎，用户无需切换模式。自动选曲/窗口排序和云端短转场编排位于 `vendor/realtime-v3/src/mobile/`；原本的单曲播放仍负责未具备混音资料的音频。
+
 ## 音乐服务接入（更新于 2026-09-20）
 
 在 **我的 → 音乐服务** 输入现有 HarBeat 账号和密码，登录后加载在线曲库；没有账号时点 **没有账号？注册账号**，填写账号、密码和确认密码，注册成功自动登录。默认使用已确认的阿里云入口 `https://8.136.120.255`，通过旧版 API 转发至 Jetson。服务地址及接口版本在“连接设置”中修改，也可切换为已有 Bearer Token。构建时可用 `--dart-define=HARBEAT_API_BASE_URL=https://your-server` 指定默认地址。
@@ -48,7 +50,7 @@ python tools/serve_preview.py --port 8766
 
 ### Android 测试安装包
 
-本次安装包：`outputs/HarBeat-Preview-20261020-SmartMix-arm64.apk`，版本 0.1.11 (13)，构建结果与校验值见 [交付说明](docs/smart-mix-mobile-20261020.md)。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；只用安全安装器保留数据更新。APK 为本机产物，不存入 Git；本次未安装到手机。
+本次安装包：`outputs/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk`，版本 0.1.12 (14)，构建结果与校验值见 [交付说明](docs/unified-playback-20261020.md)。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；只用安全安装器保留数据更新。APK 为本机产物，不存入 Git；本次未安装到手机。
 
 默认构建使用并存预览包名，只有显式 `-PharbeatPreview=false` 才使用原包名。此次修复了应用未启用 Kotlin 插件、audio_session 0.2.4 与关闭内置 Kotlin 的兼容问题，以及网络配置缺少 includeSubdomains 属性的发布检查错误。Gradle 限制为 1536MB 堆、1 个 worker 和 2 个可用处理器，避免本机原生内存不足。
 
@@ -68,14 +70,14 @@ flutter build apk --release --target-platform android-arm64
 
 ## 当前入口
 
-- **播放**：标准播放和 V3 实时混音；新增「智能分轨」按本轮实际分轨指标推荐交接，支持选择当前歌/下一首、风格筛选、准备、方法选择、确认接歌和回放试听。Android 的“本次舞程”仍按原策略从 NAS 选曲、自动混音，到时淡出。标准播放保留原有方向、循环与队列。
+- **播放**：一个播放器加音乐方向和下一首推荐；已发布歌曲自动使用智能衔接，风格和能量驱动候选、完整进入窗口和退出点的联合择优。自动完成下一首的准备与接入，显示封面、原因和倒计时。更多工具保留手动回放、方案选择、日志和 Android 定时舞程；本地/未分析音频继续原曲播放。
 - **音乐**：推荐、搜索（含 BPM）、本地音频导入、链接解析演示、歌曲详情、收藏与歌单管理。
 - **我的**：曲库入口、饰品快捷控制、饰品连接；HiFi Core / Party 留作后续扩展说明。
 
 ## 实现边界
 
 - 推荐页接入 NAS 曲库并按目录歌曲 ID 合并分析版本；快照含 391 首，其中 172 首有真实封面，启动后后台刷新在线目录与封面。个人上传曲库与 NAS 曲库分别保留。六首 Hip-Hop 精选及完整 V3 混音见 [接入与算法说明](docs/nas-hiphop-v3-20260920.md)。旧演示目录仍共用 `assets/audio/preview.wav`，不会用于 NAS 播放。
-- “播放 V3 混音”保留原完整离线试听；Android V3 入口进入原 Flutter 播放页，保留连续混音和风格/时长舞程，详见 [自动舞程接入与验证](docs/dance-set-20260921.md)。新「智能分轨」使用 `/listen/` 专用目录与云端任务，首次接入已完成浏览器真实网络交接；iOS 原生宿主尚未接入这一模式。
+- “播放 V3 混音”保留原完整离线试听；原连续策略和舞程在更多工具中，详见 [自动舞程接入与验证](docs/dance-set-20260921.md)。主播放器现按 `/listen/` 专用目录自动准备云端短转场，已完成浏览器无人操作交接与下一轮推荐；iOS 原生宿主尚未接入这一引擎。
 - 标准播放在 Android/iOS 使用 SoLoud 共享音频时钟执行双路原曲交叉淡化；“下一首 / 混入”支持当前队列，方向请求使用已分析风格/能量候选。网页标准播放仍为单曲；V3 智能分轨在浏览器用 Web Audio 时钟接续实际云端转场与 B 原曲。旧 4 秒调度仅留在显式单元测试替身中。
 - 16 拍预览按示例 BPM 截取音频开头并循环，最多到音频末尾，未做真实下拍对齐；未分析的本地文件不开放此功能。
 - 饰品页面扫描真实广播、由用户选择设备、发现 GATT 通知特征。按固件协议配置三个完整十六进制按键包；未知包不执行动作。蓝牙连接不跨重启恢复，断开不停止手机播放。未配置固件时不自动猜测 UUID 或按键值。

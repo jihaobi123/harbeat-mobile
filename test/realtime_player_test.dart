@@ -216,7 +216,7 @@ void main() {
         theme: HB.theme,
         home: AnimatedBuilder(
             animation: c, builder: (_, __) => Shell(controller: c))));
-    expect(find.text('PLAY / V3 REALTIME'), findsOneWidget);
+    expect(find.text('PLAY / YOUR FLOW'), findsOneWidget);
     expect(find.text('让身体，跟着节奏。'), findsOneWidget);
     expect(find.text('播放'), findsOneWidget);
     expect(find.text('音乐'), findsOneWidget);

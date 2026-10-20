@@ -1,0 +1,347 @@
+{
+  "schema": "harbeat.unified-auto-acceptance.v1",
+  "date": "2026-10-20",
+  "sourceCommit": "978df49191450a602f1b473b31f630a687585a8d",
+  "automaticPolicy": "mobile-direction-quality-v1",
+  "cuePolicy": "continuous-auto-quality-v1",
+  "methodPolicy": "metric-mix-v1.0",
+  "actualBrowserSession": {
+    "from": "Big Girls",
+    "to": "Alone",
+    "followingRecommendation": "Cold",
+    "interaction": "Only Start was pressed. No manual prepare or apply.",
+    "jobId": "95927e9781335ecbbcd0d0df12893c9d28f4c4897746bb3d23c9c8c9c50c5245",
+    "direction": {
+      "style": "",
+      "energy": 3,
+      "automatic": true
+    },
+    "method": "original",
+    "plan": {
+      "from": "track-86facefc6cb91411d57e",
+      "to": "track-8d55cb314b5aff07d3ac",
+      "windowId": "w0-4",
+      "start": 114.98201814058957,
+      "end": 121.7,
+      "duration": 6.717981859410431,
+      "rate": 1.0062541666666676,
+      "bStart": 40.58,
+      "bEnd": 47.34,
+      "beatErrorMs": 42.01814058957609
+    },
+    "handoff": {
+      "kind": "handoff_complete",
+      "at": "2026-10-20T09:53:26.391Z",
+      "context": 124.00036281179138,
+      "track": "track-8d55cb314b5aff07d3ac",
+      "sourceOffset": 47.3986394557823,
+      "method": "original"
+    },
+    "observations": [
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T09:53:19.621Z",
+        "name": "交接开始",
+        "frame": 5169567,
+        "planId": "95927e9781335ecbbcd0d0df12893c9d28f4c4897746bb3d23c9c8c9c50c5245",
+        "requestId": "original",
+        "observedFrame": 5169664,
+        "quantumStart": 5169536,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.5500656366348267,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T09:53:26.331Z",
+        "name": "B正文接管",
+        "frame": 5465830,
+        "planId": "95927e9781335ecbbcd0d0df12893c9d28f4c4897746bb3d23c9c8c9c50c5245",
+        "requestId": "original",
+        "observedFrame": 5465856,
+        "quantumStart": 5465728,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6041003465652466,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      }
+    ],
+    "sessionSha256": "731e4ed64eba63d294e54304a3a0cce3e01370987cb674504b30e2a700452bb2"
+  },
+  "actualCatalogueDirections": {
+    "date": "2026-10-20",
+    "current": "Attention",
+    "style": "Hip-Hop",
+    "sourceCommit": "978df49191450a602f1b473b31f630a687585a8d",
+    "results": [
+      {
+        "level": 1,
+        "elapsedMs": 134,
+        "candidates": 323,
+        "selected": {
+          "title": "HIPHOP",
+          "from": "track-642bd1ac0da727a3b53b",
+          "to": "track-d2d58531421de0eb9690",
+          "windowId": "w0-4",
+          "start": 146.73543537414966,
+          "end": 155.887,
+          "rate": 0.9899937500000001,
+          "duration": 9.151564625850341,
+          "energy": {
+            "beforeDb": -7.790348619950256,
+            "afterDb": [
+              -10.33610949820205,
+              -10.802786975155614,
+              -10.485358278223726,
+              -10.279067351911271
+            ],
+            "deltasDb": [
+              -2.5457608782517944,
+              -3.012438355205358,
+              -2.69500965827347,
+              -2.488718731961015
+            ],
+            "targetDeltaDb": -2.5
+          },
+          "reason": "完整 4 小节 · 接管后 16 秒能量持续降低 · chorus附近"
+        }
+      },
+      {
+        "level": 2,
+        "elapsedMs": 102,
+        "candidates": 323,
+        "selected": {
+          "title": "Straight (Battle Beat)",
+          "from": "track-642bd1ac0da727a3b53b",
+          "to": "track-86141f55b6b1219e1c38",
+          "windowId": "w0-2",
+          "start": 151.31121768707482,
+          "end": 155.887,
+          "rate": 0.9812520833333338,
+          "duration": 4.5757823129251705,
+          "energy": {
+            "beforeDb": -8.423051000767513,
+            "afterDb": [
+              -10.346356908970002,
+              -10.381141292052778,
+              -10.784685870442631,
+              -10.16095945390413
+            ],
+            "deltasDb": [
+              -1.9233059082024884,
+              -1.9580902912852647,
+              -2.361634869675118,
+              -1.7379084531366171
+            ],
+            "targetDeltaDb": -1.25
+          },
+          "reason": "完整 2 小节 · 接管后 16 秒能量持续降低 · chorus附近"
+        }
+      },
+      {
+        "level": 3,
+        "elapsedMs": 100,
+        "candidates": 453,
+        "selected": {
+          "title": "Pandaaaaaa",
+          "from": "track-642bd1ac0da727a3b53b",
+          "to": "track-cf23264f7eb3b1a888d1",
+          "windowId": "w24-4",
+          "start": 110.17543537414966,
+          "end": 119.327,
+          "rate": 0.9985168749999991,
+          "duration": 9.151564625850341,
+          "energy": {
+            "beforeDb": -11.972897101814429,
+            "afterDb": [
+              -11.459086679270253,
+              -11.274734384539276,
+              -11.397175776327249,
+              -11.503893374903909
+            ],
+            "deltasDb": [
+              0.5138104225441751,
+              0.698162717275153,
+              0.57572132548718,
+              0.46900372691052006
+            ],
+            "targetDeltaDb": 0
+          },
+          "reason": "完整 4 小节 · 接管后 16 秒能量接近当前方向 · chorus附近"
+        }
+      },
+      {
+        "level": 4,
+        "elapsedMs": 103,
+        "candidates": 6,
+        "selected": {
+          "title": "HIPHOP",
+          "from": "track-642bd1ac0da727a3b53b",
+          "to": "track-d2d58531421de0eb9690",
+          "windowId": "w0-4",
+          "start": 110.17543537414966,
+          "end": 119.327,
+          "rate": 0.9899937500000001,
+          "duration": 9.151564625850341,
+          "energy": {
+            "beforeDb": -11.972897101814429,
+            "afterDb": [
+              -10.33610949820205,
+              -10.802786975155614,
+              -10.485358278223726,
+              -10.279067351911271
+            ],
+            "deltasDb": [
+              1.6367876036123779,
+              1.1701101266588143,
+              1.487538823590702,
+              1.6938297499031574
+            ],
+            "targetDeltaDb": 1.25
+          },
+          "reason": "完整 4 小节 · 接管后 16 秒能量持续提升 · chorus附近"
+        }
+      },
+      {
+        "level": 5,
+        "elapsedMs": 110,
+        "candidates": 6,
+        "selected": {
+          "title": "HIPHOP",
+          "from": "track-642bd1ac0da727a3b53b",
+          "to": "track-d2d58531421de0eb9690",
+          "windowId": "w0-4",
+          "start": 110.17543537414966,
+          "end": 119.327,
+          "rate": 0.9899937500000001,
+          "duration": 9.151564625850341,
+          "energy": {
+            "beforeDb": -11.972897101814429,
+            "afterDb": [
+              -10.33610949820205,
+              -10.802786975155614,
+              -10.485358278223726,
+              -10.279067351911271
+            ],
+            "deltasDb": [
+              1.6367876036123779,
+              1.1701101266588143,
+              1.487538823590702,
+              1.6938297499031574
+            ],
+            "targetDeltaDb": 2.5
+          },
+          "reason": "完整 4 小节 · 接管后 16 秒能量持续提升 · chorus附近"
+        }
+      }
+    ]
+  },
+  "checks": {
+    "flutterPassed": 114,
+    "typescriptPassed": 184,
+    "typescriptExternalFixturesSkipped": 2,
+    "analyze": "No issues found",
+    "webRelease": "passed",
+    "pythonProxyPassed": 4,
+    "androidArm64Release": "passed",
+    "apkIdentityAndSignature": "verified"
+  },
+  "pending": [
+    "Physical Android installation and audio output",
+    "Lock screen and Bluetooth on a connected phone",
+    "iOS native host"
+  ],
+  "hiphopHighBrowserSession": {
+    "from": "Attention",
+    "to": "HIPHOP",
+    "followingPrepared": "Straight (Battle Beat)",
+    "direction": {
+      "style": "Hip-Hop",
+      "energy": 4,
+      "automatic": true
+    },
+    "method": "filter",
+    "plan": {
+      "from": "track-642bd1ac0da727a3b53b",
+      "to": "track-d2d58531421de0eb9690",
+      "windowId": "w0-4",
+      "start": 110.17543537414966,
+      "end": 119.327,
+      "duration": 9.151564625850341,
+      "rate": 0.9899937500000001,
+      "bStart": 9.1,
+      "bEnd": 18.16,
+      "beatErrorMs": 15.165606032439882
+    },
+    "handoff": {
+      "kind": "handoff_complete",
+      "at": "2026-10-20T10:24:52.001Z",
+      "context": 120.26195011337869,
+      "track": "track-d2d58531421de0eb9690",
+      "sourceOffset": 18.223204081632662,
+      "method": "filter"
+    },
+    "observations": [
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T10:24:42.783Z",
+        "name": "交接开始",
+        "frame": 4897181,
+        "planId": "15d6da0b12a1909b081101099d9478a9eac9c6025bf6a3c703be272095ec7a09",
+        "requestId": "filter",
+        "observedFrame": 4897280,
+        "quantumStart": 4897152,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6000000238418579,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T10:24:51.935Z",
+        "name": "B正文接管",
+        "frame": 5300765,
+        "planId": "15d6da0b12a1909b081101099d9478a9eac9c6025bf6a3c703be272095ec7a09",
+        "requestId": "filter",
+        "observedFrame": 5300864,
+        "quantumStart": 5300736,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6384840607643127,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      }
+    ],
+    "automaticRequests": [
+      {
+        "kind": "handoff_requested",
+        "origin": "automatic",
+        "jobId": "15d6da0b12a1909b081101099d9478a9eac9c6025bf6a3c703be272095ec7a09",
+        "method": "filter",
+        "sourcePosition": 100.30920634920635,
+        "at": "2026-10-20T10:24:32.919Z"
+      }
+    ],
+    "sessionSha256": "f266491c01fb55f176d4b8edd462426d3d259462b915b93e38a8412c85b94451",
+    "pageErrors": []
+  },
+  "apk": {
+    "file": "HarBeat-Preview-20261020-UnifiedAuto-arm64.apk",
+    "package": "com.example.harbeat.preview",
+    "versionName": "0.1.12",
+    "versionCode": 14,
+    "bytes": 332499696,
+    "sha256": "7f3ca0551ff25dc90ac328f8d85f5b94cf33184a9c1e9195e10ebb32bb1bcb3f",
+    "signatureVerified": true,
+    "installed": false,
+    "metricBundle": "metric-engine-COwDPD2f.js"
+  }
+}

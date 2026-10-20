@@ -12,6 +12,20 @@ import 'package:harbeat/src/controller.dart';
 import 'package:harbeat/src/local_store.dart';
 import 'package:harbeat/src/nas_repository.dart';
 import 'package:harbeat/src/repository.dart';
+import 'package:harbeat/src/realtime_engine.dart';
+
+class SingleSongOnly extends RealtimeEngine {
+  @override
+  bool get supported => false;
+  @override
+  Stream<Map<String, dynamic>> get states => const Stream.empty();
+  @override
+  Future<Map<String, dynamic>> command(String method,
+          [Map<String, dynamic> args = const {}]) async =>
+      throw UnsupportedError('No native mixer in this fixture');
+  @override
+  Future<void> dispose() async {}
+}
 
 final snapshot = File('assets/nas/catalog.json').readAsStringSync();
 Map<String, dynamic> fixture() => jsonDecode(snapshot) as Map<String, dynamic>;
@@ -41,6 +55,39 @@ class CaptureAudio extends MemoryAudioService {
 }
 
 void main() {
+  test('smart choices use public human labels and exclude unavailable rows',
+      () async {
+    final r = repo(handler: (request) async {
+      expect(request.url.path, '/listen/library.json');
+      expect(request.followRedirects, false);
+      expect(request.headers.containsKey('Authorization'), false);
+      return http.Response(
+          jsonEncode({
+            'schema': 'harbeat.continuous-library.v1',
+            'tracks': [
+              {
+                'id': 'track-aaaaaaaaaaaaaaaaaaaa',
+                'style': 'Pop',
+                'styleLabels': ['Hip-Hop'],
+                'playStatus': 'ready',
+                'mixStatus': 'ready'
+              },
+              {
+                'id': 'track-bbbbbbbbbbbbbbbbbbbb',
+                'style': 'House',
+                'styleLabels': ['EDM'],
+                'playStatus': 'ready',
+                'mixStatus': 'unavailable'
+              },
+            ]
+          }),
+          200);
+    });
+    addTearDown(r.close);
+    final entries = await r.smartDirectory();
+    expect(entries, hasLength(1));
+    expect(entries.single['styleLabels'], ['Hip-Hop']);
+  });
   test(
       'NAS versions collapse into 391 songs; six are pinned to their render reports',
       () async {
@@ -152,7 +199,10 @@ void main() {
     final audio = CaptureAudio();
     Future<AppController> create() async {
       final c = AppController(MockHarBeatRepository(),
-          localStore: store, audio: audio, nasRepository: repo());
+          localStore: store,
+          audio: audio,
+          nasRepository: repo(),
+          realtimeEngine: SingleSongOnly());
       final pending = c.initialize();
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 400));

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:harbeat/src/app.dart';
 import 'package:harbeat/src/controller.dart';
 import 'package:harbeat/src/theme.dart';
+import 'package:harbeat/src/models.dart';
 import 'realtime_player_test.dart' show FakeRealtime, ProbeAudio, setup;
 
 class MetricEngine extends FakeRealtime {
@@ -25,6 +26,14 @@ class MetricEngine extends FakeRealtime {
       state['metric'] = {
         ...state['metric'] as Map,
         'selected': args['trackId']
+      };
+    }
+    if (method == 'direction') {
+      state['metric'] = {
+        ...state['metric'] as Map,
+        if (args['energy'] != null) 'energyLevel': args['energy'],
+        if (args['style'] != null) 'targetStyle': args['style'],
+        if (args['automatic'] != null) 'automatic': args['automatic'],
       };
     }
     return super.command(method, args);
@@ -76,12 +85,68 @@ void main() {
               child: child!),
           home: AnimatedBuilder(
               animation: c, builder: (_, __) => Shell(controller: c))));
-      await tester.scrollUntilVisible(find.text('准备智能交接'), 250);
-      expect(find.text('下一首音乐'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('接下来听'), 250);
+      expect(find.text('自动接歌'), findsWidgets);
+      expect(find.text('标准播放'), findsNothing);
+      expect(find.text('V3 实时混音'), findsNothing);
       expect(find.text('降低能量 ↓'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       c.dispose();
     });
   }
+  test(
+      'selecting a published song starts the unified engine without a mode switch',
+      () async {
+    final engine = MetricEngine(), audio = ProbeAudio();
+    final c = await setup(engine, audio);
+    addTearDown(c.dispose);
+    const song = Track(
+        id: 'nas:track-a',
+        title: 'Big Girls',
+        artist: 'NAS',
+        style: 'Trap',
+        bpm: 142.9,
+        energy: null,
+        reason: 'NAS',
+        color: Colors.teal);
+    await c.play(song);
+    expect(c.v3Metric, true);
+    expect(c.isPlaying, true);
+    expect(c.nowPlaying?.id, song.id);
+    expect(engine.calls.where((m) => m == 'start'), hasLength(1));
+    expect(audio.actions.where((m) => m.startsWith('play:')), isEmpty);
+    await c.setSmartDirection(level: 5, style: 'Grime');
+    expect(engine.arguments.last, {
+      'method': 'direction',
+      'style': 'Grime',
+      'energy': 5,
+      'automatic': true
+    });
+    expect(engine.calls.where((m) => m == 'start'), hasLength(1));
+    await c.setSmartDirection(automatic: false);
+    expect(c.smartAutomatic, false);
+    expect(engine.calls.last, 'direction');
+    expect(c.isPlaying, true);
+    await c.togglePlayback();
+    await c.play(c.v3Tracks.last);
+    expect(c.nowPlaying?.id, 'nas:track-b');
+    expect(c.isPlaying, true);
+    expect(engine.calls.where((m) => m == 'start'), hasLength(2));
+  });
+  test(
+      'a removed saved style disables auto instead of silently broadening selection',
+      () async {
+    final engine = MetricEngine(), c = await setup(engine, ProbeAudio());
+    addTearDown(c.dispose);
+    c.smartStyle = 'removed-style';
+    await c.prepareSmartPlayer();
+    expect(c.smartAutomatic, false);
+    expect(
+        engine.arguments
+            .where((a) => a['method'] == 'direction')
+            .single['automatic'],
+        false);
+    expect(c.v3Error, contains('重新选择'));
+  });
 }

@@ -41,6 +41,15 @@ extension PhoneFlow on AppController {
       String? targetStyle,
       String source = '手机',
       bool skip = false}) async {
+    if (v3Metric) {
+      if (skip) {
+        await recommendNext();
+        return;
+      }
+      await setSmartDirection(
+          level: targetEnergy ?? draftEnergy, style: targetStyle ?? smartStyle);
+      return;
+    }
     if (v3Active) {
       if (targetStyle == 'Trap' || targetStyle == 'Grime') {
         await v3Request('style', style: targetStyle);
@@ -338,6 +347,23 @@ extension PhoneFlow on AppController {
       return;
     }
     final action = shortcutMapping[gesture]!;
+    if (v3Metric) {
+      switch (action) {
+        case ShortcutAction.playback:
+          await v3TogglePlayback();
+        case ShortcutAction.energyUp:
+          await setSmartDirection(level: draftEnergy + 1);
+        case ShortcutAction.energyDown:
+          await setSmartDirection(level: draftEnergy - 1);
+        case ShortcutAction.nextTrack:
+          await recommendNext();
+        case ShortcutAction.nextStyle:
+          final styles = smartStyles;
+          await setSmartDirection(
+              style: styles[(styles.indexOf(smartStyle) + 1) % styles.length]);
+      }
+      return;
+    }
     if (v3Active) {
       switch (action) {
         case ShortcutAction.playback:
@@ -390,6 +416,8 @@ extension PhoneFlow on AppController {
         'directionSessionActive': _directionSessionActive,
         'mixEnergy': energy,
         'mixStyle': mixStyle,
+        'smartStyle': smartStyle,
+        'smartAutomatic': smartAutomatic,
         'accessoryKind': accessoryKind.name,
         'accessoryLocked': accessoryLocked,
         'shortcuts':
@@ -397,6 +425,9 @@ extension PhoneFlow on AppController {
       };
 
   void _restorePhoneState(Map<String, dynamic> state) {
+    smartStyle =
+        state['smartStyle'] is String ? state['smartStyle'] as String : '';
+    smartAutomatic = state['smartAutomatic'] != false;
     _directionSessionActive = state['directionSessionActive'] == true;
     energy =
         draftEnergy = ((state['mixEnergy'] as num?)?.toInt() ?? 3).clamp(1, 5);

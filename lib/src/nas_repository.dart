@@ -85,6 +85,25 @@ class NasCatalogRepository {
     return jsonDecode(utf8.decode(response.bodyBytes));
   }
 
+  /// Public style choices only; no audio or analysis is loaded before playback.
+  Future<List<Map<String, dynamic>>> smartDirectory() async {
+    final value = _map(await _get('/listen/library.json', timeoutSeconds: 12));
+    if (value['schema'] != 'harbeat.continuous-library.v1' ||
+        value['tracks'] is! List) {
+      throw const BackendException('智能选曲目录暂不可用。');
+    }
+    return (value['tracks'] as List)
+        .map(_map)
+        .where((row) =>
+            row['id'] is String &&
+            _catalogId.hasMatch(row['id'] as String) &&
+            row['playStatus'] == 'ready' &&
+            row['mixStatus'] == 'ready' &&
+            row['styleLabels'] is List &&
+            (row['styleLabels'] as List).every((s) => s is String))
+        .toList();
+  }
+
   Future<List<Track>> refresh() async {
     final artwork = _refreshArtwork();
     final data = await _get('/api/analysis-lab/reports');

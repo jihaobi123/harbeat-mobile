@@ -96,7 +96,8 @@ void main() {
         home: AnimatedBuilder(
             animation: c, builder: (_, __) => Shell(controller: c))));
     await tester.scrollUntilVisible(find.text('自动接歌'), 300);
-    expect(find.text('新版连续混音'), findsOneWidget);
+    expect(find.text('标准播放'), findsNothing);
+    expect(find.text('V3 实时混音'), findsNothing);
     expect(find.textContaining('完整曲库素材尚未上线'), findsOneWidget);
     expect(find.text('自动接歌'), findsOneWidget);
     expect(find.text('提高能量 ↑'), findsNothing);

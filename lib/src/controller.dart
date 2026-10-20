@@ -25,6 +25,7 @@ part 'network_controller.dart';
 part 'nas_controller.dart';
 part 'realtime_controller.dart';
 part 'dance_controller.dart';
+part 'smart_controller.dart';
 
 class AppController extends ChangeNotifier {
   AppController(this.repository,
@@ -65,6 +66,8 @@ class AppController extends ChangeNotifier {
   StreamSubscription<Map<String, dynamic>>? _v3Subscription;
   bool v3Active = false;
   bool v3Loading = false;
+  String smartStyle = '';
+  bool smartAutomatic = true;
   String? v3Error;
   int v3Budget = 30;
   String v3Style = 'Trap';
@@ -290,6 +293,7 @@ class AppController extends ChangeNotifier {
     loading = false;
     notifyListeners();
     if (nasRepository != null) unawaited(refreshNas());
+    if (nasRepository != null && v3Supported) unawaited(loadSmartChoices());
   }
 
   void setTab(int value) {
@@ -322,11 +326,23 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> play(Track track) async {
+    if (v3Metric && v3Tracks.any((t) => t.id == track.id)) {
+      if (v3State['current']?['id'] == track.id.substring(4)) {
+        if (!isPlaying) await v3TogglePlayback();
+      } else if (!isPlaying && v3Pending == null) {
+        await metricCurrent(track);
+        if (nowPlaying?.id == track.id) await v3TogglePlayback();
+      } else {
+        await metricSelectNext(track.id.substring(4));
+      }
+      return;
+    }
     if (v3Active) {
       await v3Select(track);
       return;
     }
     if (audioBusy || applyingDirection) return;
+    if (track.isNas && v3Supported && await playSmartTrack(track)) return;
     cancelDirection(message: '手机播放');
     if (await _loadTrack(track)) {
       _directionSessionActive = false;
@@ -419,6 +435,15 @@ class AppController extends ChangeNotifier {
       return;
     }
     if (audioBusy || applyingDirection) return;
+    if (!isPlaying &&
+        v3Supported &&
+        (nowPlaying?.isNas == true ||
+            (nowPlaying == null && nasRepository != null))) {
+      if (await prepareSmartPlayer(initial: nowPlaying)) {
+        await v3TogglePlayback();
+        return;
+      }
+    }
     if (isPlaying) {
       cancelDirection(message: '已暂停，待切换操作已取消。');
       await audio.pause();
@@ -451,6 +476,10 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> nextTrack({bool autoPlay = false}) async {
+    if (v3Metric) {
+      await recommendNext();
+      return;
+    }
     if (v3Active) {
       await v3Request('next');
       return;

@@ -71,7 +71,7 @@ extension RealtimeFlow on AppController {
       v3Active = true;
       _v3Subscription ??=
           realtimeEngine.states.listen(_receiveV3, onError: (Object e) {
-        v3Error = '实时混音状态连接中断，请切换到标准播放后重试。';
+        v3Error = '智能衔接连接中断，停止后重新播放可重试。';
         _changed();
       });
       final result = await realtimeEngine.command(
@@ -99,8 +99,12 @@ extension RealtimeFlow on AppController {
       _v3PreviousQueue = List.of(queue);
       queue = v3Tracks.map((t) => t.id).toList();
       if (!queue.contains(nowPlaying?.id)) {
-        nowPlaying =
-            v3Tracks.where((t) => t.title == 'Big Girls').firstOrNull ??
+        nowPlaying = mode == 'metric'
+            ? v3Tracks
+                .where((t) => v3Catalog.any((e) =>
+                    'nas:${e['id']}' == t.id && e['playStatus'] == 'ready'))
+                .first
+            : v3Tracks.where((t) => t.title == 'Big Girls').firstOrNull ??
                 v3Tracks.first;
       }
       queueIndex = queue.indexOf(nowPlaying!.id);
@@ -143,6 +147,9 @@ extension RealtimeFlow on AppController {
     if (v3Loading || dancePreparing) return;
     await disableV3();
     if (!v3Active) await enableV3(mode: 'metric');
+    if (v3Metric) {
+      await setSmartDirection(level: draftEnergy, style: smartStyle);
+    }
   }
 
   Future<void> metricPrepare() => _v3Command('metricPrepare');
@@ -161,6 +168,7 @@ extension RealtimeFlow on AppController {
     if (v3Pending != null) return;
     if (v3State['current'] != null) {
       await _v3Command('stop');
+      if (v3State['current'] != null) return;
     }
     nowPlaying = track;
     queueIndex = queue.indexOf(track.id);
@@ -216,7 +224,11 @@ extension RealtimeFlow on AppController {
       }
       if (method == 'export') intentFeedback = '日志已提交保存到 下载 / HarBeat';
     } catch (e) {
-      v3Error = e is PlatformException ? e.message : '操作未完成，请重试。';
+      v3Error = e is PlatformException
+          ? e.message
+          : e is StateError
+              ? e.message.toString()
+              : '操作未完成，请重试。';
     }
     _changed();
   }
@@ -243,6 +255,14 @@ extension RealtimeFlow on AppController {
         await metricCurrent(track);
       } else {
         await _v3Command('select', {'trackId': track.id.substring(4)});
+      }
+      return;
+    }
+    if (v3Metric) {
+      await disableV3();
+      if (!v3Active && await _loadTrack(track)) {
+        intentFeedback = '正在播放原曲；这首歌还没有可用的智能混音资料。';
+        _changed();
       }
       return;
     }
