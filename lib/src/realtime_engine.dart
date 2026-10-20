@@ -4,13 +4,14 @@ import 'package:flutter/services.dart';
 
 abstract class RealtimeEngine {
   bool get supported;
+  bool get supportsLegacy => true;
   Stream<Map<String, dynamic>> get states;
   Future<Map<String, dynamic>> command(String method,
       [Map<String, dynamic> args = const {}]);
   Future<void> dispose();
 }
 
-class PlatformRealtimeEngine implements RealtimeEngine {
+class PlatformRealtimeEngine extends RealtimeEngine {
   bool _initialized = false;
   static const _method = MethodChannel('harbeat/realtime');
   static const _events = EventChannel('harbeat/realtime/state');

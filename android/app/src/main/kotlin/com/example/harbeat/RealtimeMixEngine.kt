@@ -38,6 +38,7 @@ import java.security.MessageDigest
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.Executors
+import java.util.concurrent.Semaphore
 
 /** Only APK-owned HTML/JS/media are accessible. No remote page or arbitrary URL bridge. */
 class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<String, Any?>) -> Unit) {
@@ -48,6 +49,8 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
     private var focusRequest: AudioFocusRequest? = null
     private val handler = Handler(Looper.getMainLooper())
     private val exports = Executors.newSingleThreadExecutor()
+    private val metricRequests = Executors.newSingleThreadExecutor()
+    private val metricSlot = Semaphore(1)
     private val focusListener = AudioManager.OnAudioFocusChangeListener { change ->
         if (change != AudioManager.AUDIOFOCUS_GAIN) {
             focused = false
@@ -64,6 +67,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
     }
 
     private var ready = false
+    private var engineMode = "v3"
     private var disposed = false
     private var sequence = 0
     private val pending = mutableMapOf<Int, MethodChannel.Result>()
@@ -100,6 +104,9 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
                 if (request.method == "GET" && uri.scheme == "https" && uri.host == "appassets.androidplatform.net") {
                     val path = uri.encodedPath ?: ""
                     val hash = uri.getQueryParameter("sha256") ?: ""
+                    if (path.matches(Regex("/listen/(?:catalog/[A-Za-z0-9_-]{1,160}/)?media/[A-Za-z0-9_.-]+\\.(flac|wav)")) && hash.matches(Regex("[a-f0-9]{64}"))) return verifiedAudio(path, hash)
+                    if (path.matches(Regex("/listen/smart-media/[a-f0-9]{64}/(original|bass|filter|yield|vocal|bass_filter)\\.wav")) && hash.matches(Regex("[a-f0-9]{64}"))) return verifiedAudio(path, hash)
+                    if (path.matches(Regex("/listen/(library\\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?details/[A-Za-z0-9_-]{1,160}\\.json|smart-api/jobs/[a-f0-9]{64})"))) return continuousMetadata(path)
                     val publishedAudio = path.matches(Regex("/analysis-lab-static/(v3-live-baseline-20260922|v31-candidate-20260923|vocal-overlap-corpus-20260924)/media/[A-Za-z0-9_.-]+\\.flac"))
                     val registeredAudio = path.matches(Regex("/api/analysis-lab/media/[a-f0-9]{64}"))
                     if ((publishedAudio || registeredAudio) && hash.matches(Regex("[a-f0-9]{64}"))) {
@@ -184,11 +191,19 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
         (web.parent as? ViewGroup)?.removeView(web)
         web.destroy()
         exports.shutdown()
+        metricRequests.shutdown()
         activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
     fun command(method: String, args: Map<*, *>, result: MethodChannel.Result) {
-        if (disposed || method !in listOf("prepare", "configure", "start", "pause", "resume", "stop", "seek", "request", "cancel", "export", "select", "volume", "automatic", "filters")) {
+        if (disposed || method !in listOf("prepare", "configure", "start", "pause", "resume", "stop", "seek", "request", "cancel", "export", "select", "volume", "automatic", "filters", "metricPrepare", "metricMethod", "metricApply")) {
             result.error("unavailable", "不支持的播放器操作", null); return
+        }
+        if (method == "prepare") {
+            val nextMode = if (args["mode"] == "metric") "metric" else "v3"
+            if (nextMode != engineMode) {
+                pauseEngine(); ready = false; engineMode = nextMode
+                web.loadUrl("https://appassets.androidplatform.net/assets/realtime/" + if (nextMode == "metric") "metric-engine.html" else "engine.html")
+            }
         }
         val id = ++sequence
         pending[id] = result
@@ -201,7 +216,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
                 pauseEngine()
                 result.error("timeout", "实时引擎响应超时，请重新开启 V3", null)
             }
-        }, if (method == "start") 120000 else 30000)
+        }, if (method == "metricPrepare") 420000 else if (method in listOf("start", "metricApply")) 180000 else 30000)
     }
 
     /** The WebView can read only content-addressed assets from the owner's NAS relay. */
@@ -265,7 +280,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
                 }
             }
             file.setLastModified(System.currentTimeMillis())
-            return WebResourceResponse("audio/flac", null, file.inputStream())
+            return WebResourceResponse(if (path.endsWith(".wav")) "audio/wav" else "audio/flac", null, file.inputStream())
         } catch (_: Exception) {
             return WebResourceResponse("text/plain", "UTF-8", 503, "Audio unavailable", emptyMap(), ByteArrayInputStream(ByteArray(0)))
         }
@@ -285,6 +300,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
             val json = runCatching { JSONObject(text) }.getOrNull() ?: return
             handler.post {
                 if (disposed) return@post
+                if ((engineMode == "metric") != (json.optJSONObject("metric") != null)) return@post
                 if (json.optBoolean("ready") && !ready) {
                     ready = true
                     waiting.toList().forEach { send(it) }; waiting.clear()
@@ -305,6 +321,51 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
         }
     }
     inner class Host {
+        @JavascriptInterface fun requestMetric(id: Int, text: String) {
+            fun reply(value: String) { handler.post {
+                if (!disposed) web.evaluateJavascript("window.dispatchEvent(new CustomEvent('harbeat-metric-result',{detail:{id:$id,reply:${JSONObject.quote(value)}}}));", null)
+            } }
+            if (disposed || id <= 0 || text.toByteArray().size > 8192 || !metricSlot.tryAcquire()) {
+                reply(JSONObject().put("ok", false).put("error", "上一条准备请求仍在连接，请稍后重试").toString()); return
+            }
+            try { metricRequests.execute {
+                val value = prepareMetric(text)
+                metricSlot.release(); reply(value)
+            } } catch (_: Exception) { metricSlot.release() }
+        }
+        private fun prepareMetric(text: String): String {
+            return try {
+                check(text.toByteArray().size <= 8192)
+                val body = JSONObject(text)
+                check(body.keys().asSequence().toSet() == setOf("from", "to", "windowId", "start"))
+                for (key in listOf("from", "to", "windowId")) check(body.getString(key).matches(Regex("[A-Za-z0-9_-]{1,160}")))
+                check(body.getString("from") != body.getString("to"))
+                val start = body.getDouble("start"); check(start.isFinite() && start >= 0 && start <= 86400)
+                val connection = URL("https://8.136.120.255/listen/smart-api/jobs").openConnection() as HttpURLConnection
+                try {
+                    connection.requestMethod = "POST"; connection.doOutput = true
+                    connection.connectTimeout = 10000; connection.readTimeout = 20000; connection.instanceFollowRedirects = false
+                    connection.setRequestProperty("Content-Type", "application/json")
+                    connection.setRequestProperty("Origin", "https://8.136.120.255")
+                    connection.outputStream.use { it.write(body.toString().toByteArray()) }
+                    val code = connection.responseCode
+                    val stream = if (code in 200..299) connection.inputStream else connection.errorStream
+                    val output = ByteArrayOutputStream()
+                    stream?.use { input ->
+                        val buffer = ByteArray(8192)
+                        while (true) {
+                            val n = input.read(buffer); if (n < 0) break
+                            check(output.size() + n <= 1024 * 1024)
+                            output.write(buffer, 0, n)
+                        }
+                    }
+                    val bytes = output.toByteArray()
+                    val data = JSONObject(String(bytes, Charsets.UTF_8))
+                    if (code in 200..299) JSONObject().put("ok", true).put("data", data).toString()
+                    else JSONObject().put("ok", false).put("error", data.optString("detail", "云端暂不可用（$code）")).toString()
+                } finally { connection.disconnect() }
+            } catch (_: Exception) { JSONObject().put("ok", false).put("error", "混音服务连接未完成，请重试").toString() }
+        }
         @JavascriptInterface fun requestFocus(): Boolean {
             val latch = CountDownLatch(1)
             var granted = false
@@ -351,6 +412,6 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
             }
         }
         private fun validSession(text: String): Boolean = text.toByteArray().size <= 20 * 1024 * 1024 &&
-            runCatching { JSONObject(text).optString("schema") == "harbeat.v3_live_session.v2" }.getOrDefault(false)
+            runCatching { JSONObject(text).optString("schema") in listOf("harbeat.v3_live_session.v2", "harbeat.metric-mix-session.v1") }.getOrDefault(false)
     }
 }

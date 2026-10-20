@@ -1,6 +1,13 @@
 part of 'controller.dart';
 
 extension RealtimeFlow on AppController {
+  bool get v3Metric => v3State['metric'] is Map;
+  bool get v3LegacySupported => realtimeEngine.supportsLegacy;
+  Map<String, dynamic> get metricState =>
+      Map<String, dynamic>.from(v3State['metric'] as Map? ?? const {});
+  Map<String, dynamic>? get metricResult => metricState['result'] is Map
+      ? Map<String, dynamic>.from(metricState['result'] as Map)
+      : null;
   bool get v3Continuous => v3State['continuous'] is Map;
   Map<String, dynamic> get continuousState => v3Continuous
       ? Map<String, dynamic>.from(v3State['continuous'] as Map)
@@ -44,7 +51,7 @@ extension RealtimeFlow on AppController {
     _changed();
   }
 
-  Future<void> enableV3({bool continuous = true}) async {
+  Future<void> enableV3({bool continuous = true, String? mode}) async {
     if (v3Active ||
         v3Loading ||
         audioBusy ||
@@ -67,8 +74,8 @@ extension RealtimeFlow on AppController {
         v3Error = '实时混音状态连接中断，请切换到标准播放后重试。';
         _changed();
       });
-      final result = await realtimeEngine
-          .command('prepare', {'mode': continuous ? 'continuous' : 'legacy'});
+      final result = await realtimeEngine.command(
+          'prepare', {'mode': mode ?? (continuous ? 'continuous' : 'legacy')});
       if (_disposed) return;
       v3Catalog = (result['tracks'] as List)
           .map((t) => Map<String, dynamic>.from(t as Map))
@@ -83,7 +90,7 @@ extension RealtimeFlow on AppController {
                 style: t['style'],
                 bpm: t['bpm'],
                 energy: null,
-                reason: 'V3 本地实时素材',
+                reason: mode == 'metric' ? '智能分轨混音素材' : 'V3 本地实时素材',
                 color: const Color(0xFFFF683B),
                 durationMs: ((t['duration'] as num) * 1000).round())
           ]);
@@ -108,12 +115,18 @@ extension RealtimeFlow on AppController {
               .round());
       _receiveV3(Map<String, dynamic>.from(result['state'] as Map));
       tab = 0;
-      if (nasRepository != null && danceStyles.isEmpty) {
+      if (mode != 'metric' && nasRepository != null && danceStyles.isEmpty) {
         unawaited(loadDanceStyles());
       }
-    } catch (_) {
+    } catch (e) {
       v3Active = false;
-      v3Error = 'V3 引擎未能启动，请重试。';
+      v3Error = e is PlatformException
+          ? e.message ?? '混音引擎未能启动，请重试。'
+          : e is TimeoutException
+              ? '连接混音引擎超时，请重试。'
+              : e is StateError
+                  ? e.message.toString()
+                  : '混音服务未能连接，请检查网络后重试。';
     } finally {
       v3Loading = false;
       _changed();
@@ -124,6 +137,36 @@ extension RealtimeFlow on AppController {
     if (v3Loading || dancePreparing) return;
     await disableV3();
     if (!v3Active) await enableV3(continuous: continuous);
+  }
+
+  Future<void> switchMetricMode() async {
+    if (v3Loading || dancePreparing) return;
+    await disableV3();
+    if (!v3Active) await enableV3(mode: 'metric');
+  }
+
+  Future<void> metricPrepare() => _v3Command('metricPrepare');
+  Future<void> metricSelectNext(String id) =>
+      _v3Command('select', {'trackId': id});
+  Future<void> metricMethod(String method) =>
+      _v3Command('metricMethod', {'method': method});
+  Future<void> metricApply({bool audition = false}) =>
+      _v3Command('metricApply', {'audition': audition});
+  Future<void> metricFilter({String? label, String? query}) =>
+      _v3Command('filters', {
+        if (label != null) 'label': label,
+        if (query != null) 'query': query,
+      });
+  Future<void> metricCurrent(Track track) async {
+    if (v3Pending != null) return;
+    if (v3State['current'] != null) {
+      await _v3Command('stop');
+    }
+    nowPlaying = track;
+    queueIndex = queue.indexOf(track.id);
+    position = Duration.zero;
+    duration = Duration(milliseconds: track.durationMs ?? 0);
+    _changed();
   }
 
   Future<void> continuousVolume(double value) =>
@@ -195,6 +238,14 @@ extension RealtimeFlow on AppController {
   }
 
   Future<void> v3Select(Track track) async {
+    if (v3Metric && v3Tracks.any((t) => t.id == track.id)) {
+      if (v3State['current'] == null) {
+        await metricCurrent(track);
+      } else {
+        await _v3Command('select', {'trackId': track.id.substring(4)});
+      }
+      return;
+    }
     if (v3Continuous && v3Tracks.any((t) => t.id == track.id)) {
       final entry = v3Catalog.firstWhere((t) => 'nas:${t['id']}' == track.id);
       if (entry['playStatus'] == 'unavailable') {

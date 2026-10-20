@@ -1,0 +1,102 @@
+{
+  "schema": "harbeat.mobile-metric-acceptance.v1",
+  "date": "2026-10-20",
+  "sourceCommit": "978df49191450a602f1b473b31f630a687585a8d",
+  "policyVersion": "metric-mix-v1.0",
+  "workerCodeVersion": "b42d5d5a488d537f687f985e92a25a210da5cff146107ca35c23b737e2739104",
+  "publicOrigin": "https://8.136.120.255",
+  "library": {
+    "tracks": 151,
+    "mixReady": 147
+  },
+  "case": {
+    "from": "Attention",
+    "to": "HIPHOP",
+    "jobId": "4cfa7bd10fc1a9e47b05a5a2a220009b514f27ce440bee694f06f35998c82c3d",
+    "recommended": "filter",
+    "selected": "filter",
+    "plan": {
+      "from": "track-642bd1ac0da727a3b53b",
+      "to": "track-d2d58531421de0eb9690",
+      "windowId": "w28-4",
+      "start": 55.31843537414966,
+      "end": 64.47,
+      "duration": 9.151564625850341,
+      "rate": 0.9899937500000003,
+      "bStart": 72.5,
+      "bEnd": 81.56,
+      "beatErrorMs": 25.40165764979463
+    },
+    "handoffSourceOffset": 81.56734693877553,
+    "handoffContext": 117.42040816326531,
+    "scheduledContext": 104.14149659863945,
+    "audioObservations": [
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T07:30:50.862Z",
+        "name": "交接开始",
+        "frame": 4774332,
+        "planId": "4cfa7bd10fc1a9e47b05a5a2a220009b514f27ce440bee694f06f35998c82c3d",
+        "requestId": "filter",
+        "observedFrame": 4774400,
+        "quantumStart": 4774272,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6000000238418579,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T07:31:00.012Z",
+        "name": "B正文接管",
+        "frame": 5177916,
+        "planId": "4cfa7bd10fc1a9e47b05a5a2a220009b514f27ce440bee694f06f35998c82c3d",
+        "requestId": "filter",
+        "observedFrame": 5177984,
+        "quantumStart": 5177856,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6039435267448425,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      }
+    ]
+  },
+  "sessionSha256": "1b7437cf26f89168d49a7095bd0ea97e9a2e21efcf7cbfbc93174448ce46ba1d",
+  "verified": [
+    "Cloud preparation from the Flutter playback page",
+    "Expired direct cue disabled",
+    "Audition from 4 seconds before the selected source cue",
+    "Rendered filter overlap and native B continuation on one audio clock",
+    "Nonzero worklet observations for overlap and B body",
+    "JSON record exported from the playback page"
+  ],
+  "pending": [
+    "Physical Android installation and audio output",
+    "Lock screen, background, Bluetooth on a real device",
+    "Safari and iOS app host",
+    "Fresh direct-arm network run: browser control disconnected during the extra run"
+  ],
+  "automatedChecks": {
+    "flutterPassed": 111,
+    "flutterAnalyze": "No issues found",
+    "typescriptPassed": 166,
+    "typescriptSkipped": 2,
+    "pythonProxyPassed": 4,
+    "webReleaseBuild": "passed",
+    "androidArm64ReleaseBuild": "passed"
+  },
+  "apk": {
+    "file": "HarBeat-Preview-20261020-SmartMix-arm64.apk",
+    "package": "com.example.harbeat.preview",
+    "versionName": "0.1.11",
+    "versionCode": 13,
+    "bytes": 332495456,
+    "sha256": "c2cc1950f99bad08ac54050b235dce9420e7a48924c9b6637453db632a7a239c",
+    "signatureVerified": true,
+    "installedThisRun": false
+  }
+}

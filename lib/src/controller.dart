@@ -17,6 +17,7 @@ import 'repository.dart';
 import 'session_store.dart';
 import 'nas_repository.dart';
 import 'realtime_engine.dart';
+import 'realtime_factory.dart';
 import 'dance_repository.dart';
 
 part 'phone_controller.dart';
@@ -42,7 +43,7 @@ class AppController extends ChangeNotifier {
         sessionStore = sessionStore ?? const SecureSessionStore(),
         backendFactory = backendFactory ?? RemoteHarBeatRepository.new,
         mediaStorage = mediaStorage ?? createMediaStorage(),
-        realtimeEngine = realtimeEngine ?? PlatformRealtimeEngine(),
+        realtimeEngine = realtimeEngine ?? createRealtimeEngine(),
         danceRepository = danceRepository ?? DanceRepository();
 
   HarBeatRepository repository;

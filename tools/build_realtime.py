@@ -22,6 +22,11 @@ def main():
     for path, digest in upstream['files'].items():
         local = SOURCE/path.removeprefix('web/')
         assert sha(local.read_bytes()) == digest, f'Upstream source changed: {local}'
+    metric = json.loads((SOURCE/'metric-upstream.json').read_text())
+    assert sha((SOURCE/'public/v3-clock.js').read_bytes()) == metric['clockSha256'], 'Metric audio clock differs'
+    for path, digest in metric['files'].items():
+        local = SOURCE/'src/metric-upstream'/path.removeprefix('web/src/')
+        assert sha(local.read_bytes()) == digest, f'Metric upstream source changed: {local}'
     catalog = json.loads((SOURCE/'public/catalog.json').read_text(encoding='utf-8'))
     assets = {}
     def walk(value):
@@ -47,15 +52,18 @@ def main():
     if args.download: subprocess.run([npm, 'ci', '--no-audit', '--no-fund'], cwd=SOURCE, check=True)
     subprocess.run([npm, 'exec', '--', 'tsc'], cwd=SOURCE, check=True)
     subprocess.run([npm, 'exec', '--', 'vite', 'build', '--config', 'vite.mobile.config.ts'], cwd=SOURCE, check=True)
+    subprocess.run([npm, 'exec', '--', 'vite', 'build', '--config', 'vite.metric-mobile.config.ts'], cwd=SOURCE, check=True)
     # Only this generated directory may be replaced. Never remove sources or user files.
     assert DEST.resolve() == (ROOT/'android/app/src/main/assets/realtime').resolve()
     if DEST.exists(): shutil.rmtree(DEST)
     # Android's asset merger treats foo.json.gz as foo.json, so shipping both
     # collides. The offline index uses .json URLs; APK compression handles size.
     shutil.copytree(SOURCE/'dist-mobile', DEST, ignore=shutil.ignore_patterns('*.json.gz'))
+    shutil.copytree(SOURCE/'dist-metric-mobile', DEST, dirs_exist_ok=True)
     manifest = {'commit': upstream['commit'], 'catalogSha256': sha((SOURCE/'public/catalog.json').read_bytes()),
                 'assetCount': len(assets), 'mediaBytes': sum(a['bytes'] for a in assets.values()),
-                'engine': 'bundled Web Audio V3', 'foregroundOnly': True,
+                'engine': 'bundled Web Audio V3 + metric mix', 'foregroundOnly': True,
+                'metricSourceCommit': metric['commit'],
                 'files': {str(p.relative_to(DEST)).replace('\\','/'): sha(p.read_bytes()) for p in DEST.rglob('*') if p.is_file()}}
     (DEST/'mobile-build.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')
     print(json.dumps({k:v for k,v in manifest.items() if k != 'files'}), flush=True)

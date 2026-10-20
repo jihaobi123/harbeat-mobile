@@ -220,11 +220,11 @@ void main() {
     expect(find.text('让身体，跟着节奏。'), findsOneWidget);
     expect(find.text('播放'), findsOneWidget);
     expect(find.text('音乐'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('提高能量 ↑'), 400);
+    await tester.scrollUntilVisible(find.text('提高能量 ↑').hitTestable(), 200);
     await tester.tap(find.text('提高能量 ↑'));
     await tester.pump();
     expect(engine.intents.last, {'kind': 'up'});
-    await tester.scrollUntilVisible(find.text('Grime'), 200);
+    await tester.scrollUntilVisible(find.text('Grime').hitTestable(), 200);
     await tester.tap(find.text('Grime'));
     await tester.pump();
     expect(engine.intents.last, {'kind': 'style', 'style': 'Grime'});

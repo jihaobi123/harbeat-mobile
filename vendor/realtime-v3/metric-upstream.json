@@ -1,0 +1,28 @@
+{
+  "repository": "https://github.com/jihaobi123/harbeat-client",
+  "commit": "978df49191450a602f1b473b31f630a687585a8d",
+  "files": {
+    "web/src/continuous/activation.ts": "118052d8a539dbc1ccd433f2b053d9906fcde39d9fb92dc265eed0570beed9aa",
+    "web/src/continuous/catalog.ts": "bc2b2e4de88e40f8de96e43033d51cad4ec99773ffb28b5ca2cc9883375b2c40",
+    "web/src/phrase/load.ts": "7275735d1ca25eb3b1c60f558dd8f95bbece9a274a288b56ec9c64ec813fef0c",
+    "web/src/realtime/planner.ts": "a47793283f16cee6f608bc1344514f3be0b3af7c6ae43110f27c1f80d8e60d0a",
+    "web/src/realtime/evidence.ts": "cbc2c03b43ce12fb185e5c5f8b95003f60b73ad315e08f7566d7e611704d09e6",
+    "web/src/realtime/decision.ts": "b031316f0f3fef143db6a6719d1c127a2a31fcb42bdb4258c3812be0203d0ffc",
+    "web/src/realtime/trace.ts": "4d9b6610d99e9251b70dd637b5232683ee2b1cb316bd60f7502344ee7c79fd93",
+    "web/src/vocal-overlap/planner.ts": "a2bf3ee91fdffc6e5e170ead8897c5a1f746c3d5a4d72c353c21a4d32deef3ba",
+    "web/src/vocal-overlap/score.ts": "0aa95e08d73227c3aff6fadbae921818718003d1961bde78decfeb18c1fbc490",
+    "web/src/v30/eq.ts": "837cafaa4d17a29db8e69093b70ba65961a5e6beddd0aa2c289c9aaaf697ca37",
+    "web/src/v30/planner.ts": "8d973182eceda23eaeb90829ed810c4f3fd901861f28afed6c2cfdeee4c24f2f",
+    "web/src/v30/types.ts": "0e41425a74917aa53b768284f1e6f18c6eded3dfec8cf738b633a0aa885c1292",
+    "web/src/phrase/types.ts": "ea91611a158e71fa04755d50bb83c2ef4612313b93cc08df466301cd90e268c7",
+    "web/src/v31-release/release.ts": "a2482027f34a921e38010a3e08a73695e8d121d5709301ce7003d7125072a0e4",
+    "web/src/continuous/beatAlignment.ts": "28c991f74ff32bb58b68632b043e43593dbce820814fb49fd30c5bfcd8e71045",
+    "web/src/metric-mix/types.ts": "cdacd8e743c472efba7d0ebd451690d93b2ace82988f2d51c6ce938b004e17b1",
+    "web/src/metric-mix/plan.ts": "5128d27caef0355ace7c555d2af8a63548ec5fe414851407306381a11858ad62",
+    "web/src/metric-mix/transport.ts": "f810e6e1fbda76815af021b3363c6de3c3cbf91b7cacde4ba45ea83e64d3599f",
+    "web/src/continuous/segments.ts": "da40a6c237234c11a597845878e0bb02b2992c540d98714d2f2fcca31ee85c8d",
+    "web/src/realtime/cache.ts": "aa89c95c327ea2184c86e3974790b097b19789f6a46ea1f361ab527e4429ad3b",
+    "web/src/realtime/encodedCache.ts": "ccf3a71cd59dd6a6a0bd795720de30b5fba048b4db3422e51a570dba9cf0c745"
+  },
+  "clockSha256": "da4c97488f80b3f5272055991111d50069746997d2f1bd1732ca5ee55f5328d7"
+}

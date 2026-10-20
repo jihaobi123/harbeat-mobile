@@ -39,8 +39,9 @@ class PhoneMixScreen extends StatelessWidget {
                       selected: c.v3Active,
                       color: c.v3Active ? HB.orange : HB.white,
                       busy: c.v3Loading,
-                      onPressed:
-                          c.v3Loading || c.audioBusy ? null : c.enableV3)),
+                      onPressed: c.v3Loading || c.audioBusy
+                          ? null
+                          : () => c.enableV3(mode: 'metric'))),
             ]),
             const SizedBox(height: 16),
           ],
@@ -52,11 +53,13 @@ class PhoneMixScreen extends StatelessWidget {
             Expanded(
                 child: Text(
                     c.v3Active
-                        ? c.v3Continuous
-                            ? '连续混音 · ${c.v3Tracks.length} 首已发布素材'
-                            : c.danceRunning
-                                ? '${c.danceRun!['style']} · 自动舞程'
-                                : '本机实时混音 · 六首离线试听'
+                        ? c.v3Metric
+                            ? '智能分轨 · ${c.v3Tracks.length} 首可选'
+                            : c.v3Continuous
+                                ? '连续混音 · ${c.v3Tracks.length} 首已发布素材'
+                                : c.danceRunning
+                                    ? '${c.danceRun!['style']} · 自动舞程'
+                                    : '本机实时混音 · 六首离线试听'
                         : c.isRemoteMode
                             ? '手机播放 · 在线曲库'
                             : '手机播放 · 本地曲库',
@@ -73,38 +76,55 @@ class PhoneMixScreen extends StatelessWidget {
             _NetworkNotice(c.catalogError!, onRetry: () => c.refreshCatalog()),
           const SizedBox(height: 24),
           if (c.v3Active) ...[
-            Row(children: [
-              Expanded(
-                  child: HardButton(
-                      label: '新版连续混音',
-                      selected: c.v3Continuous,
-                      color: c.v3Continuous ? HB.acid : HB.white,
-                      onPressed:
-                          c.v3Loading || c.dancePreparing || c.v3Continuous
-                              ? null
-                              : () => c.switchV3Mode(true))),
-              const SizedBox(width: 10),
-              Expanded(
-                  child: HardButton(
-                      label: '定时舞程',
-                      selected: !c.v3Continuous,
-                      color: c.v3Continuous ? HB.white : HB.acid,
-                      onPressed:
-                          c.v3Loading || c.dancePreparing || !c.v3Continuous
-                              ? null
-                              : () => c.switchV3Mode(false))),
-            ]),
+            SizedBox(
+                width: double.infinity,
+                child: HardButton(
+                    label: '智能分轨',
+                    selected: c.v3Metric,
+                    color: c.v3Metric ? HB.orange : HB.white,
+                    onPressed:
+                        c.v3Loading || c.v3Metric ? null : c.switchMetricMode)),
+            const SizedBox(height: 10),
+            if (c.v3LegacySupported)
+              Row(children: [
+                Expanded(
+                    child: HardButton(
+                        label: '新版连续混音',
+                        selected: c.v3Continuous,
+                        color: c.v3Continuous ? HB.acid : HB.white,
+                        onPressed:
+                            c.v3Loading || c.dancePreparing || c.v3Continuous
+                                ? null
+                                : () => c.switchV3Mode(true))),
+                const SizedBox(width: 10),
+                Expanded(
+                    child: HardButton(
+                        label: '定时舞程',
+                        selected: !c.v3Continuous && !c.v3Metric,
+                        color:
+                            c.v3Continuous || c.v3Metric ? HB.white : HB.acid,
+                        onPressed: c.v3Loading ||
+                                c.dancePreparing ||
+                                (!c.v3Continuous && !c.v3Metric)
+                            ? null
+                            : () => c.switchV3Mode(false))),
+              ]),
             const SizedBox(height: 16),
-            if (c.v3Continuous) _ContinuousSetup(c) else _DanceSetup(c),
+            if (c.v3Metric)
+              _MetricSetup(c)
+            else if (c.v3Continuous)
+              _ContinuousSetup(c)
+            else
+              _DanceSetup(c),
             const SizedBox(height: 20),
           ],
           if (c.clientIssue != null) ...[
             const SizedBox(height: 16),
             _IssueCard(c),
           ],
-          if (c.v3Active)
+          if (c.v3Active && !c.v3Metric)
             _V3Directions(c)
-          else ...[
+          else if (!c.v3Active) ...[
             const SizedBox(height: 26),
             _SectionTitle('能量',
                 action: '想要 · ${AppController.energyNames[c.draftEnergy - 1]}'),
@@ -264,7 +284,9 @@ class _PlaybackCard extends StatelessWidget {
                             color: HB.deepTeal))),
                 Text(
                     c.v3Active
-                        ? 'V3 · 实时混音'
+                        ? c.v3Metric
+                            ? '智能分轨混音'
+                            : 'V3 · 实时混音'
                         : track?.resourceLabel ?? (c.loading ? '正在加载' : '选择歌曲'),
                     style: const TextStyle(fontSize: 14, color: HB.muted)),
               ]),
@@ -333,7 +355,7 @@ class _PlaybackCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 4, vertical: 12)),
                     onPressed: c.v3Active
-                        ? c.v3Continuous
+                        ? c.v3Metric || c.v3Continuous
                             ? null
                             : c.cycleV3Budget
                         : c.directionBusy || track?.isRenderedMix == true
@@ -345,9 +367,11 @@ class _PlaybackCard extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                           c.v3Active
-                              ? c.v3Continuous
-                                  ? '等待 18s'
-                                  : '等待 ${c.v3Budget}s'
+                              ? c.v3Metric
+                                  ? '按指标接歌'
+                                  : c.v3Continuous
+                                      ? '等待 18s'
+                                      : '等待 ${c.v3Budget}s'
                               : c.loopPreview
                                   ? '结束循环'
                                   : '循环 16 拍',
@@ -376,7 +400,10 @@ class _PlaybackCard extends StatelessWidget {
                     onPressed: c.directionBusy ||
                             !c.isPlaying ||
                             (c.v3Continuous &&
-                                c.continuousSelection['status'] != 'ready')
+                                c.continuousSelection['status'] != 'ready') ||
+                            (c.v3Metric &&
+                                (c.metricState['canArm'] != true ||
+                                    c.metricState['working'] == true))
                         ? null
                         : () => c.nextTrack(),
                     child:
@@ -395,7 +422,9 @@ class _PlaybackCard extends StatelessWidget {
           const Divider(height: 24),
           Text(
               c.v3Active
-                  ? '选点、EQ 和双轨混音实时执行。锁屏或离开 App 会暂停。'
+                  ? c.v3Metric
+                      ? '按实际交接片段推荐处理；准备完成后再接歌。切到后台或锁屏会暂停。'
+                      : '选点、EQ 和双轨混音实时执行。锁屏或离开 App 会暂停。'
                   : track?.isRenderedMix == true
                       ? 'V3 已渲染试听 · 6 首连续混音，当前播放无需联网。'
                       : track?.isNas == true
@@ -575,6 +604,206 @@ class _V3Directions extends StatelessWidget {
                   : '当前六首每首最多 150 秒；小节与风格结果仍待人工确认。',
           style: const TextStyle(fontSize: 14)),
     ]);
+  }
+}
+
+class _MetricSetup extends StatelessWidget {
+  const _MetricSetup(this.c);
+  final AppController c;
+  @override
+  Widget build(BuildContext context) {
+    final state = c.metricState, result = c.metricResult;
+    final working = state['working'] == true;
+    final locked = c.v3Pending != null;
+    final label = state['label'] as String? ?? '';
+    final query = (state['query'] as String? ?? '').trim().toLowerCase();
+    final selected = state['selected'] as String?;
+    final labels = c.v3Catalog
+        .expand((t) => (t['styleLabels'] as List? ?? []).whereType<String>())
+        .toSet()
+        .toList()
+      ..sort();
+    final rows = c.v3Catalog.where((t) => t['playStatus'] == 'ready').toList();
+    bool visible(Map<String, dynamic> t) =>
+        (label.isEmpty || (t['styleLabels'] as List? ?? []).contains(label)) &&
+        (query.isEmpty ||
+            '${t['title']} ${t['collection']}'.toLowerCase().contains(query));
+    final decision =
+        Map<String, dynamic>.from(result?['decision'] as Map? ?? {});
+    final methods =
+        Map<String, dynamic>.from(decision['methods'] as Map? ?? {});
+    final available =
+        (result?['available'] as List? ?? []).whereType<String>().toList();
+    final method = state['method'] as String? ?? 'original';
+    final metrics = Map<String, dynamic>.from(result?['metrics'] as Map? ?? {});
+    return HardCard(
+        child:
+            Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Text('听清交接，再决定怎么混。', style: Theme.of(context).textTheme.titleMedium),
+      const SizedBox(height: 8),
+      const Text('根据这次交接的贝斯、旋律和人声指标推荐处理；未通过条件时，当前歌曲继续播放。',
+          style: TextStyle(fontSize: 14)),
+      const SizedBox(height: 16),
+      TextFormField(
+          initialValue: state['query'] as String? ?? '',
+          decoration: const InputDecoration(
+              labelText: '筛选混音曲库', hintText: '歌曲名称', border: HB.inputBorder),
+          onChanged: (value) => c.metricFilter(query: value)),
+      const SizedBox(height: 12),
+      DropdownButtonFormField<String>(
+          key: ValueKey('metric-label-$label'),
+          initialValue: label,
+          isExpanded: true,
+          decoration:
+              const InputDecoration(labelText: '音乐风格', border: HB.inputBorder),
+          items: [
+            const DropdownMenuItem(value: '', child: Text('全部风格')),
+            ...labels.map((s) => DropdownMenuItem(value: s, child: Text(s)))
+          ],
+          onChanged: (value) {
+            if (value != null) c.metricFilter(label: value);
+          }),
+      const SizedBox(height: 12),
+      DropdownButtonFormField<String>(
+          key: ValueKey('metric-current-${c.nowPlaying?.id}-$label-$query'),
+          initialValue: rows.any((t) => 'nas:${t['id']}' == c.nowPlaying?.id)
+              ? c.nowPlaying!.id
+              : null,
+          isExpanded: true,
+          decoration:
+              const InputDecoration(labelText: '当前歌曲', border: HB.inputBorder),
+          items: rows
+              .where((t) => visible(t) || 'nas:${t['id']}' == c.nowPlaying?.id)
+              .map((t) => DropdownMenuItem(
+                  value: 'nas:${t['id']}',
+                  child: Text('${t['title']} · ${t['bpm']} BPM',
+                      maxLines: 1, overflow: TextOverflow.ellipsis)))
+              .toList(),
+          onChanged: working || locked || c.v3Busy
+              ? null
+              : (id) {
+                  if (id != null) {
+                    c.metricCurrent(c.v3Tracks.firstWhere((t) => t.id == id));
+                  }
+                }),
+      const SizedBox(height: 12),
+      DropdownButtonFormField<String>(
+          key: ValueKey(
+              'metric-next-$selected-$label-$query-${c.nowPlaying?.id}'),
+          initialValue: selected,
+          isExpanded: true,
+          decoration:
+              const InputDecoration(labelText: '下一首音乐', border: HB.inputBorder),
+          items: rows
+              .where((t) =>
+                  t['mixStatus'] == 'ready' &&
+                  (t['id'] != c.v3State['current']?['id'] ||
+                      t['id'] == selected) &&
+                  (visible(t) || t['id'] == selected))
+              .map((t) => DropdownMenuItem(
+                  value: t['id'] as String,
+                  child: Text('${t['title']} · ${t['bpm']} BPM',
+                      maxLines: 1, overflow: TextOverflow.ellipsis)))
+              .toList(),
+          onChanged: locked
+              ? null
+              : (id) {
+                  if (id != null) {
+                    c.metricSelectNext(id);
+                  }
+                }),
+      const SizedBox(height: 14),
+      HardButton(
+          label: '准备智能交接',
+          color: HB.acid,
+          busy: working,
+          onPressed: working ||
+                  locked ||
+                  c.v3Busy ||
+                  c.v3State['current'] == null ||
+                  selected == null ||
+                  selected == c.v3State['current']?['id']
+              ? null
+              : c.metricPrepare),
+      const SizedBox(height: 10),
+      Semantics(
+          liveRegion: true,
+          child: Text(
+              c.v3Error ?? state['notice']?.toString() ?? '选择当前歌曲后点击开始播放',
+              style: const TextStyle(fontSize: 14))),
+      if (working) TextButton(onPressed: c.v3Cancel, child: const Text('取消准备')),
+      if (result != null) ...[
+        const Divider(height: 30),
+        Text('本次推荐 · ${methods[decision['recommended']]?['name'] ?? ''}',
+            style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 8),
+        Text(decision['explanation']?.toString() ?? '',
+            style: const TextStyle(fontSize: 14)),
+        const SizedBox(height: 12),
+        DropdownButtonFormField<String>(
+            key: ValueKey('metric-method-${result['id']}-$method'),
+            initialValue: available.contains(method) ? method : null,
+            isExpanded: true,
+            decoration: const InputDecoration(
+                labelText: '采用的混音方案', border: HB.inputBorder),
+            items: available
+                .map((id) => DropdownMenuItem(
+                    value: id, child: Text(methods[id]['name'] as String)))
+                .toList(),
+            onChanged: working || locked || c.v3Busy
+                ? null
+                : (id) {
+                    if (id != null) c.metricMethod(id);
+                  }),
+        const SizedBox(height: 12),
+        HardButton(
+            label: '按这个方案接歌',
+            color: HB.orange,
+            onPressed: state['canArm'] == true && !working && !c.v3Busy
+                ? () => c.metricApply()
+                : null),
+        const SizedBox(height: 10),
+        HardButton(
+            label: '试听交接 · 从前 4 秒开始',
+            color: HB.white,
+            onPressed: working || locked || c.v3Busy
+                ? null
+                : () => c.metricApply(audition: true)),
+        if (state['canArm'] != true && !locked)
+          const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text('原接点已过或歌曲已变化，可试听本组，连续播放请重新准备。',
+                  style: TextStyle(fontSize: 14))),
+        ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            title: const Text('查看判断依据'),
+            children: [
+              Text(
+                  '贝斯重叠指标：${metrics['bassOverlap'] ?? '未知'}\n旋律重叠指标：${metrics['otherOverlap'] ?? '未知'}',
+                  style: const TextStyle(fontSize: 14)),
+              ...methods.entries.map((e) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Text('${e.value['name']}：${e.value['reason']}',
+                      style: const TextStyle(fontSize: 14)))),
+              const Text('指标和规则分用于本次排序，不是冲突概率或混音成功率；这些门槛仍需更多听感验证。',
+                  style: TextStyle(fontSize: 14)),
+            ]),
+      ],
+      if (locked) ...[
+        const SizedBox(height: 12),
+        Text(
+            '${c.v3Pending!['title']} · ${(c.v3Pending!['remaining'] as num).toStringAsFixed(1)} 秒后接管',
+            style: const TextStyle(fontWeight: FontWeight.w700)),
+        const Text('已安排交接，暂停会暂停整个时间轴；停止可取消。', style: TextStyle(fontSize: 14)),
+      ],
+      const SizedBox(height: 12),
+      TextButton.icon(
+          onPressed: (c.v3State['logCount'] as num? ?? 0) > 0
+              ? () => c.v3Export('json')
+              : null,
+          icon: const Icon(Icons.download),
+          label: const Text('保存智能混音记录')),
+    ]));
   }
 }
 

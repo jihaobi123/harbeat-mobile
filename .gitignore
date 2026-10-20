@@ -27,6 +27,7 @@ android/local.properties
 # Reproducible V3 bundle / verified single-song assets (see tools/build_realtime.py)
 vendor/realtime-v3/node_modules/
 vendor/realtime-v3/dist-mobile/
+vendor/realtime-v3/dist-metric-mobile/
 vendor/realtime-v3/public/media/
 vendor/realtime-v3/public/continuous/
 vendor/realtime-v3/.source-cache/

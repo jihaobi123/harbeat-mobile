@@ -2,7 +2,7 @@
 
 手机先完成选歌、播放与方向控制，饰品作为可选快捷控制。界面采用浅色背景、青绿与杏黄、细描边圆角卡片；播放、音乐、我的三个主入口保持不变。
 
-当前版本为 **Android Preview 0.1.10+12**：NAS 真实封面接入首页、收藏封套、黑胶中心、歌单和播放器；保留挂环卡片、展开过渡、风格/时长舞程与连续混音入口。见 [封面接入和验证说明](docs/nas-cover-integration-20261016.md) 与 [黑胶界面说明](docs/vinyl-playlists-20261016.md)。首次拉取仓库请先阅读 [环境与复现步骤](docs/release-0.1.6.md)，Android 打包前需准备 V3 引擎素材。
+当前版本为 **Android Preview 0.1.11+13**：原播放页新增「智能分轨」，接入最新指标驱动转场策略；Android 与网页使用同一套音频引擎，云端准备短转场、客户端连续播放 A/转场/B。保留 NAS 封面、黑胶卡片、过渡动效及 Android 原有连续混音和风格/时长舞程。见 [本次接入与验证说明](docs/smart-mix-mobile-20261020.md)、[封面接入说明](docs/nas-cover-integration-20261016.md) 与 [黑胶界面说明](docs/vinyl-playlists-20261016.md)。首次拉取仓库请先阅读 [环境与复现步骤](docs/release-0.1.6.md)，Android 打包前需准备 V3 引擎素材。本次手机未连接，真实设备验收待补。
 
 ## 运行
 
@@ -15,11 +15,12 @@ flutter --suppress-analytics pub get
 flutter --suppress-analytics run -d web-server --web-hostname 127.0.0.1 --web-port 8765
 ```
 
-静态预览：
+智能分轨需要额外的音频引擎文件和同源接口转发，请使用下面的静态预览（首次先在 `vendor/realtime-v3` 执行 `npm ci`）：
 
 ```powershell
-flutter --suppress-analytics build web --no-web-resources-cdn --no-wasm-dry-run
-python -m http.server 8765 --bind 127.0.0.1 --directory build/web
+flutter --suppress-analytics build web --no-web-resources-cdn --no-wasm-dry-run --dart-define=HARBEAT_NAS_BASE_URL=http://127.0.0.1:8766
+python tools/build_metric_web.py
+python tools/serve_preview.py --port 8766
 ```
 
 ## 当前架构
@@ -47,7 +48,7 @@ python -m http.server 8765 --bind 127.0.0.1 --directory build/web
 
 ### Android 测试安装包
 
-当前产物：`outputs/HarBeat-Preview-20261016-Covers-arm64.apk`，版本 0.1.10 (12)，校验值与真机验证见 [交付说明](docs/nas-cover-integration-20261016.md)。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；只用安全安装器保留数据更新。
+本次安装包：`outputs/HarBeat-Preview-20261020-SmartMix-arm64.apk`，版本 0.1.11 (13)，构建结果与校验值见 [交付说明](docs/smart-mix-mobile-20261020.md)。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；只用安全安装器保留数据更新。APK 为本机产物，不存入 Git；本次未安装到手机。
 
 默认构建使用并存预览包名，只有显式 `-PharbeatPreview=false` 才使用原包名。此次修复了应用未启用 Kotlin 插件、audio_session 0.2.4 与关闭内置 Kotlin 的兼容问题，以及网络配置缺少 includeSubdomains 属性的发布检查错误。Gradle 限制为 1536MB 堆、1 个 worker 和 2 个可用处理器，避免本机原生内存不足。
 
@@ -67,15 +68,15 @@ flutter build apk --release --target-platform android-arm64
 
 ## 当前入口
 
-- **播放**：标准播放和 V3 实时混音；V3 的“本次舞程”按风格与大概时长从 NAS 选曲，预览歌单后开始自动混音，到时淡出。标准播放保留原有方向、循环与队列。
+- **播放**：标准播放和 V3 实时混音；新增「智能分轨」按本轮实际分轨指标推荐交接，支持选择当前歌/下一首、风格筛选、准备、方法选择、确认接歌和回放试听。Android 的“本次舞程”仍按原策略从 NAS 选曲、自动混音，到时淡出。标准播放保留原有方向、循环与队列。
 - **音乐**：推荐、搜索（含 BPM）、本地音频导入、链接解析演示、歌曲详情、收藏与歌单管理。
 - **我的**：曲库入口、饰品快捷控制、饰品连接；HiFi Core / Party 留作后续扩展说明。
 
 ## 实现边界
 
 - 推荐页接入 NAS 曲库并按目录歌曲 ID 合并分析版本；快照含 391 首，其中 172 首有真实封面，启动后后台刷新在线目录与封面。个人上传曲库与 NAS 曲库分别保留。六首 Hip-Hop 精选及完整 V3 混音见 [接入与算法说明](docs/nas-hiphop-v3-20260920.md)。旧演示目录仍共用 `assets/audio/preview.wav`，不会用于 NAS 播放。
-- “播放 V3 混音”保留原完整离线试听；Android V3 入口现已进入原 Flutter 播放页，通过本机引擎实时混音。新增风格/时长舞程使用 NAS 的可用曲库，不限原六首。详见 [自动舞程接入与验证](docs/dance-set-20260921.md)。网页和 iOS 仍使用原外部试听入口。
-- Android/iOS 使用 SoLoud 共享音频时钟执行双路原曲交叉淡化；“下一首 / 混入”支持当前队列，方向请求使用已分析风格/能量候选。下载完成后才按音频时钟规划切换。网页只做单曲播放；4 秒调度仅留在显式单元测试替身中。
+- “播放 V3 混音”保留原完整离线试听；Android V3 入口进入原 Flutter 播放页，保留连续混音和风格/时长舞程，详见 [自动舞程接入与验证](docs/dance-set-20260921.md)。新「智能分轨」使用 `/listen/` 专用目录与云端任务，首次接入已完成浏览器真实网络交接；iOS 原生宿主尚未接入这一模式。
+- 标准播放在 Android/iOS 使用 SoLoud 共享音频时钟执行双路原曲交叉淡化；“下一首 / 混入”支持当前队列，方向请求使用已分析风格/能量候选。网页标准播放仍为单曲；V3 智能分轨在浏览器用 Web Audio 时钟接续实际云端转场与 B 原曲。旧 4 秒调度仅留在显式单元测试替身中。
 - 16 拍预览按示例 BPM 截取音频开头并循环，最多到音频末尾，未做真实下拍对齐；未分析的本地文件不开放此功能。
 - 饰品页面扫描真实广播、由用户选择设备、发现 GATT 通知特征。按固件协议配置三个完整十六进制按键包；未知包不执行动作。蓝牙连接不跨重启恢复，断开不停止手机播放。未配置固件时不自动猜测 UUID 或按键值。
 - 链接输入仅做 URL 校验并展示固定的元数据示例，不访问外部平台。
@@ -103,11 +104,12 @@ flutter --suppress-analytics test --no-pub --concurrency=2
 
 ## 本机网页预览
 
-NAS 分析服务限制浏览器跨域来源。本机预览使用仅绑定回环地址的只读转发，固定上游、限制路径、拒绝其他 Origin，不转发凭据，不支持写操作。
+NAS 分析服务限制浏览器跨域来源。本机预览只绑定回环地址，固定上游、限制路径、拒绝其他 Origin，不转发凭据。除了受限的智能转场准备 POST，其他上游操作均为读取；不支持账号、上传或管理写操作。
 
 ```powershell
-flutter build web --no-web-resources-cdn --no-wasm-dry-run --dart-define=HARBEAT_NAS_BASE_URL=http://127.0.0.1:8765
-python tools/serve_preview.py
+flutter build web --no-web-resources-cdn --no-wasm-dry-run --dart-define=HARBEAT_NAS_BASE_URL=http://127.0.0.1:8766
+python tools/build_metric_web.py
+python tools/serve_preview.py --port 8766
 ```
 
 Android 构建不传本机地址参数，默认直接访问阿里云 HTTPS。网页部署到其他域名时应配置对应的同源读取转发。
