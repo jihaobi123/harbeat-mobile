@@ -1,0 +1,112 @@
+{
+  "schema": "harbeat.mobile-nearby-verification.v1",
+  "date": "2026-10-20",
+  "baseCommit": "43e65e4f6888b52e1a14812e04f947f0331533e8",
+  "branch": "codex/metric-mix-mobile-20261020",
+  "tests": {
+    "typescriptPassed": 190,
+    "typescriptSkipped": 3,
+    "flutterPassed": 115,
+    "flutterAnalyze": "no issues",
+    "build": "Flutter Web release and pinned engine passed",
+    "androidBridge": "mixSoon allowlist and 420-second deadline updated; no APK or physical-device acceptance in this change"
+  },
+  "network": {
+    "sourceSessionSha256": "583beb7dff7cc86e11e582ae593c98f7fe34359523c553041d6fc462985ee81f",
+    "engine": "metric-engine-KPkMDSmO.js",
+    "direction": {
+      "style": "Hip-Hop",
+      "energy": 4,
+      "automatic": false
+    },
+    "events": [
+      {
+        "kind": "nearby_request",
+        "at": "2026-10-20T13:18:51.777Z",
+        "from": "track-642bd1ac0da727a3b53b",
+        "to": "track-d2d58531421de0eb9690",
+        "sourcePosition": 49.49814058956916
+      },
+      {
+        "kind": "nearby_candidate",
+        "at": "2026-10-20T13:18:51.788Z",
+        "sourcePosition": 49.50975056689342,
+        "start": 91.87843537414966,
+        "end": 101.03,
+        "leadSeconds": 40,
+        "reused": false
+      },
+      {
+        "kind": "nearby_armed",
+        "at": "2026-10-20T13:18:56.470Z",
+        "sourcePosition": 54.191473922902496,
+        "start": 91.87843537414966,
+        "method": "original"
+      }
+    ],
+    "trackStartsAfterRequest": 0,
+    "observations": [
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T13:19:34.156Z",
+        "name": "交接开始",
+        "frame": 4118827,
+        "planId": "3201481192b58a9c7efb691d6e996fa88556b800d164a50dfc8cb8cc76b1e0fd",
+        "requestId": "original",
+        "observedFrame": 4118912,
+        "quantumStart": 4118784,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6000000238418579,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T13:19:43.308Z",
+        "name": "B正文接管",
+        "frame": 4522411,
+        "planId": "3201481192b58a9c7efb691d6e996fa88556b800d164a50dfc8cb8cc76b1e0fd",
+        "requestId": "original",
+        "observedFrame": 4522496,
+        "quantumStart": 4522368,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.605542004108429,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      }
+    ],
+    "handoff": {
+      "kind": "handoff_complete",
+      "at": "2026-10-20T13:19:43.334Z",
+      "context": 102.57414965986395,
+      "track": "track-d2d58531421de0eb9690",
+      "sourceOffset": 81.58514739229025,
+      "method": "original"
+    },
+    "historyOrigins": [
+      {
+        "kind": "prepared",
+        "origin": "nearby"
+      },
+      {
+        "kind": "handoff_requested",
+        "origin": "nearby",
+        "sourcePosition": 54.191473922902496
+      }
+    ]
+  },
+  "finalEngine": {
+    "name": "metric-engine-CCsVWYTG.js",
+    "sha256": "696522c2f7667829ccf5cace1bcd58ee6a475234ee7f5846ac57b83136d20c56",
+    "differenceAfterNetworkTest": "Reuse any valid prepared cue sooner than the cold-preparation allowance; regression verified in shared nearby tests."
+  },
+  "limitations": [
+    "Nearby is an explicit selected-song request; automatic direction-based late-region selection stays separate",
+    "Initial cold preparation allowance is 40 seconds, not a latency promise",
+    "No new APK generated; physical Android still pending"
+  ]
+}

@@ -8,6 +8,7 @@ import type {Track,Plan} from '../metric-upstream/realtime/planner'
 import {nativeSegment} from '../metric-upstream/continuous/segments'
 import {shortlist,rankChoices,SMART_POLICY} from './smart-selection'
 import type {Host} from './session'
+import {mixNearby} from './nearby'
 
 const hash=/^[a-f0-9]{64}$/
 export const METHODS:Method[]=['original','bass','filter','yield','vocal','bass_filter']
@@ -84,6 +85,7 @@ export class MetricRun {
  private revision=0;private request:AbortController|null=null;private alive=true;private lastCurrent:string|null=null
  private explicit:string|null=null;private recent:string[]=[];private excludedPlans=new Set<string>()
  private excludedTracks=new Set<string>()
+ private nearbyTask:Promise<void>|null=null
  private retryAt=0;private autoTask:Promise<void>|null=null;private lastResult:Prepared|null=null
  private history:Record<string,unknown>[]=[]
  constructor(readonly index:LibraryIndex,readonly base:URL,private changed:()=>void,private host?:Host,
@@ -277,6 +279,28 @@ export class MetricRun {
   const task=this.recommend().finally(()=>{if(this.autoTask===task)this.autoTask=null})
   this.autoTask=task
  }
+ mixSoon(){
+  if(this.nearbyTask)return this.nearbyTask
+  const task=this.performNearby().finally(()=>{if(this.nearbyTask===task){this.nearbyTask=null;this.update()}})
+  this.nearbyTask=task;return task
+ }
+ private async performNearby(){
+  const p=this.player,a=p?.current,id=this.selected
+  if(!p?.playing||!a||p.transition||p.busy)throw Error('先播放当前歌曲，再尽快混入')
+  if(!id||id===a.id)throw Error('先选择下一首，或等待推荐出现')
+  const ready=this.result?{result:this.result,method:this.method}:undefined
+  this.invalidate();const token=this.revision,controller=this.request=new AbortController()
+  this.working=true;this.phase='preparing';this.notice='正在寻找当前位置附近的合适接点';this.update()
+  try{
+   const b=await abortable(this.library.load(id),controller.signal)
+   if(!this.alive||token!==this.revision)return
+   const outcome=await mixNearby({player:p,a,b,signal:controller.signal,ready,leadSeconds:40,prepare:(plan,signal)=>this.cloud(a,b,plan,signal),onStatus:message=>{if(this.alive&&token===this.revision){this.notice=message;this.update()}}})
+   if(!this.alive||token!==this.revision)return
+   this.adopt(outcome.result,a,b,'nearby');this.method=outcome.method;this.phase='armed';this.notice='已安排附近合适接点，将自动混入下一首'
+   this.history.push({kind:'handoff_requested',origin:'nearby',jobId:outcome.result.id,method:outcome.method,sourcePosition:p.position,at:new Date().toISOString()});this.history=this.history.slice(-12)
+  }catch(e){if(token===this.revision&&(e as Error).name!=='AbortError'){this.phase='no_match';this.error=(e as Error).message;this.retryAt=Date.now()+30000}}
+  finally{if(token===this.revision){this.working=false;this.update()}}
+ }
  requestNext(){
   if(this.player?.transition)throw Error('正在交接，稍后可以继续换歌')
   if(this.selected)this.excludedTracks.add(this.selected)
@@ -303,7 +327,7 @@ export class MetricRun {
  save(){if(this.player)this.host?.saveSession(JSON.stringify(this.export()))}
  dispose(){this.alive=false;this.invalidate();this.save();this.player?.dispose()}
  snapshot(){const p=this.player,r=this.result;return {release:METRIC_RELEASE,selected:this.selected,label:this.label,query:this.query,volume:this.volume,working:this.working,notice:this.error||this.notice,canArm:!!r&&canArm(r.plan,p?.current?.id??null,p?.position??0)&&!p?.transition,
-  automatic:this.automatic,energyLevel:this.energyLevel,targetStyle:this.targetStyle,phase:this.phase,recommendation:this.recommendation,
+  automatic:this.automatic,energyLevel:this.energyLevel,targetStyle:this.targetStyle,phase:this.phase,nearbyWorking:!!this.nearbyTask,recommendation:this.recommendation,
   result:r?{id:r.id,policyVersion:r.policyVersion,plan:r.plan,metrics:r.metrics,decision:r.decision,available:METHODS.filter(m=>r.assets[m]&&r.decision.methods[m]?.eligible)}:null,method:this.method}}
 }
 export async function loadMetricIndex(base:URL){return readLibraryIndex(await readMetricJson('/listen/library.json',base))}

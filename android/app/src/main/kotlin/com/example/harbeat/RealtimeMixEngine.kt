@@ -195,7 +195,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
         activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
     fun command(method: String, args: Map<*, *>, result: MethodChannel.Result) {
-        if (disposed || method !in listOf("prepare", "configure", "start", "pause", "resume", "stop", "seek", "request", "cancel", "export", "select", "volume", "automatic", "filters", "metricPrepare", "metricMethod", "metricApply", "direction", "recommend")) {
+        if (disposed || method !in listOf("prepare", "configure", "start", "pause", "resume", "stop", "seek", "request", "cancel", "export", "select", "volume", "automatic", "filters", "metricPrepare", "mixSoon", "metricMethod", "metricApply", "direction", "recommend")) {
             result.error("unavailable", "不支持的播放器操作", null); return
         }
         if (method == "prepare") {
@@ -216,7 +216,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
                 pauseEngine()
                 result.error("timeout", "实时引擎响应超时，请重新开启 V3", null)
             }
-        }, if (method == "metricPrepare") 420000 else if (method in listOf("start", "metricApply")) 180000 else 30000)
+        }, if (method in listOf("metricPrepare", "mixSoon")) 420000 else if (method in listOf("start", "metricApply")) 180000 else 30000)
     }
 
     /** The WebView can read only content-addressed assets from the owner's NAS relay. */

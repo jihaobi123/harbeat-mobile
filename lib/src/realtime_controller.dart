@@ -153,6 +153,7 @@ extension RealtimeFlow on AppController {
   }
 
   Future<void> metricPrepare() => _v3Command('metricPrepare');
+  Future<void> metricMixSoon() => _v3Command('mixSoon');
   Future<void> metricSelectNext(String id) =>
       _v3Command('select', {'trackId': id});
   Future<void> metricMethod(String method) =>

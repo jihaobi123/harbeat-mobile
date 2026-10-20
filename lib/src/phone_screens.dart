@@ -257,7 +257,7 @@ class _ListeningDirection extends StatelessWidget {
             decoration: const InputDecoration(
                 labelText: '想听的风格', border: HB.inputBorder),
             items: [
-                const DropdownMenuItem(value: '', child: Text('不限风格')),
+              const DropdownMenuItem(value: '', child: Text('不限风格')),
               ...c.smartStyles
                   .map((s) => DropdownMenuItem(value: s, child: Text(s)))
             ],
@@ -496,13 +496,21 @@ class _PlaybackCard extends StatelessWidget {
                     style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 4, vertical: 12)),
-                    onPressed: c.v3Active
-                        ? c.v3Metric || c.v3Continuous
-                            ? null
-                            : c.cycleV3Budget
-                        : c.directionBusy || track?.isRenderedMix == true
-                            ? null
-                            : c.togglePracticeLoop,
+                    onPressed: c.v3Metric
+                        ? c.isPlaying &&
+                                !c.v3Busy &&
+                                c.metricState['nearbyWorking'] != true &&
+                                c.v3Pending == null &&
+                                c.metricState['selected'] != null
+                            ? c.metricMixSoon
+                            : null
+                        : c.v3Active
+                            ? c.v3Metric || c.v3Continuous
+                                ? null
+                                : c.cycleV3Budget
+                            : c.directionBusy || track?.isRenderedMix == true
+                                ? null
+                                : c.togglePracticeLoop,
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
                       Icon(c.v3Active ? Icons.timelapse : Icons.repeat_rounded,
                           size: 24),
@@ -510,9 +518,7 @@ class _PlaybackCard extends StatelessWidget {
                       Text(
                           c.v3Active
                               ? c.v3Metric
-                                  ? c.smartAutomatic
-                                      ? '自动接歌'
-                                      : '原曲播放'
+                                  ? '尽快混入'
                                   : c.v3Continuous
                                       ? '等待 18s'
                                       : '等待 ${c.v3Budget}s'

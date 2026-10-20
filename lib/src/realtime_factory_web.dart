@@ -111,8 +111,9 @@ class WebMetricEngine extends RealtimeEngine {
       'args': args
     });
     try {
-      return await pending.future
-          .timeout(Duration(seconds: method == 'metricPrepare' ? 420 : 180));
+      return await pending.future.timeout(Duration(
+          seconds:
+              const ['metricPrepare', 'mixSoon'].contains(method) ? 420 : 180));
     } finally {
       _pending.remove(id);
     }

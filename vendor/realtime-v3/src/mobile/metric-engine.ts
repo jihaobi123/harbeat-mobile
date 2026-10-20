@@ -26,6 +26,7 @@ window.HarBeatEngine={async dispatch({id,method,args}){try{
    case 'start':await run.start(String(args.trackId));break
    case 'select':run.choose(String(args.trackId));break
    case 'metricPrepare':await run.prepare();break
+   case 'mixSoon':await run.mixSoon();break
    case 'metricMethod':run.selectMethod(args.method);break
    case 'metricApply':await run.apply(args.audition===true);break
    case 'pause':run.pause();break

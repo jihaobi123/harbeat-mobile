@@ -130,3 +130,17 @@ it('a failed asset cancels its stalled sibling before trying another candidate',
  expect(run.result).not.toBeNull();expect(stalled?.aborted).toBe(true)
  expect(p.start).toHaveBeenCalledTimes(1);expect(p.arm).not.toHaveBeenCalled()
 })
+
+it('an explicit nearby request arms without waiting for the automatic late-song region',async()=>{
+ const {run,p}=setup();run.direction({automatic:false});await run.start('a');run.choose('b')
+ await run.mixSoon()
+ expect(p.arm).toHaveBeenCalledTimes(1);expect(p.start).toHaveBeenCalledTimes(1)
+ expect(p.arm.mock.calls[0][0].plan.end).toBeLessThan(52)
+})
+it('repeated nearby taps share one preparation instead of queuing more cloud jobs',async()=>{
+ let release!:()=>void;const waiting=new Promise<void>(r=>release=r)
+ const {run,host,p}=setup({waitCloud:()=>waiting});run.direction({automatic:false});await run.start('a');run.choose('b')
+ const first=run.mixSoon();await vi.waitFor(()=>expect(host.prepareMetric).toHaveBeenCalledTimes(1))
+ const second=run.mixSoon();release();await Promise.all([first,second])
+ expect(host.prepareMetric).toHaveBeenCalledTimes(1);expect(p.arm).toHaveBeenCalledTimes(1)
+})
