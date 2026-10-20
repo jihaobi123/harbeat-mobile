@@ -55,6 +55,21 @@ function delay(signal:AbortSignal,ms:number){return new Promise<void>((resolve,r
  signal.addEventListener('abort',abort,{once:true});if(signal.aborted)abort()
 })}
 
+/** Stop awaiting superseded metadata even when a shared library read cannot
+ * be cancelled. The original read may still populate its source-validated cache. */
+function abortable<T>(operation:Promise<T>,signal:AbortSignal):Promise<T>{
+ return new Promise<T>((resolve,reject)=>{
+  const cleanup=()=>signal.removeEventListener('abort',abort)
+  const abort=()=>{cleanup();reject(signal.reason??new DOMException('已取消','AbortError'))}
+  signal.addEventListener('abort',abort,{once:true})
+  operation.then(value=>{cleanup();resolve(value)},error=>{cleanup();reject(error)})
+  if(signal.aborted)abort()
+ })
+}
+
+function expiredCue(){return Object.assign(new Error('当前接点已过，将重新寻找后续可用窗口'),{code:'cue_expired'})}
+const isExpiredCue=(error:unknown)=>(error as {code?:unknown})?.code==='cue_expired'
+
 /** One player: source playback, recommendation, cloud stem choice and handoff. */
 export class MetricRun {
  readonly library:TrackLibrary
@@ -194,7 +209,7 @@ export class MetricRun {
    // At most two metadata reads at a time; one failed source does not erase
    // successful candidates, and no audio is decoded for rejected candidates.
    for(let i=0;i<picks.length;i+=2){
-    const group=await Promise.allSettled(picks.slice(i,i+2).map(t=>this.library.load(t.id)))
+    const group=await abortable(Promise.allSettled(picks.slice(i,i+2).map(t=>this.library.load(t.id))),controller.signal)
     if(!valid())return
     for(const r of group)if(r.status==='fulfilled')loaded.push(r.value)
    }
@@ -202,11 +217,11 @@ export class MetricRun {
    if(!valid())return
    const choices=ranked.choices.filter(c=>!this.excludedPlans.has(c.plan.id))
    if(!choices.length)throw Error('这个风格与能量方向暂时没有可靠接点，当前音乐继续播放；可以换个方向')
-   let lastError=''
+   let lastError='',expired=false
    for(const choice of choices.slice(0,3)){
     if(!valid())return
     if(choice.plan.start<p.position+12){
-     this.excludedPlans.add(choice.plan.id);lastError='准备期间接点已过，将重新寻找后续可用窗口';continue
+     this.excludedPlans.add(choice.plan.id);expired=true;lastError='准备期间接点已过，将重新寻找后续可用窗口';continue
     }
     const b=choice.track
     this.selected=b.id;this.phase='preparing'
@@ -214,14 +229,21 @@ export class MetricRun {
      cue:{start:choice.plan.start,end:choice.plan.end,bStart:choice.plan.window.start,bEnd:choice.plan.window.end,bars:choice.plan.window.bars},
      alternatives:choices.slice(0,3).map(c=>({id:c.track.id,title:c.track.title,start:c.plan.start,windowId:c.plan.window.id,score:c.score}))}
     this.notice='为 '+b.title+' 准备最合适的分轨转场';this.update()
+    // A cloud queue/read or audio download must not keep an obsolete cue in
+    // charge. This stops local waiting; the server has no job-cancel endpoint.
+    const candidate=new AbortController()
+    const cancel=()=>candidate.abort(controller.signal.reason)
+    controller.signal.addEventListener('abort',cancel,{once:true})
+    if(controller.signal.aborted)cancel()
+    const deadline=setInterval(()=>{if(!canArm(choice.plan,p.current?.id??null,p.position))candidate.abort(expiredCue())},250)
     try{
-     const result=await this.cloud(a,b,choice.plan,controller.signal)
+     const result=await abortable(this.cloud(a,b,choice.plan,candidate.signal),candidate.signal)
      if(!valid())return
-     if(!canArm(result.plan,p.current?.id??null,p.position))throw Error('准备完成时接点已过，重新寻找更晚接点')
+     if(!canArm(result.plan,p.current?.id??null,p.position))throw expiredCue()
      const method=result.decision.recommended
-     await Promise.all([p.cache.load(result.assets[method]!,controller.signal),p.cache.load(nativeSegment(b,result.plan.bEnd).asset,controller.signal)])
+     await abortable(Promise.all([p.cache.load(result.assets[method]!,candidate.signal),p.cache.load(nativeSegment(b,result.plan.bEnd).asset,candidate.signal)]),candidate.signal)
      if(!valid())return
-     if(!canArm(result.plan,p.current?.id??null,p.position))throw Error('音频准备完成时接点已过')
+     if(!canArm(result.plan,p.current?.id??null,p.position))throw expiredCue()
      this.adopt(result,a,b,'automatic');this.phase='ready';this.notice='下一首已就绪，将在合适的小节自动接入'
      this.library.trim(new Set([a.id,b.id]),10);this.retryAt=0;return
     }catch(e){
@@ -229,10 +251,12 @@ export class MetricRun {
      this.excludedPlans.add(choice.plan.id);lastError=(e as Error).message
      this.history.push({at:new Date().toISOString(),kind:'candidate_failed',planId:choice.plan.id,reason:lastError})
      this.history=this.history.slice(-12)
-    }
+     if(isExpiredCue(e)){expired=true;break}
+    }finally{clearInterval(deadline);controller.signal.removeEventListener('abort',cancel);candidate.abort()}
    }
+   if(expired)throw expiredCue()
    throw Error(lastError||'本轮转场尚未准备成功，当前音乐继续播放')
-  }catch(e){if(valid()&&(e as Error).name!=='AbortError'){this.phase='no_match';this.error=(e as Error).message;this.recommendation=null;this.selected=null;this.retryAt=Date.now()+30000}}
+  }catch(e){if(valid()&&(e as Error).name!=='AbortError'){this.phase='no_match';this.error=(e as Error).message;this.recommendation=null;this.selected=null;this.retryAt=Date.now()+(isExpiredCue(e)?1000:30000)}}
   finally{if(token===this.revision){this.working=false;this.update()}}
  }
  /** Called by the host's existing timer. All actual source scheduling remains

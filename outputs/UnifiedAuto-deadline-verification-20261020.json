@@ -1,0 +1,291 @@
+{
+  "schema": "harbeat.mobile-deadline-verification.v1",
+  "date": "2026-10-20",
+  "repository": "jihaobi123/harbeat-mobile",
+  "branch": "codex/metric-mix-mobile-20261020",
+  "baseCommit": "406525a74ee9ab37f8a912df2063e997081fccfc",
+  "algorithmSourceCommit": "978df49191450a602f1b473b31f630a687585a8d",
+  "environment": {
+    "os": "Darwin",
+    "surface": "Flutter Web release in Chromium in-app browser",
+    "preview": "http://127.0.0.1:8766/",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "physicalWindowsRetest": false,
+    "physicalAndroidRetest": false,
+    "apkRebuilt": false
+  },
+  "fixes": [
+    "Release superseded metadata waiting immediately on direction cancellation",
+    "Abort local cloud/audio waiting at an expired cue and retry after one second",
+    "Cancel remaining sibling downloads on candidate completion/failure"
+  ],
+  "regressions": {
+    "focusedPassed": 23,
+    "fullTypeScriptPassed": 187,
+    "fullTypeScriptSkipped": 3,
+    "flutterPassed": 114,
+    "flutterAnalyze": "no issues",
+    "previewProxyPassed": 4,
+    "redBeforeFix": [
+      "changed direction blocked by pending metadata",
+      "cloud polling remains working after cue expiry",
+      "failed asset leaves stalled sibling uncancelled"
+    ],
+    "additionalCoverage": [
+      "stalled audio cannot adopt an expired result"
+    ]
+  },
+  "finalEngine": {
+    "name": "metric-engine-Ccu1jpko.js",
+    "sha256": "ebe1f9234539de2659245702c924ee552d32e9a50f1b26979592facdd1a76d09",
+    "build": "TypeScript, pinned upstream hashes and Vite passed"
+  },
+  "networkContinuous": {
+    "engine": "metric-engine-BzmD8SH5.js",
+    "songs": [
+      "Attention",
+      "HIPHOP",
+      "Straight (Battle Beat)"
+    ],
+    "rawSessionSha256": "53beb63f4f44d48d7bf977589ff2cc3f6d21c6240edd745f8ae6018e9adf39a0",
+    "sampleRate": 44100,
+    "direction": {
+      "style": "Hip-Hop",
+      "energy": 4,
+      "automatic": true
+    },
+    "trackStarts": 1,
+    "handoffs": [
+      {
+        "from": "track-642bd1ac0da727a3b53b",
+        "to": "track-d2d58531421de0eb9690",
+        "method": "filter",
+        "cueStart": 110.17543537414966,
+        "cueEnd": 119.327,
+        "bStart": 9.1,
+        "bEnd": 18.16,
+        "scheduleLeadSeconds": 9.880741496598645
+      },
+      {
+        "from": "track-d2d58531421de0eb9690",
+        "to": "track-86141f55b6b1219e1c38",
+        "method": "bass",
+        "cueStart": 129.0771882086168,
+        "cueEnd": 133.58,
+        "bStart": 26.93,
+        "bEnd": 31.42,
+        "scheduleLeadSeconds": 9.945866213151959
+      }
+    ],
+    "observations": [
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T12:26:41.696Z",
+        "name": "交接开始",
+        "frame": 5130269,
+        "planId": "15d6da0b12a1909b081101099d9478a9eac9c6025bf6a3c703be272095ec7a09",
+        "requestId": "filter",
+        "observedFrame": 5130368,
+        "quantumStart": 5130240,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6000000238418579,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T12:26:50.848Z",
+        "name": "B正文接管",
+        "frame": 5533853,
+        "planId": "15d6da0b12a1909b081101099d9478a9eac9c6025bf6a3c703be272095ec7a09",
+        "requestId": "filter",
+        "observedFrame": 5533952,
+        "quantumStart": 5533824,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6384840607643127,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T12:28:41.765Z",
+        "name": "交接开始",
+        "frame": 10425301,
+        "planId": "73124bae7990d6cfce25b25d571eaded56e3149726228b17adee3a370c4047b0",
+        "requestId": "bass",
+        "observedFrame": 10425344,
+        "quantumStart": 10425216,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6384840607643127,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T12:28:46.267Z",
+        "name": "B正文接管",
+        "frame": 10623875,
+        "planId": "73124bae7990d6cfce25b25d571eaded56e3149726228b17adee3a370c4047b0",
+        "requestId": "bass",
+        "observedFrame": 10624000,
+        "quantumStart": 10623872,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6384840607643127,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      }
+    ],
+    "completions": [
+      {
+        "kind": "handoff_complete",
+        "at": "2026-10-20T12:26:50.910Z",
+        "context": 125.54739229024943,
+        "track": "track-d2d58531421de0eb9690",
+        "sourceOffset": 18.223204081632648,
+        "method": "filter"
+      },
+      {
+        "kind": "handoff_complete",
+        "at": "2026-10-20T12:28:46.268Z",
+        "context": 240.9099319727891,
+        "track": "track-86141f55b6b1219e1c38",
+        "sourceOffset": 31.42574376417231,
+        "method": "bass"
+      }
+    ],
+    "automaticEvents": [
+      {
+        "kind": "prepared",
+        "at": "2026-10-20T12:25:31.118Z",
+        "origin": "automatic"
+      },
+      {
+        "kind": "handoff_requested",
+        "at": "2026-10-20T12:26:31.815Z",
+        "origin": "automatic"
+      },
+      {
+        "kind": "prepared",
+        "at": "2026-10-20T12:27:00.630Z",
+        "origin": "automatic"
+      },
+      {
+        "kind": "handoff_requested",
+        "at": "2026-10-20T12:28:31.814Z",
+        "origin": "automatic"
+      }
+    ]
+  },
+  "screenshots": [
+    {
+      "path": "outputs/UnifiedAuto-deadline-ready-20261020.jpg",
+      "sha256": "fd2deb44803c00c75efd6bb2dd27b257c7bf4f95a5cdb462622c1371b4d11079",
+      "engine": "metric-engine-BzmD8SH5.js"
+    },
+    {
+      "path": "outputs/UnifiedAuto-deadline-final-20261020.jpg",
+      "sha256": "0fa10062e17ceeff14824156ead50182ee4de262b264dfff8c0f6e0c0b374653",
+      "engine": "metric-engine-Ccu1jpko.js"
+    }
+  ],
+  "limitations": [
+    "Cloud jobs already submitted are not cancelled server-side",
+    "AudioWorklet late=0 is render-quantum execution evidence, not device or Bluetooth latency",
+    "Rule thresholds and subjective mix quality are unchanged",
+    "Existing version 14 APK does not include this source fix"
+  ],
+  "networkFinal": {
+    "engine": "metric-engine-Ccu1jpko.js",
+    "engineVerifiedFromIframeScript": true,
+    "rawSessionSha256": "869258f36720e42cc1ed49234c08c5a9052414dc8ff84ab15c5e41026665d7ad",
+    "songs": [
+      "Attention",
+      "HIPHOP"
+    ],
+    "nextPrepared": "Straight (Battle Beat)",
+    "sampleRate": 44100,
+    "trackStarts": 1,
+    "handoffs": [
+      {
+        "method": "filter",
+        "cueStart": 110.17543537414966,
+        "cueEnd": 119.327,
+        "bStart": 9.1,
+        "bEnd": 18.16,
+        "scheduleLeadSeconds": 9.982328798185932
+      }
+    ],
+    "observations": [
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T12:33:42.749Z",
+        "name": "交接开始",
+        "frame": 4936733,
+        "planId": "15d6da0b12a1909b081101099d9478a9eac9c6025bf6a3c703be272095ec7a09",
+        "requestId": "filter",
+        "observedFrame": 4936832,
+        "quantumStart": 4936704,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6000000238418579,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T12:33:51.892Z",
+        "name": "B正文接管",
+        "frame": 5340317,
+        "planId": "15d6da0b12a1909b081101099d9478a9eac9c6025bf6a3c703be272095ec7a09",
+        "requestId": "filter",
+        "observedFrame": 5340416,
+        "quantumStart": 5340288,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6384840607643127,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      }
+    ],
+    "completions": [
+      {
+        "kind": "handoff_complete",
+        "at": "2026-10-20T12:33:51.939Z",
+        "context": 121.1414058956916,
+        "track": "track-d2d58531421de0eb9690",
+        "sourceOffset": 18.205789115646258,
+        "method": "filter"
+      }
+    ],
+    "automaticEvents": [
+      {
+        "kind": "prepared",
+        "at": "2026-10-20T12:32:01.571Z",
+        "origin": "automatic"
+      },
+      {
+        "kind": "handoff_requested",
+        "at": "2026-10-20T12:33:32.762Z",
+        "origin": "automatic"
+      },
+      {
+        "kind": "prepared",
+        "at": "2026-10-20T12:33:52.440Z",
+        "origin": "automatic"
+      }
+    ]
+  }
+}

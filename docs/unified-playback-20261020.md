@@ -91,3 +91,25 @@ python tools/serve_preview.py --port 8766
 - 安装包：`outputs/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk`，**332,499,696 字节**，SHA-256 `7f3ca0551ff25dc90ac328f8d85f5b94cf33184a9c1e9195e10ebb32bb1bcb3f`。
 - 已核对预览包名、版本 `0.1.12 (14)`、最低 API 24、ARM64 Flutter 程序、内置最新引擎 `metric-engine-COwDPD2f.js` 和上游来源清单；`apksigner verify` 通过，使用原 Preview 调试签名。APK 保存在本机，不提交进 Git；没有连接或安装手机。
 - [统一播放器截图](../outputs/UnifiedAuto-player-20261020.jpg)、[方向与下一首截图](../outputs/UnifiedAuto-direction-20261020.jpg)。测试结束已暂停播放。
+
+
+## Mac 网页复核与等待逻辑修复（2026-10-20）
+
+此次从 GitHub 拉取 `harbeat-mobile` 的 `codex/metric-mix-mobile-20261020`，复核基线为 `406525a74ee9ab37f8a912df2063e997081fccfc`。上面的 Windows 构建和 APK 记录属于该基线；本节记录随后在 Mac 上运行同一网页工程的结果。
+
+新增回归先复现了两个等待问题：改变方向时，旧的曲目资料请求仍占用自动推荐流程；云端任务或音频下载错过接点后，客户端仍继续等待。修复后，旧方向立即释放编排流程；自动候选每 250 ms 根据实际播放位置检查接点是否仍可调度，失效就停止本地等待，并在一秒退避后重新找后续窗口。普通失败仍保留原来的 30 秒退避。单个音频下载失败时，同时取消该候选尚未完成的其他下载。
+
+这些改动只影响等待、取消和重试。选点评分、完整小节、人声冲突门槛、云端手法判断和 AudioContext 调度沿用基线。共享的只读曲目资料请求可能继续填充已校验缓存；已经提交的云端任务也可能继续运行，服务端尚无取消接口。
+
+最终自动化检查：
+
+- TypeScript：187 项通过，3 项外部素材/目录测试按配置跳过；新增四项覆盖慢资料换方向、云端排队过期、音频下载过期，以及一个下载失败时取消另一个挂起下载。三个缺陷均记录过修复前失败。
+- Flutter：114 项通过，静态分析无问题；此次未改 Dart。
+- 本地预览代理：4 项通过。
+- Flutter Web release 与最终分轨引擎构建通过；锁定上游来源校验通过。最终引擎为 `metric-engine-Ccu1jpko.js`。
+
+真实网络复测采用页面操作启动 NAS 的 Attention，自动连续完成 Attention → HIPHOP → Straight (Battle Beat)。两次调度分别提前 9.881 秒、9.946 秒；四个音频线程观察均 `late=0` 且输出非零，整段记录只有一次 `track_start`。页面在 390×844 视口显示下一首准备状态。原始记录留在本机，精简证据见 `outputs/UnifiedAuto-deadline-verification-20261020.json`。
+
+该连续会话使用首次修复构建 `metric-engine-BzmD8SH5.js`。随后复核补上了失败下载的清理，23 项聚焦测试再次通过；最终构建再完成一次 Attention → HIPHOP，两个音频线程观察均 `late=0`、输出非零，并自动准备了 Straight (Battle Beat)，详见同一证据文件。音频线程记录验证调度执行，不能代表实体手机的扬声器、蓝牙延迟或主观听感。
+
+预览地址仍为 `http://127.0.0.1:8766/`。本次未重新生成 APK，部署到 Android 前应使用此分支重新打包，并在实体手机上验收。上文 0.1.12 (14) 的旧安装包不包含本节修复。

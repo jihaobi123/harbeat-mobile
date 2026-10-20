@@ -2,13 +2,13 @@ import {afterEach,expect,it,vi} from 'vitest'
 import {qualityTrack} from '../metric-upstream/continuous/qualityFixture'
 import {MetricRun} from './metric'
 const job='c'.repeat(64),runs:MetricRun[]=[]
-function setup(options:{waitCloud?:()=>Promise<any>;failAsset?:boolean}={}){
+function setup(options:{waitCloud?:()=>Promise<any>;waitMetadata?:(id:string)=>Promise<void>;cloudRunning?:boolean;waitAsset?:()=>Promise<void>;loadAsset?:(asset:any,signal?:AbortSignal)=>Promise<any>;failAsset?:boolean}={}){
  const tracks=['a','b','c'].map(id=>qualityTrack(id))
  for(const t of tracks)t.windows[0].variants=Object.fromEntries(tracks.map(a=>[a.id,{...t.windows[0].variants.a}]))
  const index:any={schema:'harbeat.continuous-library.v1',tracks:tracks.map(t=>({...t,detailUrl:t.id,playStatus:'ready',mixStatus:'ready',styleLabels:t.id==='c'?['House']:['Hip-Hop'],collection:'NAS'}))}
  let payload:any,failed=false
  const p:any={ctx:{resume:async()=>{}},current:null,position:0,transition:null,busy:false,playing:false,paused:false,buffering:false,logs:[],
-  cache:{ready:new Set(),load:vi.fn(async()=>{if(options.failAsset&&!failed){failed=true;throw Error('one window unavailable')}return {}})},
+  cache:{ready:new Set(),load:vi.fn(async(asset:any,signal?:AbortSignal)=>{if(options.loadAsset)return options.loadAsset(asset,signal);await options.waitAsset?.();if(options.failAsset&&!failed){failed=true;throw Error('one window unavailable')}return {}})},
   initialize:async()=>{},start:vi.fn(async(t:any)=>{p.current=t;p.playing=true;p.changed()}),arm:vi.fn(async(r:any,m:any,b:any)=>{p.transition={result:r,method:m,b}}),
   pause:vi.fn(()=>{p.paused=true;p.playing=false}),resume:vi.fn(async()=>{p.paused=false;p.playing=true}),stop:vi.fn(()=>{p.current=null;p.playing=false}),
   setVolume:vi.fn(),dispose:vi.fn(),export:()=>({logs:[]})}
@@ -18,14 +18,15 @@ function setup(options:{waitCloud?:()=>Promise<any>;failAsset?:boolean}={}){
   decision:{recommended:'original',methods:{original:{eligible:true,name:'原渐混'}}}})
  const host:any={requestFocus:()=>true,saveSession:vi.fn(),prepareMetric:vi.fn((json:string)=>{payload=JSON.parse(json);return JSON.stringify({ok:true,data:{id:job}})})}
  const read=vi.fn(async(path:string)=>{
-  const t=tracks.find(t=>t.id===path);if(t)return {track:t}
+  const t=tracks.find(t=>t.id===path);if(t){await options.waitMetadata?.(t.id);return {track:t}}
+  if(options.cloudRunning)return {status:'running',message:'queued'}
   if(options.waitCloud)await options.waitCloud()
   return result()
  })
  const run=new MetricRun(index,new URL('https://example.test/listen/'),()=>{},host,(_base,changed)=>{p.changed=changed;return p},read)
  runs.push(run);return {run,p,host,read,tracks,result}
 }
-afterEach(()=>{runs.splice(0).forEach(r=>r.dispose());vi.restoreAllMocks()})
+afterEach(()=>{runs.splice(0).forEach(r=>r.dispose());vi.restoreAllMocks();vi.useRealTimers()})
 const finished=async(run:MetricRun)=>{await vi.waitFor(()=>expect(run.working).toBe(false))}
 it('recommends, prepares, preloads and arms at the future cue with no manual prepare/apply',async()=>{
  const {run,p,host}=setup();run.direction({style:'Hip-Hop',energy:3});await run.start('a');run.tick();await finished(run)
@@ -83,4 +84,49 @@ it('backgrounding during an automatic cloud request cannot adopt it later',async
  await vi.waitFor(()=>expect(host.prepareMetric).toHaveBeenCalledTimes(1))
  run.pauseForHost();release();await finished(run)
  expect(run.result).toBeNull();expect(p.arm).not.toHaveBeenCalled();expect(p.playing).toBe(false)
+})
+
+it('a changed direction can prepare immediately while superseded metadata remains slow',async()=>{
+ let release!:()=>void;const waiting=new Promise<void>(r=>release=r)
+ const {run,p,host,read}=setup({waitMetadata:id=>id==='b'?waiting:Promise.resolve()})
+ try{
+  run.direction({style:'Hip-Hop'});await run.start('a');run.tick()
+  await vi.waitFor(()=>expect(read).toHaveBeenCalledWith('b',expect.any(URL)))
+  run.direction({style:'House'})
+  await vi.waitFor(()=>{run.tick();expect(host.prepareMetric).toHaveBeenCalledTimes(1)},{timeout:300,interval:10})
+  await finished(run);expect(run.result?.plan.to).toBe('c');expect(p.start).toHaveBeenCalledTimes(1)
+ }finally{release()}
+})
+it('automatic cloud polling stops waiting once its cue expires',async()=>{
+ vi.useFakeTimers()
+ const {run,p,host}=setup({cloudRunning:true});await run.start('a');run.tick()
+ await vi.waitFor(()=>expect(host.prepareMetric).toHaveBeenCalledTimes(1))
+ const payload=JSON.parse(host.prepareMetric.mock.calls[0][0]);p.position=payload.start+1
+ await vi.advanceTimersByTimeAsync(2100)
+ expect(run.working).toBe(false);expect(run.result).toBeNull();expect(p.arm).not.toHaveBeenCalled()
+ expect(host.prepareMetric).toHaveBeenCalledTimes(1)
+})
+
+it('a stalled audio download releases an expired cue and cannot adopt a late buffer',async()=>{
+ vi.useFakeTimers();let release!:()=>void;const waiting=new Promise<void>(r=>release=r)
+ const {run,p,host}=setup({waitAsset:()=>waiting});await run.start('a');run.tick()
+ await vi.waitFor(()=>expect(p.cache.load).toHaveBeenCalledTimes(2))
+ const payload=JSON.parse(host.prepareMetric.mock.calls[0][0]);p.position=payload.start+1
+ await vi.advanceTimersByTimeAsync(300)
+ expect(run.working).toBe(false);expect(run.result).toBeNull();expect(p.arm).not.toHaveBeenCalled()
+ release();await Promise.resolve();await Promise.resolve()
+ expect(run.result).toBeNull();expect(p.start).toHaveBeenCalledTimes(1)
+})
+
+it('a failed asset cancels its stalled sibling before trying another candidate',async()=>{
+ let count=0,stalled:AbortSignal|undefined
+ const {run,p}=setup({loadAsset:async(_asset,signal)=>{
+  count++
+  if(count===1)throw Error('one window unavailable')
+  if(count===2){stalled=signal;return new Promise(()=>{})}
+  return {}
+ }})
+ await run.start('a');run.tick();await finished(run)
+ expect(run.result).not.toBeNull();expect(stalled?.aborted).toBe(true)
+ expect(p.start).toHaveBeenCalledTimes(1);expect(p.arm).not.toHaveBeenCalled()
 })
