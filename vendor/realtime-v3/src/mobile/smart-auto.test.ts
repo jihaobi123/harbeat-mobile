@@ -2,7 +2,7 @@ import {afterEach,expect,it,vi} from 'vitest'
 import {qualityTrack} from '../metric-upstream/continuous/qualityFixture'
 import {MetricRun} from './metric'
 const job='c'.repeat(64),runs:MetricRun[]=[]
-function setup(options:{waitCloud?:()=>Promise<any>;waitMetadata?:(id:string)=>Promise<void>;cloudRunning?:boolean;waitAsset?:()=>Promise<void>;loadAsset?:(asset:any,signal?:AbortSignal)=>Promise<any>;failAsset?:boolean}={}){
+function setup(options:{waitLocal?:()=>Promise<any>;waitCloud?:()=>Promise<any>;waitMetadata?:(id:string)=>Promise<void>;cloudRunning?:boolean;waitAsset?:()=>Promise<void>;loadAsset?:(asset:any,signal?:AbortSignal)=>Promise<any>;failAsset?:boolean}={}){
  const tracks=['a','b','c'].map(id=>qualityTrack(id))
  for(const t of tracks)t.windows[0].variants=Object.fromEntries(tracks.map(a=>[a.id,{...t.windows[0].variants.a}]))
  const index:any={schema:'harbeat.continuous-library.v1',tracks:tracks.map(t=>({...t,detailUrl:t.id,playStatus:'ready',mixStatus:'ready',styleLabels:t.id==='c'?['House']:['Hip-Hop'],collection:'NAS'}))}
@@ -23,8 +23,9 @@ function setup(options:{waitCloud?:()=>Promise<any>;waitMetadata?:(id:string)=>P
   if(options.waitCloud)await options.waitCloud()
   return result()
  })
- const run=new MetricRun(index,new URL('https://example.test/listen/'),()=>{},host,(_base,changed)=>{p.changed=changed;return p},read)
- runs.push(run);return {run,p,host,read,tracks,result}
+ const render=vi.fn(async(_player:any,a:any,b:any,plan:any,_signal:any):Promise<any>=>{await options.waitLocal?.();payload={from:a.id,to:b.id,windowId:plan.window.id,start:plan.start};return result()})
+ const run=new MetricRun(index,new URL('https://example.test/listen/'),()=>{},host,(_base,changed)=>{p.changed=changed;return p},read,render)
+ runs.push(run);return {run,p,host,read,tracks,result,render}
 }
 afterEach(()=>{runs.splice(0).forEach(r=>r.dispose());vi.restoreAllMocks();vi.useRealTimers()})
 const finished=async(run:MetricRun)=>{await vi.waitFor(()=>expect(run.working).toBe(false))}
@@ -132,15 +133,22 @@ it('a failed asset cancels its stalled sibling before trying another candidate',
 })
 
 it('an explicit nearby request arms without waiting for the automatic late-song region',async()=>{
- const {run,p}=setup();run.direction({automatic:false});await run.start('a');run.choose('b')
+ const {run,p,host,render}=setup();run.direction({automatic:false});await run.start('a');run.choose('b')
  await run.mixSoon()
  expect(p.arm).toHaveBeenCalledTimes(1);expect(p.start).toHaveBeenCalledTimes(1)
- expect(p.arm.mock.calls[0][0].plan.end).toBeLessThan(52)
+ expect(p.arm.mock.calls[0][0].plan.start).toBeLessThan(5)
+ expect(host.prepareMetric).not.toHaveBeenCalled();expect(render).toHaveBeenCalledTimes(1)
 })
 it('repeated nearby taps share one preparation instead of queuing more cloud jobs',async()=>{
  let release!:()=>void;const waiting=new Promise<void>(r=>release=r)
- const {run,host,p}=setup({waitCloud:()=>waiting});run.direction({automatic:false});await run.start('a');run.choose('b')
- const first=run.mixSoon();await vi.waitFor(()=>expect(host.prepareMetric).toHaveBeenCalledTimes(1))
+ const {run,host,p,render}=setup({waitLocal:()=>waiting});run.direction({automatic:false});await run.start('a');run.choose('b')
+ const first=run.mixSoon();await vi.waitFor(()=>expect(render).toHaveBeenCalledTimes(1))
  const second=run.mixSoon();release();await Promise.all([first,second])
- expect(host.prepareMetric).toHaveBeenCalledTimes(1);expect(p.arm).toHaveBeenCalledTimes(1)
+ expect(host.prepareMetric).not.toHaveBeenCalled();expect(render).toHaveBeenCalledTimes(1);expect(p.arm).toHaveBeenCalledTimes(1)
+})
+
+it('preloads the selected nearby material even with automatic handoffs disabled',async()=>{
+ const {run,p,host,render}=setup();run.direction({automatic:false});await run.start('a');run.choose('b');run.tick()
+ await vi.waitFor(()=>expect(p.cache.load).toHaveBeenCalled())
+ expect(run.working).toBe(false);expect(host.prepareMetric).not.toHaveBeenCalled();expect(render).not.toHaveBeenCalled();expect(p.arm).not.toHaveBeenCalled()
 })

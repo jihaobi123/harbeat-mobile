@@ -518,7 +518,7 @@ class _PlaybackCard extends StatelessWidget {
                       Text(
                           c.v3Active
                               ? c.v3Metric
-                                  ? '尽快混入'
+                                  ? '最近接点切歌'
                                   : c.v3Continuous
                                       ? '等待 18s'
                                       : '等待 ${c.v3Budget}s'

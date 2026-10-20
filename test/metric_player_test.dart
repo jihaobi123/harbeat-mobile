@@ -83,7 +83,7 @@ void main() {
         theme: HB.theme,
         home: AnimatedBuilder(
             animation: c, builder: (_, __) => Shell(controller: c))));
-    await tester.tap(find.text('尽快混入'));
+    await tester.tap(find.text('最近接点切歌'));
     await tester.pumpAndSettle();
     expect(engine.calls.last, 'mixSoon');
     expect(engine.calls.where((m) => m == 'start'), hasLength(1));

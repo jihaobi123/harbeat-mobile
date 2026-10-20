@@ -8,7 +8,8 @@ import type {Track,Plan} from '../metric-upstream/realtime/planner'
 import {nativeSegment} from '../metric-upstream/continuous/segments'
 import {shortlist,rankChoices,SMART_POLICY} from './smart-selection'
 import type {Host} from './session'
-import {mixNearby} from './nearby'
+import {mixNearby,nearbyPlan} from './nearby'
+import {localOriginal,preloadOriginal} from './local-original'
 
 const hash=/^[a-f0-9]{64}$/
 export const METHODS:Method[]=['original','bass','filter','yield','vocal','bass_filter']
@@ -85,11 +86,12 @@ export class MetricRun {
  private revision=0;private request:AbortController|null=null;private alive=true;private lastCurrent:string|null=null
  private explicit:string|null=null;private recent:string[]=[];private excludedPlans=new Set<string>()
  private excludedTracks=new Set<string>()
+ private warmController:AbortController|null=null;private warmKey='';private warmRunning=false;private warmAt=0
  private nearbyTask:Promise<void>|null=null
  private retryAt=0;private autoTask:Promise<void>|null=null;private lastResult:Prepared|null=null
  private history:Record<string,unknown>[]=[]
  constructor(readonly index:LibraryIndex,readonly base:URL,private changed:()=>void,private host?:Host,
-  private create=(base:URL,changed:()=>void)=>new MetricTransport(base,changed),private read=readMetricJson){
+  private create=(base:URL,changed:()=>void)=>new MetricTransport(base,changed),private read=readMetricJson,private renderOriginal=localOriginal){
   this.library=new TrackLibrary(index.tracks,base,(path,base)=>this.read(path,base))
  }
  private update(){
@@ -263,7 +265,21 @@ export class MetricRun {
  }
  /** Called by the host's existing timer. All actual source scheduling remains
   * in the pinned AudioContext transport, never in this polling timer. */
+ private warmNearby(){
+  const p=this.player,a=p?.current,id=this.selected
+  const key=this.alive&&p?.playing&&!p.paused&&!p.busy&&!p.transition&&a&&id&&id!==a.id?a.id+':'+id:''
+  if(key!==this.warmKey){this.warmController?.abort();this.warmKey=key;this.warmRunning=false;this.warmAt=0}
+  if(!key||!p||!a||!id||this.warmRunning||Date.now()<this.warmAt)return
+  const controller=this.warmController=new AbortController();this.warmRunning=true
+  void this.library.load(id).then(async b=>{
+   controller.signal.throwIfAborted()
+   const plan=nearbyPlan(a,b,p.position)
+   if(plan)await preloadOriginal(p,a,b,plan,controller.signal)
+  }).catch(e=>{if(!controller.signal.aborted)p.logs.push({kind:'nearby_preload_failed',reason:(e as Error).message})})
+   .finally(()=>{if(this.warmController===controller){this.warmRunning=false;this.warmAt=Date.now()+2000}})
+ }
  tick(){
+  this.warmNearby()
   const p=this.player
   if(!this.alive||!this.automatic||!p?.playing||p.paused||p.busy||p.buffering||p.transition||this.working||this.autoTask)return
   if(this.result&&this.result.plan.from===p.current?.id){
@@ -286,7 +302,7 @@ export class MetricRun {
  }
  private async performNearby(){
   const p=this.player,a=p?.current,id=this.selected
-  if(!p?.playing||!a||p.transition||p.busy)throw Error('先播放当前歌曲，再尽快混入')
+  if(!p?.playing||!a||p.transition||p.busy)throw Error('先播放当前歌曲，再点击最近接点切歌')
   if(!id||id===a.id)throw Error('先选择下一首，或等待推荐出现')
   const ready=this.result?{result:this.result,method:this.method}:undefined
   this.invalidate();const token=this.revision,controller=this.request=new AbortController()
@@ -294,7 +310,7 @@ export class MetricRun {
   try{
    const b=await abortable(this.library.load(id),controller.signal)
    if(!this.alive||token!==this.revision)return
-   const outcome=await mixNearby({player:p,a,b,signal:controller.signal,ready,leadSeconds:40,prepare:(plan,signal)=>this.cloud(a,b,plan,signal),onStatus:message=>{if(this.alive&&token===this.revision){this.notice=message;this.update()}}})
+   const outcome=await mixNearby({player:p,a,b,signal:controller.signal,ready,prepare:(plan,signal)=>this.renderOriginal(p,a,b,plan,signal),onStatus:message=>{if(this.alive&&token===this.revision){this.notice=message;this.update()}}})
    if(!this.alive||token!==this.revision)return
    this.adopt(outcome.result,a,b,'nearby');this.method=outcome.method;this.phase='armed';this.notice='已安排附近合适接点，将自动混入下一首'
    this.history.push({kind:'handoff_requested',origin:'nearby',jobId:outcome.result.id,method:outcome.method,sourcePosition:p.position,at:new Date().toISOString()});this.history=this.history.slice(-12)
@@ -325,7 +341,7 @@ export class MetricRun {
  filters(value:{label?:string;query?:string}){this.label=value.label??this.label;this.query=value.query??this.query;this.update()}
  export(){return {...this.player?.export(),schema:'harbeat.metric-mix-session.v1',release:METRIC_RELEASE,automaticPolicy:SMART_POLICY,direction:{style:this.targetStyle,energy:this.energyLevel,automatic:this.automatic},history:this.history,selectedResult:this.result??this.lastResult,selectedMethod:this.method,exportedAt:new Date().toISOString()}}
  save(){if(this.player)this.host?.saveSession(JSON.stringify(this.export()))}
- dispose(){this.alive=false;this.invalidate();this.save();this.player?.dispose()}
+ dispose(){this.warmController?.abort();this.alive=false;this.invalidate();this.save();this.player?.dispose()}
  snapshot(){const p=this.player,r=this.result;return {release:METRIC_RELEASE,selected:this.selected,label:this.label,query:this.query,volume:this.volume,working:this.working,notice:this.error||this.notice,canArm:!!r&&canArm(r.plan,p?.current?.id??null,p?.position??0)&&!p?.transition,
   automatic:this.automatic,energyLevel:this.energyLevel,targetStyle:this.targetStyle,phase:this.phase,nearbyWorking:!!this.nearbyTask,recommendation:this.recommendation,
   result:r?{id:r.id,policyVersion:r.policyVersion,plan:r.plan,metrics:r.metrics,decision:r.decision,available:METHODS.filter(m=>r.assets[m]&&r.decision.methods[m]?.eligible)}:null,method:this.method}}

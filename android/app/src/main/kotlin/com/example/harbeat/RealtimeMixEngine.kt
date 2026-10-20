@@ -122,7 +122,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
                     val response = loader.shouldInterceptRequest(uri)
                     if (response != null) {
                         response.responseHeaders = mapOf(
-                            "Content-Security-Policy" to "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; worker-src 'self'; img-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'none'",
+                            "Content-Security-Policy" to "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self' blob:; worker-src 'self'; img-src 'self' data:; object-src 'none'; frame-src 'none'; base-uri 'none'",
                             "X-Content-Type-Options" to "nosniff")
                         return response
                     }

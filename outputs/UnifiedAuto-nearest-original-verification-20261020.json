@@ -1,0 +1,110 @@
+{
+  "schema": "harbeat.mobile-nearest-original-verification.v1",
+  "date": "2026-10-20",
+  "baseCommit": "62702a4",
+  "branch": "codex/metric-mix-mobile-20261020",
+  "engineBundle": "metric-engine-ExAzExYa.js",
+  "engineSha256": "e86f28d9caecfb90e2cb7af42864e78c5316f7464786c392746c4a21f755caa4",
+  "tests": {
+    "typescriptPassed": 211,
+    "typescriptSkipped": 3,
+    "flutterPassed": 115,
+    "analyze": "no issues",
+    "build": "passed",
+    "pinnedSources": "verified"
+  },
+  "browser": {
+    "sessionSha256": "b2f5a91a296cecd5867cb6bd3dd68bbdc894ff1c5ffd4d2c049c27b33b7c72d0",
+    "request": {
+      "kind": "nearby_request",
+      "at": "2026-10-20T14:37:43.502Z",
+      "from": "track-642bd1ac0da727a3b53b",
+      "to": "track-d2d58531421de0eb9690",
+      "sourcePosition": 37.702403628117914
+    },
+    "candidate": {
+      "kind": "nearby_candidate",
+      "at": "2026-10-20T14:37:43.520Z",
+      "sourcePosition": 37.71981859410431,
+      "start": 39.30843537414966,
+      "end": 48.46,
+      "reused": false,
+      "policy": "nearest-qualified-start"
+    },
+    "armed": {
+      "kind": "nearby_armed",
+      "at": "2026-10-20T14:37:43.596Z",
+      "sourcePosition": 37.79528344671202,
+      "start": 39.30843537414966,
+      "method": "original"
+    },
+    "waitUntilMixSeconds": 1.6060317460317464,
+    "postRequestTrackStarts": 0,
+    "observations": [
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T14:37:45.112Z",
+        "name": "交接开始",
+        "frame": 2371370,
+        "planId": "be8df3f05a43f2de69b458800cf4e2044fe651963710ff644b8806365a0ba858",
+        "requestId": "original",
+        "observedFrame": 2371456,
+        "quantumStart": 2371328,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6000000238418579,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-20T14:37:54.264Z",
+        "name": "B正文接管",
+        "frame": 2774954,
+        "planId": "be8df3f05a43f2de69b458800cf4e2044fe651963710ff644b8806365a0ba858",
+        "requestId": "original",
+        "observedFrame": 2775040,
+        "quantumStart": 2774912,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.602664053440094,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      }
+    ],
+    "handoff": {
+      "kind": "handoff_complete",
+      "at": "2026-10-20T14:37:54.285Z",
+      "context": 62.95219954648526,
+      "track": "track-d2d58531421de0eb9690",
+      "sourceOffset": 81.58807256235828,
+      "method": "original"
+    },
+    "plan": {
+      "from": "track-642bd1ac0da727a3b53b",
+      "to": "track-d2d58531421de0eb9690",
+      "windowId": "w28-4",
+      "start": 39.30843537414966,
+      "end": 48.46,
+      "duration": 9.151564625850341,
+      "rate": 0.9899937500000003,
+      "bStart": 72.5,
+      "bEnd": 81.56,
+      "beatErrorMs": 25.401657649787523
+    },
+    "renderStats": {
+      "peak": 0.6031606793403625
+    },
+    "renderSha256": "be8df3f05a43f2de69b458800cf4e2044fe651963710ff644b8806365a0ba858",
+    "policy": "browser-v3-original-v1"
+  },
+  "testSetup": "automatic disabled; restored to enabled after handoff; playback paused",
+  "nativeCompatibility": "connect-src now permits local blob assets; not tested on physical Android",
+  "limitations": [
+    "no APK generated",
+    "worklet timings are not device or Bluetooth latency",
+    "sound quality still requires user listening"
+  ]
+}
