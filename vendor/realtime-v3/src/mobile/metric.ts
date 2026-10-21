@@ -6,14 +6,14 @@ import {canArm} from '../metric-upstream/metric-mix/plan'
 import type {Prepared, Method} from '../metric-upstream/metric-mix/types'
 import type {Track,Plan} from '../metric-upstream/realtime/planner'
 import {nativeSegment} from '../metric-upstream/continuous/segments'
-import {shortlist,rankChoices,rankNearbyChoices,choiceForPlan,SMART_POLICY,NEARBY_DIRECTION_POLICY,type SmartChoice} from './smart-selection'
+import {candidateStages,rankChoices,rankNearbyChoices,choiceForPlan,SMART_POLICY,NEARBY_DIRECTION_POLICY,type SmartChoice} from './smart-selection'
 import type {Host} from './session'
 import {mixNearby,nearbyPlan} from './nearby'
 import {localOriginal,preloadOriginal} from './local-original'
 
 const hash=/^[a-f0-9]{64}$/
 export const METHODS:Method[]=['original','bass','filter','yield','vocal','bass_filter']
-export const METRIC_RELEASE={id:'metric-mix-mobile-20261020',sourceCommit:'978df49191450a602f1b473b31f630a687585a8d',policyVersion:'metric-mix-v1.0'}
+export const METRIC_RELEASE={id:'metric-mix-mobile-20261021',sourceCommit:'978df49191450a602f1b473b31f630a687585a8d',policyVersion:'metric-mix-v1.0'}
 let nativeSequence=0
 export function nativeMetricJob(host:Host,payload:object,signal:AbortSignal){return new Promise<any>((resolve,reject)=>{
  const id=++nativeSequence
@@ -91,6 +91,7 @@ export class MetricRun {
  private nearbyTask:Promise<void>|null=null
  private retryAt=0;private autoTask:Promise<void>|null=null;private lastResult:Prepared|null=null
  private history:Record<string,unknown>[]=[]
+ private selection:{available:number;styleCandidates:number;tempoCandidates:number;recentCandidates:number;checked:number;metadataFailed:number;qualified:number;stage:string|null;usedRecent:boolean}|null=null
  constructor(readonly index:LibraryIndex,readonly base:URL,private changed:()=>void,private host?:Host,
   private create=(base:URL,changed:()=>void)=>new MetricTransport(base,changed),private read=readMetricJson,private renderOriginal=localOriginal){
   this.library=new TrackLibrary(index.tracks,base,(path,base)=>this.read(path,base))
@@ -101,7 +102,7 @@ export class MetricRun {
    if(this.lastCurrent){
     this.revision++;this.request?.abort();this.request=null;this.working=false
     this.userIntent=null;this.lastResult=this.result;this.result=null;this.pair=null;this.recommendation=null;this.phase='idle'
-    this.selected=null;this.explicit=null;this.notice='已进入 '+current.title+'，继续按你的方向推荐'
+    this.selection=null;this.selected=null;this.explicit=null;this.notice='已进入 '+current.title+'，继续按你的方向推荐'
    }
    this.lastCurrent=current.id;this.recent.push(current.id);this.recent=this.recent.slice(-8)
    if(this.selected===current.id){this.selected=null;this.explicit=null}
@@ -111,7 +112,7 @@ export class MetricRun {
  }
  private invalidate(clear=true){
   this.revision++;this.request?.abort();this.request=null;this.working=false;this.error=''
-  if(clear){this.result=null;this.pair=null;this.recommendation=null;this.phase='idle'}
+  if(clear){this.result=null;this.pair=null;this.recommendation=null;this.selection=null;this.phase='idle'}
   this.update()
  }
  private async ensure(){
@@ -179,6 +180,24 @@ export class MetricRun {
   }
   throw Error('云端准备超时，请稍后重试')
  }
+ /** Reserve local preparation time at an already selected automatic cue. */
+ private async automaticResult(p:MetricTransport,a:Track,b:Track,plan:Plan,signal:AbortSignal){
+  const cloud=new AbortController(),cancel=()=>cloud.abort(signal.reason)
+  let budgetExpired=false
+  signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel()
+  const timer=setInterval(()=>{
+   if(plan.start-p.position<=12){budgetExpired=true;cloud.abort(Error('分轨尚未就绪，改用同接点原渐混'))}
+  },250)
+  try{return await abortable(this.cloud(a,b,plan,cloud.signal),cloud.signal)}
+  catch(error){
+   signal.throwIfAborted()
+   if(!budgetExpired||!canArm(plan,p.current?.id??null,p.position))throw error
+   this.notice='分轨未及时就绪，正在为原定接点准备原渐混';this.update()
+   this.history.push({kind:'automatic_original_fallback',at:new Date().toISOString(),from:a.id,to:b.id,start:plan.start,sourcePosition:p.position,reason:'cloud_preparation_budget'})
+   this.history=this.history.slice(-12)
+   return await this.renderOriginal(p,a,b,plan,signal)
+  }finally{clearInterval(timer);signal.removeEventListener('abort',cancel);cloud.abort()}
+ }
  private adopt(result:Prepared,a:Track,b:Track,origin='manual'){
   this.result=result;this.pair={a,b};this.method=result.decision.recommended
   this.history.push({at:new Date().toISOString(),kind:'prepared',origin,policy:SMART_POLICY,style:this.targetStyle,energy:this.energyLevel,recommendation:this.recommendation,result})
@@ -211,21 +230,42 @@ export class MetricRun {
   const valid=()=>this.alive&&token===this.revision&&p.current?.id===a.id
   this.working=true;this.phase='selecting';this.notice='正在按风格、能量和接点比较下一首';this.update()
   try{
-   const picks=shortlist(this.index.tracks,entry,this.targetStyle,this.recent,this.excludedTracks,intent?null:this.explicit,intent?.preferred)
-   if(!picks.length)throw Error('当前风格没有速度相容的下一首，试试其他风格')
-   const loaded:Track[]=[]
-   // At most two metadata reads at a time; one failed source does not erase
-   // successful candidates, and no audio is decoded for rejected candidates.
-   for(let i=0;i<picks.length;i+=2){
-    const group=await abortable(Promise.allSettled(picks.slice(i,i+2).map(t=>this.library.load(t.id))),controller.signal)
-    if(!valid())return
-    for(const r of group)if(r.status==='fulfilled')loaded.push(r.value)
+   const search=candidateStages(this.index.tracks,entry,this.targetStyle,this.recent,this.excludedTracks,intent?null:this.explicit,intent?.preferred)
+   const selection:NonNullable<MetricRun['selection']>={...search.counts,checked:0,metadataFailed:0,qualified:0,stage:null,usedRecent:false}
+   this.selection=selection
+   if(!search.stages.length)throw Error(`当前风格有 ${selection.styleCandidates} 首候选，速度相容 ${selection.tempoCandidates} 首；请换个方向或补充这个速度区间的音乐`)
+   const energy=this.energyLevel
+   let choices:SmartChoice[]=[]
+   for(const stage of search.stages){
+    selection.stage=stage.kind
+    this.notice=stage.kind==='recent'?'未播候选暂不合适，正在回查已播歌曲':'正在逐首比较候选的合格接点';this.update()
+    const qualified=new Set<string>()
+    const compare=(x:SmartChoice,y:SmartChoice)=>(stage.kind==='recent'?this.recent.lastIndexOf(x.track.id)-this.recent.lastIndexOf(y.track.id):0)||
+     (intent?x.plan.start-y.plan.start||y.score-x.score:y.score-x.score||y.plan.end-x.plan.end)||x.plan.id.localeCompare(y.plan.id)
+    // Rank and release each eight-track batch. Keep only the three render
+    // attempts, rather than holding every track's full analysis in memory.
+    for(let batch=0;batch<stage.entries.length;batch+=8){
+     const loaded:Track[]=[]
+     for(let i=batch;i<Math.min(batch+8,stage.entries.length);i+=2){
+      const group=await abortable(Promise.allSettled(stage.entries.slice(i,Math.min(i+2,batch+8,stage.entries.length)).map(t=>this.library.load(t.id).finally(()=>{if(!valid())this.library.trim(new Set([p.current?.id??'',this.selected??'']),10)}))),controller.signal)
+      if(!valid())return
+      selection.checked+=group.length
+      for(const r of group)if(r.status==='fulfilled')loaded.push(r.value);else selection.metadataFailed++
+     }
+     if(!valid())return
+     const ranked=intent?rankNearbyChoices(a,loaded,p.position,energy):rankChoices(a,loaded,p.position+35,energy,p.cache.ready)
+     const eligible=ranked.choices.filter(c=>!this.excludedPlans.has(c.plan.id))
+     for(const c of eligible)qualified.add(c.track.id)
+     choices=[...choices,...eligible].sort(compare).slice(0,3)
+     selection.qualified=qualified.size
+     this.library.trim(new Set([a.id,...choices.map(c=>c.track.id)]),10)
+     if(batch+8<stage.entries.length)await delay(controller.signal,0)
+     if(!valid())return
+    }
+    if(choices.length)break
    }
-   const energy=this.energyLevel,ranked=intent?rankNearbyChoices(a,loaded,p.position,energy):rankChoices(a,loaded,p.position+35,energy,p.cache.ready)
    if(!valid())return
-   const choices=ranked.choices.filter(c=>!this.excludedPlans.has(c.plan.id))
-   if(intent?.preferred)choices.sort((x,y)=>Number(y.track.id===intent.preferred)-Number(x.track.id===intent.preferred))
-   if(!choices.length)throw Error('这个风格与能量方向暂时没有可靠接点，当前音乐继续播放；可以换个方向')
+   if(!choices.length)throw Error(`已检查 ${selection.checked} 首，暂时没有通过接点与响度连续性检查的歌曲${selection.metadataFailed?`（${selection.metadataFailed} 首分析资料读取失败）`:''}；当前音乐继续播放`)
    let lastError='',expired=false
    for(const choice of choices.slice(0,3)){
     if(!valid())return
@@ -234,8 +274,9 @@ export class MetricRun {
     }
     const b=choice.track
     const describe=(chosen:SmartChoice)=>{
+    selection.usedRecent=this.recent.includes(chosen.track.id)
     this.selected=chosen.track.id;this.phase='preparing'
-    this.recommendation={id:chosen.track.id,title:chosen.track.title,style:this.targetStyle,energyLevel:this.energyLevel,reason:chosen.reason,energy:chosen.energy,score:chosen.score,qualityScore:chosen.plan.score,energyPenalty:chosen.plan.score-chosen.score,policy:SMART_POLICY,qualityPolicy:intent?NEARBY_DIRECTION_POLICY:'continuous-auto-quality-v1',
+    this.recommendation={id:chosen.track.id,title:chosen.track.title,style:this.targetStyle,energyLevel:this.energyLevel,reason:chosen.reason,styleLabels:this.index.tracks.find(t=>t.id===chosen.track.id)?.styleLabels??[],selection:{...selection},energy:chosen.energy,score:chosen.score,qualityScore:chosen.plan.score,energyPenalty:chosen.plan.score-chosen.score,policy:SMART_POLICY,qualityPolicy:intent?NEARBY_DIRECTION_POLICY:'continuous-auto-quality-v1',
      cue:{start:chosen.plan.start,end:chosen.plan.end,bStart:chosen.plan.window.start,bEnd:chosen.plan.window.end,bars:chosen.plan.window.bars},
      alternatives:choices.slice(0,3).map(c=>({id:c.track.id,title:c.track.title,start:c.plan.start,windowId:c.plan.window.id,score:c.score}))}
     }
@@ -251,7 +292,9 @@ export class MetricRun {
     try{
      if(intent){
       const outcome=await mixNearby({player:p,a,b,signal:candidate.signal,ready,
+       preload:(plan,signal)=>preloadOriginal(p,a,b,plan,signal),
        acceptPlan:plan=>!!choiceForPlan(a,b,plan,energy),
+       scorePlan:plan=>choiceForPlan(a,b,plan,energy)?.score??-Infinity,
        onCandidate:plan=>{if(valid()){const actual=choiceForPlan(a,b,plan,energy);if(actual)describe(actual)}},
        prepare:(plan,signal)=>this.renderOriginal(p,a,b,plan,signal),
        onStatus:message=>{if(valid()){this.notice=message;this.update()}}})
@@ -260,7 +303,7 @@ export class MetricRun {
       this.history.push({kind:'handoff_requested',origin:intent.kind,jobId:outcome.result.id,method:outcome.method,sourcePosition:p.position,at:new Date().toISOString()});this.history=this.history.slice(-12)
       this.library.trim(new Set([a.id,b.id]),10);this.retryAt=0;return
      }
-     const result=await abortable(this.cloud(a,b,choice.plan,candidate.signal),candidate.signal)
+     const result=await abortable(this.automaticResult(p,a,b,choice.plan,candidate.signal),candidate.signal)
      if(!valid())return
      if(!canArm(result.plan,p.current?.id??null,p.position))throw expiredCue()
      const method=result.decision.recommended
@@ -280,7 +323,7 @@ export class MetricRun {
    if(expired)throw expiredCue()
    throw Error(lastError||'本轮转场尚未准备成功，当前音乐继续播放')
   }catch(e){if(valid()&&(e as Error).name!=='AbortError'){this.phase='no_match';this.error=(e as Error).message;this.recommendation=null;this.selected=null;this.retryAt=Date.now()+(isExpiredCue(e)?1000:30000)}}
-  finally{if(token===this.revision){this.working=false;this.update()}}
+  finally{this.library.trim(new Set([p.current?.id??'',this.selected??'']),10);if(token===this.revision){this.working=false;this.update()}}
  }
  /** Called by the host's existing timer. All actual source scheduling remains
   * in the pinned AudioContext transport, never in this polling timer. */
@@ -337,7 +380,7 @@ export class MetricRun {
   try{
    const b=await abortable(this.library.load(id),controller.signal)
    if(!this.alive||token!==this.revision)return
-   const outcome=await mixNearby({player:p,a,b,signal:controller.signal,ready,prepare:(plan,signal)=>this.renderOriginal(p,a,b,plan,signal),onStatus:message=>{if(this.alive&&token===this.revision){this.notice=message;this.update()}}})
+   const outcome=await mixNearby({player:p,a,b,signal:controller.signal,ready,preload:(plan,signal)=>preloadOriginal(p,a,b,plan,signal),prepare:(plan,signal)=>this.renderOriginal(p,a,b,plan,signal),onStatus:message=>{if(this.alive&&token===this.revision){this.notice=message;this.update()}}})
    if(!this.alive||token!==this.revision)return
    this.adopt(outcome.result,a,b,'nearby');this.method=outcome.method;this.phase='armed';this.notice='已安排附近合适接点，将自动混入下一首'
    this.history.push({kind:'handoff_requested',origin:'nearby',jobId:outcome.result.id,method:outcome.method,sourcePosition:p.position,at:new Date().toISOString()});this.history=this.history.slice(-12)
@@ -368,11 +411,11 @@ export class MetricRun {
  pauseForHost(){this.userIntent=null;this.invalidate(false);if(this.player?.busy){this.player.stop();this.notice='已暂停准备，回到前台后重新开始'}else this.player?.pause();this.save()}
  setVolume(value:number){if(!Number.isFinite(value))throw Error('音量无效');this.volume=Math.max(0,Math.min(1,value));this.player?.setVolume(this.volume);this.update()}
  filters(value:{label?:string;query?:string}){this.label=value.label??this.label;this.query=value.query??this.query;this.update()}
- export(){return {...this.player?.export(),schema:'harbeat.metric-mix-session.v1',release:METRIC_RELEASE,automaticPolicy:SMART_POLICY,direction:{style:this.targetStyle,energy:this.energyLevel,automatic:this.automatic},history:this.history,selectedResult:this.result??this.lastResult,selectedMethod:this.method,exportedAt:new Date().toISOString()}}
+ export(){return {...this.player?.export(),schema:'harbeat.metric-mix-session.v1',release:METRIC_RELEASE,automaticPolicy:SMART_POLICY,direction:{style:this.targetStyle,energy:this.energyLevel,automatic:this.automatic},history:this.history,selectedResult:this.result??this.lastResult,selectedMethod:this.method,selection:this.selection,exportedAt:new Date().toISOString()}}
  save(){if(this.player)this.host?.saveSession(JSON.stringify(this.export()))}
  dispose(){this.warmController?.abort();this.alive=false;this.invalidate();this.save();this.player?.dispose()}
  snapshot(){const p=this.player,r=this.result;return {release:METRIC_RELEASE,selected:this.selected,label:this.label,query:this.query,volume:this.volume,working:this.working,notice:this.error||this.notice,canArm:!!r&&canArm(r.plan,p?.current?.id??null,p?.position??0)&&!p?.transition,
-  automatic:this.automatic,energyLevel:this.energyLevel,targetStyle:this.targetStyle,phase:this.phase,nearbyWorking:!!this.nearbyTask,recommendation:this.recommendation,
+  automatic:this.automatic,energyLevel:this.energyLevel,targetStyle:this.targetStyle,phase:this.phase,nearbyWorking:!!this.nearbyTask,recommendation:this.recommendation,selection:this.selection,
   result:r?{id:r.id,policyVersion:r.policyVersion,plan:r.plan,metrics:r.metrics,decision:r.decision,available:METHODS.filter(m=>r.assets[m]&&r.decision.methods[m]?.eligible)}:null,method:this.method}}
 }
 export async function loadMetricIndex(base:URL){return readLibraryIndex(await readMetricJson('/listen/library.json',base))}

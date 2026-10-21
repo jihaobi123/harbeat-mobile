@@ -1,0 +1,948 @@
+{
+  "date": "2026-10-21",
+  "url": "http://127.0.0.1:8766/",
+  "release": {
+    "id": "metric-mix-mobile-20261021",
+    "sourceCommit": "978df49191450a602f1b473b31f630a687585a8d",
+    "policyVersion": "metric-mix-v1.0"
+  },
+  "automaticPolicy": "mobile-direction-preference-v2",
+  "engineAsset": "metric-engine-DI0z_HRm.js",
+  "direction": {
+    "style": "Hip-Hop",
+    "energy": 4,
+    "automatic": true
+  },
+  "selection": {
+    "available": 146,
+    "styleCandidates": 30,
+    "tempoCandidates": 7,
+    "recentCandidates": 2,
+    "checked": 5,
+    "metadataFailed": 0,
+    "qualified": 5,
+    "stage": "fresh",
+    "usedRecent": false
+  },
+  "playbackEvents": [
+    {
+      "kind": "track_start",
+      "at": "2026-10-21T03:15:37.046Z",
+      "context": 4.56562358276644,
+      "track": "track-cf23264f7eb3b1a888d1",
+      "offset": 0,
+      "contextStart": 4.679818594104309
+    },
+    {
+      "kind": "nearby_request",
+      "at": "2026-10-21T03:16:02.018Z",
+      "from": "track-cf23264f7eb3b1a888d1",
+      "to": "track-86141f55b6b1219e1c38",
+      "sourcePosition": 24.855963718820863
+    },
+    {
+      "kind": "nearby_inputs_loading",
+      "at": "2026-10-21T03:16:02.035Z",
+      "sourcePosition": 24.873378684807257,
+      "windowId": "w8-4"
+    },
+    {
+      "kind": "nearby_candidate",
+      "at": "2026-10-21T03:16:03.865Z",
+      "sourcePosition": 26.701950113378686,
+      "start": 27.87243537414966,
+      "end": 37.024,
+      "reused": false,
+      "policy": "nearest-qualified-start"
+    },
+    {
+      "kind": "nearby_armed",
+      "at": "2026-10-21T03:16:03.951Z",
+      "sourcePosition": 26.789024943310658,
+      "start": 27.87243537414966,
+      "method": "original"
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T03:16:05.035Z",
+      "name": "交接开始",
+      "frame": 1435554,
+      "planId": "1c0f044810b30db28d2205615b4ec20d88d21146ab58ff6bd70340deb4a978f2",
+      "requestId": "original",
+      "observedFrame": 1435648,
+      "quantumStart": 1435520,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6000000238418579,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T03:16:14.187Z",
+      "name": "B正文接管",
+      "frame": 1839138,
+      "planId": "1c0f044810b30db28d2205615b4ec20d88d21146ab58ff6bd70340deb4a978f2",
+      "requestId": "original",
+      "observedFrame": 1839232,
+      "quantumStart": 1839104,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6000000238418579,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "handoff_complete",
+      "at": "2026-10-21T03:16:14.263Z",
+      "context": 41.78140589569161,
+      "track": "track-86141f55b6b1219e1c38",
+      "sourceOffset": 53.9275873015873,
+      "method": "original"
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T03:17:43.904Z",
+      "name": "交接开始",
+      "frame": 5795703,
+      "planId": "5a2ffa17e7e3099b76f991e02206fa6f96d14904a981ac02449000e314617379",
+      "requestId": "filter",
+      "observedFrame": 5795712,
+      "quantumStart": 5795584,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6000000238418579,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T03:17:52.880Z",
+      "name": "B正文接管",
+      "frame": 6191367,
+      "planId": "5a2ffa17e7e3099b76f991e02206fa6f96d14904a981ac02449000e314617379",
+      "requestId": "filter",
+      "observedFrame": 6191488,
+      "quantumStart": 6191360,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6434047222137451,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "handoff_complete",
+      "at": "2026-10-21T03:17:52.902Z",
+      "context": 140.41977324263038,
+      "track": "track-7c28de573d1db91e6dd3",
+      "sourceOffset": 64.52595464852607,
+      "method": "filter"
+    }
+  ],
+  "prepared": [
+    {
+      "origin": "user-direction",
+      "method": "original",
+      "plan": {
+        "from": "track-cf23264f7eb3b1a888d1",
+        "to": "track-86141f55b6b1219e1c38",
+        "windowId": "w8-4",
+        "start": 27.87243537414966,
+        "end": 37.024,
+        "duration": 9.151564625850341,
+        "rate": 0.9801593749999999,
+        "bStart": 44.88,
+        "bEnd": 53.85,
+        "beatErrorMs": 24.22896934040253
+      },
+      "recommendation": {
+        "id": "track-86141f55b6b1219e1c38",
+        "title": "Straight (Battle Beat)",
+        "style": "Hip-Hop",
+        "energyLevel": 4,
+        "reason": "完整 4 小节 · 接管后 16 秒实测覆盖 · 优先升能，也可平稳接续 · verse附近",
+        "styleLabels": [
+          "Hip-Hop"
+        ],
+        "selection": {
+          "available": 146,
+          "styleCandidates": 30,
+          "tempoCandidates": 8,
+          "recentCandidates": 0,
+          "checked": 8,
+          "metadataFailed": 0,
+          "qualified": 8,
+          "stage": "fresh",
+          "usedRecent": false
+        },
+        "energy": {
+          "beforeDb": -12.272651925043931,
+          "afterDb": [
+            -10.377177605712493,
+            -10.898113548200076,
+            -11.285326259519145,
+            -10.669848064973229
+          ],
+          "deltasDb": [
+            1.8954743193314378,
+            1.374538376843855,
+            0.9873256655247857,
+            1.6028038600707024
+          ],
+          "targetDeltaDb": 1.25
+        },
+        "score": 0.896555337053874,
+        "qualityScore": 0.9381200637755103,
+        "energyPenalty": 0.04156472672163625,
+        "policy": "mobile-direction-preference-v2",
+        "qualityPolicy": "mobile-direction-nearby-v1",
+        "cue": {
+          "start": 27.87243537414966,
+          "end": 37.024,
+          "bStart": 44.88,
+          "bEnd": 53.85,
+          "bars": 4
+        },
+        "alternatives": [
+          {
+            "id": "track-86141f55b6b1219e1c38",
+            "title": "Straight (Battle Beat)",
+            "start": 25.59743537414966,
+            "windowId": "w8-4",
+            "score": 1.0614321795140196
+          },
+          {
+            "id": "track-2421bf94e8c0430cd78c",
+            "title": "Rump Shaker",
+            "start": 25.59743537414966,
+            "windowId": "w16-4",
+            "score": 1.0582536235733873
+          },
+          {
+            "id": "track-d2d58531421de0eb9690",
+            "title": "HIPHOP",
+            "start": 25.59743537414966,
+            "windowId": "w0-4",
+            "score": 1.0533915030742218
+          }
+        ]
+      },
+      "decision": {
+        "recommended": "original",
+        "explanation": "最近合格接点采用原有浏览器渐混；该接点的分轨方案尚未就绪",
+        "policy": {
+          "version": "browser-v3-original-v1"
+        },
+        "limitations": [
+          "这是已验证素材的浏览器原渐混，不是云端分轨效果判断"
+        ],
+        "methods": {
+          "original": {
+            "name": "原渐混（就近接歌）",
+            "eligible": true,
+            "score": 50,
+            "reason": "最近合格接点采用原有浏览器渐混；该接点的分轨方案尚未就绪",
+            "processingCost": 0,
+            "levelPenalty": 0
+          },
+          "bass": {
+            "name": "独立贝斯交接",
+            "eligible": false,
+            "score": null,
+            "reason": "本次未等待云端生成此接点的分轨方案",
+            "processingCost": 0,
+            "levelPenalty": 0
+          },
+          "filter": {
+            "name": "旋律滤波",
+            "eligible": false,
+            "score": null,
+            "reason": "本次未等待云端生成此接点的分轨方案",
+            "processingCost": 0,
+            "levelPenalty": 0
+          },
+          "yield": {
+            "name": "旋律让位",
+            "eligible": false,
+            "score": null,
+            "reason": "本次未等待云端生成此接点的分轨方案",
+            "processingCost": 0,
+            "levelPenalty": 0
+          },
+          "vocal": {
+            "name": "人声唱完再退出",
+            "eligible": false,
+            "score": null,
+            "reason": "本次未等待云端生成此接点的分轨方案",
+            "processingCost": 0,
+            "levelPenalty": 0
+          },
+          "bass_filter": {
+            "name": "贝斯交接＋旋律滤波",
+            "eligible": false,
+            "score": null,
+            "reason": "本次未等待云端生成此接点的分轨方案",
+            "processingCost": 0,
+            "levelPenalty": 0
+          }
+        }
+      }
+    },
+    {
+      "origin": "automatic",
+      "method": "filter",
+      "plan": {
+        "from": "track-86141f55b6b1219e1c38",
+        "to": "track-7c28de573d1db91e6dd3",
+        "windowId": "w18-4",
+        "start": 143.56802721088434,
+        "end": 152.54,
+        "duration": 8.971972789115647,
+        "rate": 0.9897500000000004,
+        "bStart": 55.62,
+        "bEnd": 64.5,
+        "lastBarStart": 6.731972789115673,
+        "bassTiming": {
+          "duckStart": 4.491972789115664,
+          "swapStart": 6.181972789115662,
+          "swapEnd": 6.731972789115673
+        },
+        "restore": 7.850477462012843,
+        "beatErrorMs": 24.599715107086695,
+        "vocalExit": null,
+        "vocalBenefit": 0,
+        "eq": {
+          "a": [
+            {
+              "t": 0,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 0.24922146636432352,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 0.49844293272864704,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 0.7476643990929706,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 0.9968858654572941,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 1.2461073318216176,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 1.495328798185941,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 1.7445502645502646,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 1.9937717309145881,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 2.2429931972789117,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 2.492214663643235,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 2.7414361300075587,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 2.990657596371882,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 3.2398790627362057,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 3.4891005291005293,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 3.7383219954648528,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 3.9875434618291763,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 4.2367649281935,
+              "low": -9,
+              "mid": 0,
+              "high": -1.7870652758805923
+            },
+            {
+              "t": 4.485986394557823,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4374234238740813
+            },
+            {
+              "t": 4.735207860922147,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 4.98442932728647,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 5.233650793650794,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 5.482872260015117,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 5.732093726379441,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 5.981315192743764,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 6.230536659108088,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 6.4797581254724115,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 6.728979591836735,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 6.9782010582010585,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 7.227422524565382,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 7.4766439909297056,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 7.72586545729403,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 7.975086923658353,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 8.224308390022676,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 8.473529856387,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 8.722751322751323,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 8.971972789115647,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            }
+          ],
+          "b": [
+            {
+              "t": 0,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 0.24922146636432352,
+              "low": -7,
+              "mid": -0.21604938271604937,
+              "high": 1.2
+            },
+            {
+              "t": 0.49844293272864704,
+              "low": -7.467238835578776,
+              "mid": -0.41975308641975306,
+              "high": 1.1747537926358893
+            },
+            {
+              "t": 0.7476643990929706,
+              "low": -7,
+              "mid": -0.611111111111111,
+              "high": 1.0044800412764872
+            },
+            {
+              "t": 0.9968858654572941,
+              "low": -7,
+              "mid": -0.7901234567901234,
+              "high": 1.029383167959688
+            },
+            {
+              "t": 1.2461073318216176,
+              "low": -7.322996603470526,
+              "mid": -0.9567901234567903,
+              "high": 0.7153259447237201
+            },
+            {
+              "t": 1.495328798185941,
+              "low": -7.384630427768991,
+              "mid": -1.1111111111111112,
+              "high": 0.28018277554740745
+            },
+            {
+              "t": 1.7445502645502646,
+              "low": -7.427861300516228,
+              "mid": -1.2530864197530864,
+              "high": 0.5002136311289859
+            },
+            {
+              "t": 1.9937717309145881,
+              "low": -7.859631167210713,
+              "mid": -1.382716049382716,
+              "high": -0.11958948677497139
+            },
+            {
+              "t": 2.2429931972789117,
+              "low": -8.607295566303684,
+              "mid": -1.5,
+              "high": -0.5008855669443826
+            },
+            {
+              "t": 2.492214663643235,
+              "low": -7.859631167210713,
+              "mid": -1.6049382716049383,
+              "high": 0.24677883214858798
+            },
+            {
+              "t": 2.7414361300075587,
+              "low": -7.1119667681177425,
+              "mid": -1.6975308641975309,
+              "high": 0.6619371391473611
+            },
+            {
+              "t": 2.990657596371882,
+              "low": -7,
+              "mid": -1.777777777777778,
+              "high": 0.01954598604627411
+            },
+            {
+              "t": 3.2398790627362057,
+              "low": -7,
+              "mid": -1.8456790123456788,
+              "high": -0.026015916619452017
+            },
+            {
+              "t": 3.4891005291005293,
+              "low": -7,
+              "mid": -1.9012345679012348,
+              "high": 0.7216484824735185
+            },
+            {
+              "t": 3.7383219954648528,
+              "low": -7.012096335570473,
+              "mid": -1.9444444444444442,
+              "high": 1.0960064722522749
+            },
+            {
+              "t": 3.9875434618291763,
+              "low": -7.759760734663444,
+              "mid": -1.9753086419753085,
+              "high": 1.1444552619693815
+            },
+            {
+              "t": 4.2367649281935,
+              "low": -8.507425133756414,
+              "mid": -1.9938271604938271,
+              "high": 1.2
+            },
+            {
+              "t": 4.485986394557823,
+              "low": -7.759760734663443,
+              "mid": -2,
+              "high": 1.2
+            },
+            {
+              "t": 4.735207860922147,
+              "low": -7.012096335570472,
+              "mid": -1.9938271604938271,
+              "high": 1.2
+            },
+            {
+              "t": 4.98442932728647,
+              "low": -7.759760734663443,
+              "mid": -1.9753086419753085,
+              "high": 1.15700913815263
+            },
+            {
+              "t": 5.233650793650794,
+              "low": -7.012096335570472,
+              "mid": -1.9444444444444444,
+              "high": 0.5165247156453175
+            },
+            {
+              "t": 5.482872260015117,
+              "low": -7,
+              "mid": -1.9012345679012346,
+              "high": 1.2
+            },
+            {
+              "t": 5.732093726379441,
+              "low": -7.7476643990929706,
+              "mid": -1.8456790123456792,
+              "high": 1.2
+            },
+            {
+              "t": 5.981315192743764,
+              "low": -7.190802105229224,
+              "mid": -1.777777777777778,
+              "high": 0.8190788096467676
+            },
+            {
+              "t": 6.230536659108088,
+              "low": -7,
+              "mid": -1.6975308641975309,
+              "high": 0.15095678521322609
+            },
+            {
+              "t": 6.4797581254724115,
+              "low": -7.7476643990929706,
+              "mid": -1.6049382716049383,
+              "high": -0.05746650032772549
+            },
+            {
+              "t": 6.728979591836735,
+              "low": -8.495328798185941,
+              "mid": -1.5,
+              "high": 0.3014437718690637
+            },
+            {
+              "t": 6.9782010582010585,
+              "low": -7.7476643990929706,
+              "mid": -1.382716049382716,
+              "high": 1.0491081709620342
+            },
+            {
+              "t": 7.227422524565382,
+              "low": -7,
+              "mid": -1.2530864197530862,
+              "high": 0.952860554831651
+            },
+            {
+              "t": 7.4766439909297056,
+              "low": -7,
+              "mid": -1.111111111111111,
+              "high": 0.6425960253172646
+            },
+            {
+              "t": 7.72586545729403,
+              "low": -7.039348527995026,
+              "mid": -0.9567901234567898,
+              "high": 1.2
+            },
+            {
+              "t": 7.975086923658353,
+              "low": -7,
+              "mid": -0.7901234567901237,
+              "high": 1.2
+            },
+            {
+              "t": 8.224308390022676,
+              "low": -7,
+              "mid": -0.6111111111111114,
+              "high": 1.1161392107108403
+            },
+            {
+              "t": 8.473529856387,
+              "low": -7,
+              "mid": -0.4197530864197533,
+              "high": 1.1271832384673404
+            },
+            {
+              "t": 8.722751322751323,
+              "low": -7,
+              "mid": -0.21604938271604948,
+              "high": 1.2
+            },
+            {
+              "t": 8.971972789115647,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            }
+          ]
+        }
+      },
+      "recommendation": {
+        "id": "track-7c28de573d1db91e6dd3",
+        "title": "Bounce",
+        "style": "Hip-Hop",
+        "energyLevel": 4,
+        "reason": "完整 4 小节 · 接管后 16 秒实测覆盖 · 优先升能，也可平稳接续 · outro附近",
+        "styleLabels": [
+          "boombap"
+        ],
+        "selection": {
+          "available": 146,
+          "styleCandidates": 30,
+          "tempoCandidates": 7,
+          "recentCandidates": 1,
+          "checked": 6,
+          "metadataFailed": 0,
+          "qualified": 6,
+          "stage": "fresh",
+          "usedRecent": false
+        },
+        "energy": {
+          "beforeDb": -10.21761890732944,
+          "afterDb": [
+            -8.738369416219493,
+            -8.942025471608657,
+            -9.391359278893207,
+            -9.777916980613078
+          ],
+          "deltasDb": [
+            1.4792494911099467,
+            1.2755934357207828,
+            0.8262596284362331,
+            0.43970192671636177
+          ],
+          "targetDeltaDb": 1.25
+        },
+        "score": 1.0413159440710338,
+        "qualityScore": 1.085982385221378,
+        "energyPenalty": 0.04466644115034413,
+        "policy": "mobile-direction-preference-v2",
+        "qualityPolicy": "continuous-auto-quality-v1",
+        "cue": {
+          "start": 143.56802721088434,
+          "end": 152.54,
+          "bStart": 55.62,
+          "bEnd": 64.5,
+          "bars": 4
+        },
+        "alternatives": [
+          {
+            "id": "track-7c28de573d1db91e6dd3",
+            "title": "Bounce",
+            "start": 143.56802721088434,
+            "windowId": "w18-4",
+            "score": 1.0413159440710338
+          },
+          {
+            "id": "track-7c28de573d1db91e6dd3",
+            "title": "Bounce",
+            "start": 125.62802721088434,
+            "windowId": "w18-4",
+            "score": 1.0288770082355134
+          },
+          {
+            "id": "track-7c28de573d1db91e6dd3",
+            "title": "Bounce",
+            "start": 107.68802721088434,
+            "windowId": "w18-4",
+            "score": 1.0082214209663556
+          }
+        ]
+      },
+      "decision": {
+        "policy": {
+          "version": "metric-mix-v1.0",
+          "status": "provisional-engineering-rules",
+          "minimumMargin": 4,
+          "combinationMargin": 6,
+          "audibleDbfs": -45,
+          "minimumOverlap": 0.25,
+          "tempoRatio": [
+            0.95,
+            1.05
+          ],
+          "beatToleranceMs": 65,
+          "maximumDuration": 32,
+          "tailQuietSeconds": 0.25,
+          "maximumCandidatePeak": 0.98,
+          "scope": "Rule scores are ranking heuristics,not probabilities or calibrated listening accuracy."
+        },
+        "recommended": "filter",
+        "methods": {
+          "original": {
+            "name": "原渐混",
+            "eligible": true,
+            "score": 50,
+            "benefit": 0,
+            "processingCost": 0,
+            "levelPenalty": 0,
+            "reason": "原方案参照；没有足够新增收益时优先保留",
+            "status": "candidate"
+          },
+          "bass": {
+            "name": "独立贝斯交接",
+            "eligible": true,
+            "score": 55.98,
+            "benefit": 11.98,
+            "processingCost": 6,
+            "levelPenalty": 0,
+            "reason": "贝斯同时可闻及音高分布差异代理达到候选门槛",
+            "status": "candidate"
+          },
+          "filter": {
+            "name": "旋律滤波",
+            "eligible": true,
+            "score": 60.78,
+            "benefit": 14.78,
+            "processingCost": 4,
+            "levelPenalty": 0,
+            "reason": "other同时可闻程度达到门槛；只处理末小节",
+            "status": "candidate"
+          },
+          "yield": {
+            "name": "旋律让位",
+            "eligible": false,
+            "score": null,
+            "benefit": 0,
+            "processingCost": 11,
+            "levelPenalty": 0,
+            "reason": "未达到旋律提前退出的较高门槛",
+            "status": "excluded"
+          },
+          "vocal": {
+            "name": "人声唱完再退出",
+            "eligible": false,
+            "score": null,
+            "benefit": 0,
+            "processingCost": 6,
+            "levelPenalty": 0,
+            "reason": "缺少安全的人声尾部/空隙，或保留人声收益不足",
+            "status": "excluded"
+          },
+          "bass_filter": {
+            "name": "贝斯交接＋旋律滤波",
+            "eligible": false,
+            "score": 64.76,
+            "benefit": 26.76,
+            "processingCost": 12,
+            "levelPenalty": 0,
+            "reason": "贝斯与other均满足门槛；还需胜过较好单项至少6分；没有达到组合额外收益门槛",
+            "status": "excluded"
+          }
+        },
+        "explanation": "other同时可闻程度达到门槛；只处理末小节",
+        "limitations": [
+          "规则阈值尚未通过大样本听感校准",
+          "音高分布差异不等于和弦冲突，RMS不等于感知响度",
+          "缺失值保持未知；歌曲风格和曲名不触发手法"
+        ]
+      }
+    }
+  ],
+  "checks": {
+    "audioObservations": 4,
+    "late": 0,
+    "nonzero": true,
+    "typescriptPassed": 237,
+    "typescriptSkipped": 3,
+    "flutterPassed": 116,
+    "flutterAnalyze": "passed",
+    "typecheck": "passed",
+    "independentReview": "No remaining actionable issues"
+  },
+  "limits": [
+    "Actual Mac browser run; not physical Android validation",
+    "Observed local-original direction handoff and automatic filter handoff",
+    "Slow-cloud original fallback covered by regression; this final browser automatic case had stems ready",
+    "Energy remains local source RMS preference, not calibrated perceived energy"
+  ]
+}

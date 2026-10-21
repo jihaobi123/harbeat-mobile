@@ -5,7 +5,7 @@ import type {MetricTransport} from '../metric-upstream/metric-mix/transport'
 import type {Prepared,Method} from '../metric-upstream/metric-mix/types'
 import {canArm} from '../metric-upstream/metric-mix/plan'
 import {buildV30Eq} from '../metric-upstream/v30/eq'
-export type NearbyOptions={player:MetricTransport;a:Track;b:Track;signal:AbortSignal;prepare:(plan:Plan,signal:AbortSignal)=>Promise<Prepared>;ready?:{result:Prepared;method:Method};onStatus?:(message:string)=>void;acceptPlan?:(plan:Plan)=>boolean;onCandidate?:(plan:Plan)=>void;leadSeconds?:number}
+export type NearbyOptions={player:MetricTransport;a:Track;b:Track;signal:AbortSignal;prepare:(plan:Plan,signal:AbortSignal)=>Promise<Prepared>;preload?:(plan:Plan,signal:AbortSignal)=>Promise<unknown>;ready?:{result:Prepared;method:Method};onStatus?:(message:string)=>void;acceptPlan?:(plan:Plan)=>boolean;onCandidate?:(plan:Plan)=>void;scorePlan?:(plan:Plan)=>number;leadSeconds?:number}
 function wait<T>(operation:Promise<T>,signal:AbortSignal){return new Promise<T>((resolve,reject)=>{
  const cleanup=()=>signal.removeEventListener('abort',abort),abort=()=>{cleanup();reject(signal.reason??new DOMException('已取消','AbortError'))}
  signal.addEventListener('abort',abort,{once:true});operation.then(x=>{cleanup();resolve(x)},e=>{cleanup();reject(e)});if(signal.aborted)abort()
@@ -13,11 +13,23 @@ function wait<T>(operation:Promise<T>,signal:AbortSignal){return new Promise<T>(
 const expired=()=>Object.assign(Error('准备期间接点已过，重新寻找后续接点'),{code:'cue_expired'})
 /** Keep every existing gate, then prefer the closest upcoming start. Compare
  * each existing entry window; do not substitute automatic late-song ranking. */
-export function nearbyPlan(a:Track,b:Track,position:number,excluded=new Set<string>(),acceptPlan:(plan:Plan)=>boolean=()=>true){
+export function nearbyPlan(a:Track,b:Track,position:number,excluded=new Set<string>(),acceptPlan:(plan:Plan)=>boolean=()=>true,scorePlan?:(plan:Plan)=>number){
  const windows=b.windows.filter(w=>{const v=w.variants[a.id];return v&&v.rate>=.95&&v.rate<=1.05&&v.duration>=1&&v.duration<=32&&[2,4,8].includes(w.bars)})
  const candidates=windows.flatMap(w=>planContinuous(a,[{...b,windows:[w]}],position+.25,{kind:'next',targetId:b.id},new Set(),60,false).candidates)
   candidates.sort((x,y)=>x.start-y.start||y.score-x.score||x.id.localeCompare(y.id))
-  for(const plan of candidates){if(excluded.has(plan.id))continue;try{const accepted={...plan,v30Eq:buildV30Eq(a,b,plan)};if(acceptPlan(accepted))return accepted}catch{excluded.add(plan.id)}}
+  let best:Plan|null=null,bestScore=-Infinity
+  for(const plan of candidates){
+   if(best&&plan.start>best.start)break
+   if(excluded.has(plan.id))continue
+   try{
+    const accepted={...plan,v30Eq:buildV30Eq(a,b,plan)}
+    if(!acceptPlan(accepted))continue
+    if(!scorePlan)return accepted
+    const score=scorePlan(accepted)
+    if(Number.isFinite(score)&&(!best||score>bestScore)){best=accepted;bestScore=score}
+   }catch{excluded.add(plan.id)}
+  }
+  if(best)return best
  return null
 }
 /** One explicit live request: no restart, seek or audition. A missed candidate
@@ -29,11 +41,24 @@ export async function mixNearby(o:NearbyOptions){
  let lastError:unknown=Error('附近没有通过拍点、人声和速度检查的接点，请换歌或稍后再试')
  for(let attempt=0;attempt<3;attempt++){
   valid()
-  const plan=nearbyPlan(a,b,p.position,excluded,o.acceptPlan)
+  let plan=nearbyPlan(a,b,p.position,excluded,o.acceptPlan,o.scorePlan)
   if(!plan)throw lastError
+  const preparedFor=(plan:Plan)=>{
+   const r=o.ready?.result
+   return attempt===0&&r&&r.plan.from===a.id&&r.plan.to===b.id&&r.plan.windowId===plan.window.id&&Math.abs(r.plan.start-plan.start)<.002&&Math.abs(r.plan.end-plan.end)<.002&&canArm(r.plan,a.id,p.position)?o.ready:null
+  }
+  let cached=preparedFor(plan)
+  if(!cached&&o.preload){
+   o.onStatus?.('正在装入下一首的原渐混素材，当前音乐继续播放…')
+   p.logs.push({kind:'nearby_inputs_loading',at:new Date().toISOString(),sourcePosition:p.position,windowId:plan.window.id})
+   // Keep a cold download alive across passing cues; a superseded user request
+   // still cancels it. Select the actual nearest cue only after inputs arrive.
+   await wait(o.preload(plan,signal),signal);valid()
+   plan=nearbyPlan(a,b,p.position,excluded,o.acceptPlan,o.scorePlan)
+   if(!plan)throw lastError
+   cached=preparedFor(plan)
+  }
   o.onCandidate?.(plan)
-  const r=o.ready?.result
-  const cached=attempt===0&&r&&r.plan.from===a.id&&r.plan.to===b.id&&r.plan.windowId===plan.window.id&&Math.abs(r.plan.start-plan.start)<.002&&Math.abs(r.plan.end-plan.end)<.002&&canArm(r.plan,a.id,p.position)?o.ready:null
   const cue=cached?.result.plan??plan,controller=new AbortController(),cancel=()=>controller.abort(signal.reason)
   p.logs.push({kind:'nearby_candidate',at:new Date().toISOString(),sourcePosition:p.position,start:cue.start,end:cue.end,reused:!!cached,policy:'nearest-qualified-start'})
   signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel()

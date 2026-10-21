@@ -62,7 +62,8 @@ it('a rejected window tries another choice, with no interruption or invented har
  expect(p.start).toHaveBeenCalledTimes(1);expect(p.arm).not.toHaveBeenCalled()
 })
 it('no compatible energy remains honest and does not restart A',async()=>{
- const {run,p,host}=setup();run.direction({energy:5});await run.start('a');run.tick();await finished(run)
+ const {run,p,host,tracks}=setup();for(const t of tracks.slice(1))t.alignment!.bandFrames[0].rmsDbfs=-24
+ run.direction({energy:5});await run.start('a');run.tick();await finished(run)
  expect(run.phase).toBe('no_match');expect(host.prepareMetric).not.toHaveBeenCalled();expect(p.start).toHaveBeenCalledTimes(1);expect(p.arm).not.toHaveBeenCalled()
 })
 it('new preferences during a committed transition apply to the next song',async()=>{
@@ -171,7 +172,8 @@ it('a live energy change uses the existing four-block energy gate at the nearby 
  expect((run.recommendation?.energy as any).deltasDb).toEqual([3,3,3,3]);expect(host.prepareMetric).not.toHaveBeenCalled()
 })
 it('a quick direction with no matching energy keeps A playing without an invented fallback',async()=>{
- const {run,p,host}=setup();await run.start('a');run.direction({energy:5});run.tick();await finished(run)
+ const {run,p,host,tracks}=setup();for(const t of tracks.slice(1))t.alignment!.bandFrames[0].rmsDbfs=-24
+ await run.start('a');run.direction({energy:5});run.tick();await finished(run)
  expect(run.phase).toBe('no_match');expect(p.arm).not.toHaveBeenCalled();expect(host.prepareMetric).not.toHaveBeenCalled();expect(p.start).toHaveBeenCalledTimes(1)
 })
 it('the latest direction supersedes a pending Next metadata request',async()=>{
@@ -208,4 +210,77 @@ it('a style change cancels an automatic arm still loading before the clock is co
 it('Next retains a displayed eligible song even if it was played recently',async()=>{
  const {run,p}=setup();await run.start('b');run.stop();await run.start('a');run.choose('b');run.requestNext();run.tick();await finished(run)
  expect(p.arm).toHaveBeenCalledTimes(1);expect(p.arm.mock.calls[0][0].plan.to).toBe('b')
+})
+
+it('rechecks a recent valid song after all fresh songs fail detailed cue checks',async()=>{
+ const {run,p,tracks}=setup();run.index.tracks.find(t=>t.id==='c')!.styleLabels=['Hip-Hop'];tracks[2].alignment!.bars=[]
+ run.direction({style:'Hip-Hop'});await run.start('b');run.stop();await run.start('a');run.tick();await finished(run)
+ expect(run.result?.plan.to).toBe('b');expect(p.start).toHaveBeenCalledTimes(2)
+ expect((run.snapshot() as any).selection.usedRecent).toBe(true)
+})
+it('checks fresh candidates beyond the first eight before declaring no match',async()=>{
+ const {run,tracks}=setup();run.direction({style:'Hip-Hop'});tracks[1].alignment!.bars=[]
+ for(let i=0;i<9;i++){
+  const t=qualityTrack('d'+i);if(i<8)t.alignment!.bars=[];tracks.push(t)
+  run.index.tracks.push({...run.index.tracks[1],id:t.id,detailUrl:t.id,title:t.title})
+ }
+ await run.start('a');run.tick();await finished(run)
+ expect(run.result?.plan.to).toBe('d8')
+ expect((run.snapshot() as any).selection.checked).toBe(10)
+})
+it('keeps recent fallback out of ranking when a fresh valid song exists',async()=>{
+ const {run}=setup();run.index.tracks.find(t=>t.id==='c')!.styleLabels=['Hip-Hop']
+ run.direction({style:'Hip-Hop'});await run.start('b');run.stop();await run.start('a');run.tick();await finished(run)
+ expect(run.result?.plan.to).toBe('c');expect((run.snapshot() as any).selection.usedRecent).toBe(false)
+})
+
+it('prefers the older played song over an immediate return when falling back',async()=>{
+ const {run,tracks}=setup();run.index.tracks.find(t=>t.id==='c')!.styleLabels=['Hip-Hop'];tracks[1].alignment!.bandFrames[0].rmsDbfs=-20
+ run.direction({style:'Hip-Hop'});await run.start('b');run.stop();await run.start('c');run.stop();await run.start('a');run.tick();await finished(run)
+ expect(run.result?.plan.to).toBe('b')
+})
+it('a superseded recent fallback cannot arm after its metadata arrives',async()=>{
+ let release!:()=>void;const hold=new Promise<void>(r=>release=r)
+ const {run,p,tracks,read}=setup({waitMetadata:id=>id==='b'?hold:Promise.resolve()});tracks[2].alignment!.bars=[]
+ try{
+  await run.start('a');p.current=tracks[1];p.changed();p.current=tracks[0];p.changed()
+  run.requestNext();run.tick();await vi.waitFor(()=>expect(read).toHaveBeenCalledWith('b',expect.any(URL)))
+  run.direction({style:'House'});release();run.tick();await finished(run)
+  expect(p.arm).not.toHaveBeenCalled();expect(run.result).toBeNull();expect(p.current.id).toBe('a')
+ }finally{release()}
+})
+
+it('bounds metadata retention while exhausting a large no-match fresh pool',async()=>{
+ let maximum=0,run!:MetricRun
+ const s=setup({waitMetadata:async()=>{maximum=Math.max(maximum,run.library.values().length)}});run=s.run
+ run.direction({style:'Hip-Hop'});s.tracks[1].alignment!.bars=[]
+ for(let i=0;i<25;i++){
+  const t=qualityTrack('g'+String(i).padStart(2,'0'));t.alignment!.bars=[];s.tracks.push(t)
+  run.index.tracks.push({...run.index.tracks[1],id:t.id,detailUrl:t.id,title:t.title})
+ }
+ await run.start('a');run.tick();await finished(run)
+ expect(run.phase).toBe('no_match');expect((run.snapshot() as any).selection.checked).toBe(26)
+ expect(maximum).toBeLessThanOrEqual(18);expect(run.library.values().length).toBeLessThanOrEqual(10)
+})
+
+it('renders the same energy-preferred entry that nearby selection reports',async()=>{
+ const {run,tracks,render}=setup();const [a,b]=tracks
+ for(const t of [a,b]){t.vocals=[];t.preprocessing!.vocalActivity!.intervals=[]}
+ b.windows=[{...b.windows[0],id:'a-flat'},{...b.windows[0],id:'z-loud',start:24,end:32}]
+ b.alignment!.bandFrames=[{...b.alignment!.bandFrames[0],end:32},{...b.alignment!.bandFrames[0],start:32,rmsDbfs:-12}]
+ run.direction({style:'Hip-Hop',automatic:false});await run.start('a');run.direction({energy:5});run.tick();await finished(run)
+ expect(render.mock.calls[0][3].window.id).toBe('z-loud')
+ expect((run.recommendation?.cue as any).bStart).toBe(24)
+})
+
+it('keeps the selected automatic cue with original fade when cloud preparation misses its budget',async()=>{
+ vi.useFakeTimers()
+ const {run,p,host,render}=setup({cloudRunning:true});await run.start('a');run.tick()
+ await vi.waitFor(()=>expect(host.prepareMetric).toHaveBeenCalledTimes(1))
+ const payload=JSON.parse(host.prepareMetric.mock.calls[0][0]);p.position=payload.start-11
+ await vi.advanceTimersByTimeAsync(300)
+ expect(render).toHaveBeenCalledTimes(1);expect(run.result?.plan.start).toBe(payload.start)
+ expect(run.export().history.some(h=>h.kind==='automatic_original_fallback')).toBe(true)
+ p.position=payload.start-9;run.tick();await vi.advanceTimersByTimeAsync(1)
+ expect(p.arm).toHaveBeenCalledTimes(1);expect(p.start).toHaveBeenCalledTimes(1)
 })

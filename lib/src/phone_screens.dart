@@ -248,7 +248,8 @@ class _ListeningDirection extends StatelessWidget {
                                           style: const TextStyle(fontSize: 14))
                                     ])))))))),
         const SizedBox(height: 8),
-        const Text('改变下一首的强弱倾向，音量保持不变。', style: TextStyle(fontSize: 14)),
+        const Text('高档优先更有劲，也可平稳接续；低档优先放缓。按局部响度排序，不调整播放音量。',
+            style: TextStyle(fontSize: 14)),
         const SizedBox(height: 18),
         DropdownButtonFormField<String>(
             key: ValueKey('listening-style-${c.smartStyle}'),
@@ -296,6 +297,11 @@ class _NextRecommendation extends StatelessWidget {
         Map<String, dynamic>.from(result?['decision'] as Map? ?? {});
     final methods =
         Map<String, dynamic>.from(decision['methods'] as Map? ?? {});
+    final selection =
+        Map<String, dynamic>.from(state['selection'] as Map? ?? {});
+    final method = state['method'] ?? decision['recommended'];
+    final chosenMethod =
+        Map<String, dynamic>.from(methods[method] as Map? ?? {});
     final start = (cue['start'] as num?)?.toDouble();
     final remaining =
         start == null ? null : start - c.position.inMilliseconds / 1000;
@@ -353,6 +359,12 @@ class _NextRecommendation extends StatelessWidget {
                       state['notice']?.toString() ??
                       '点击下一首或调整能量、风格，会直接安排衔接。',
                   style: const TextStyle(fontSize: 14))),
+          if ((selection['checked'] as num? ?? 0) > 0) ...[
+            const SizedBox(height: 8),
+            Text(
+                '已比较 ${selection['checked']} 首 · ${selection['qualified'] ?? 0} 首有合格接点${selection['usedRecent'] == true ? ' · 回查已播歌曲' : ''}',
+                style: const TextStyle(fontSize: 14)),
+          ],
           if (rec['reason'] != null) ...[
             const SizedBox(height: 8),
             Text(rec['reason'].toString(), style: const TextStyle(fontSize: 14))
@@ -366,12 +378,16 @@ class _NextRecommendation extends StatelessWidget {
           ],
           if (result != null) ...[
             const SizedBox(height: 8),
-            Text(
-                '交接方式 · ${methods[decision['recommended']]?['name'] ?? '自然衔接'}',
+            Text('交接方式 · ${chosenMethod['name'] ?? '自然衔接'}',
                 style:
                     const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
             const SizedBox(height: 6),
-            Text(decision['explanation']?.toString() ?? '',
+            Text(
+                (method == decision['recommended']
+                            ? decision['explanation']
+                            : chosenMethod['reason'])
+                        ?.toString() ??
+                    '',
                 style: const TextStyle(fontSize: 14)),
           ],
           if (pending != null) ...[

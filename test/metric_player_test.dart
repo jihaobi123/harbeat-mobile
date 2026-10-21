@@ -178,4 +178,48 @@ void main() {
         false);
     expect(c.v3Error, contains('重新选择'));
   });
+  testWidgets(
+      'recommendation shows the selected handoff method and history recovery',
+      (tester) async {
+    tester.view.physicalSize = const Size(390, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final engine = MetricEngine();
+    late AppController c;
+    await tester.runAsync(() async {
+      c = await setup(engine, ProbeAudio());
+      await c.enableV3(mode: 'metric');
+      engine.emit({
+        'metric': {
+          'working': false,
+          'selected': 'track-b',
+          'method': 'filter',
+          'selection': {'checked': 9, 'qualified': 1, 'usedRecent': true},
+          'result': {
+            'decision': {
+              'recommended': 'bass',
+              'explanation': '原先推荐贝斯',
+              'methods': {
+                'bass': {'name': '独立贝斯交接'},
+                'filter': {'name': '旋律滤波', 'reason': '实际选择旋律滤波'}
+              }
+            }
+          }
+        }
+      });
+      await Future<void>.delayed(Duration.zero);
+    });
+    await tester.pumpWidget(MaterialApp(
+        theme: HB.theme,
+        home: AnimatedBuilder(
+            animation: c, builder: (_, __) => Shell(controller: c))));
+    await tester.scrollUntilVisible(find.text('接下来听'), 250);
+    expect(find.text('交接方式 · 旋律滤波'), findsOneWidget);
+    expect(find.text('实际选择旋律滤波'), findsOneWidget);
+    expect(find.textContaining('回查已播歌曲'), findsOneWidget);
+    expect(find.text('交接方式 · 独立贝斯交接'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
+  });
 }

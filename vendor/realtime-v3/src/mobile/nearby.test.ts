@@ -72,3 +72,21 @@ it('keeps a caller acceptance gate when selecting the actual nearby cue',async()
  const s=setup();await mixNearby({...s,acceptPlan:(plan:any)=>plan.start>=20} as any)
  expect(s.player.arm.mock.calls[0][0].plan.start).toBeGreaterThanOrEqual(20)
 })
+
+it('finishes cold local input loading before choosing the actual nearby cue',async()=>{
+ const s=setup();let cold=true
+ const preload=vi.fn(async()=>{s.player.position+=5;cold=false})
+ s.prepare.mockImplementation(async(p:any)=>{if(cold)throw Error('cold inputs not ready');return makeResult(s.a,s.b,p)})
+ await mixNearby({...s,preload} as any)
+ expect(preload).toHaveBeenCalledTimes(1)
+ expect(s.player.arm).toHaveBeenCalledTimes(1)
+ expect(s.player.arm.mock.calls[0][0].plan.start).toBeGreaterThan(15.5)
+ expect(s.player.start).not.toHaveBeenCalled()
+})
+it('cancels cold input loading without arming when the direction is superseded',async()=>{
+ const s=setup();let release!:()=>void
+ const preload=vi.fn(()=>new Promise<void>(r=>release=r))
+ const task=mixNearby({...s,preload} as any),rejected=expect(task).rejects.toMatchObject({name:'AbortError'})
+ await vi.waitFor(()=>expect(preload).toHaveBeenCalledTimes(1));s.controller.abort();await rejected;release()
+ expect(s.prepare).not.toHaveBeenCalled();expect(s.player.arm).not.toHaveBeenCalled()
+})

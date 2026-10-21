@@ -1,0 +1,260 @@
+{
+  "date": "2026-10-21",
+  "policy": "mobile-direction-preference-v2",
+  "sourceRelease": "/srv/harbeat-listen/releases/import-1792312707972683118",
+  "scope": "same actual source-bound corpus; A position35, no recent history for aggregate; qualified directed pairs, not listening success",
+  "before": {
+    "strictHipHopHigh": 21
+  },
+  "after": {
+    "strictHipHopHigh": 40,
+    "expandedHipHopHigh": 82
+  },
+  "tracks": [
+    {
+      "title": "DJ Alien-Track 17",
+      "strictHigh": 3,
+      "expandedHigh": 4,
+      "best": {
+        "title": "POPPING SEASON 01",
+        "start": 36.95401360544217,
+        "deltasDb": [
+          0.8036490198303561,
+          1.4687813755145633,
+          1.6945907264091709,
+          1.312004917887375
+        ]
+      }
+    },
+    {
+      "title": "Pandaaaaaa",
+      "strictHigh": 5,
+      "expandedHigh": 8,
+      "best": {
+        "title": "HIPHOP",
+        "start": 37.02143537414966,
+        "deltasDb": [
+          1.6503477793643437,
+          1.1836703024107802,
+          1.501098999342668,
+          1.7073899256551233
+        ]
+      }
+    },
+    {
+      "title": "MOP - Ante Up...Bang[Edit Beats]",
+      "strictHigh": 4,
+      "expandedHigh": 5,
+      "best": {
+        "title": "POPPING SEASON 01",
+        "start": 35.717188208616776,
+        "deltasDb": [
+          -0.05096151332508114,
+          0.6141708423591261,
+          0.8399801932537336,
+          0.4573943847319377
+        ]
+      }
+    },
+    {
+      "title": "GRILLZ (feat. Ilir808)",
+      "strictHigh": 3,
+      "expandedHigh": 10,
+      "best": {
+        "title": "What I'm After",
+        "start": 35.51408163265306,
+        "deltasDb": [
+          1.5498166317125968,
+          1.5933721634095406,
+          1.1839118108507343,
+          0.05998627609815621
+        ]
+      }
+    },
+    {
+      "title": "中国风？ (已售)",
+      "strictHigh": 1,
+      "expandedHigh": 5,
+      "best": {
+        "title": "Playback (feat. Ine)",
+        "start": 37.346666666666664,
+        "deltasDb": [
+          1.6219923342940845,
+          1.5181994038064346,
+          1.778807162054962,
+          1.202768112871949
+        ]
+      }
+    },
+    {
+      "title": "POPPING SEASON 01",
+      "strictHigh": 4,
+      "expandedHigh": 5,
+      "best": {
+        "title": "DJ Alien-Track 17",
+        "start": 36.55857142857143,
+        "deltasDb": [
+          0.2921293778822509,
+          1.3142819136447983,
+          1.0027247954240082,
+          0.6041579189175508
+        ]
+      }
+    },
+    {
+      "title": "Straight (Battle Beat)",
+      "strictHigh": 5,
+      "expandedHigh": 7,
+      "best": {
+        "title": "Bounce",
+        "start": 35.904013605442174,
+        "deltasDb": [
+          1.2622426348037106,
+          1.4733238384941068,
+          1.5240820879024426,
+          0.9898815096677165
+        ]
+      }
+    },
+    {
+      "title": "Snake Gang",
+      "strictHigh": 3,
+      "expandedHigh": 11,
+      "best": {
+        "title": "GRILLZ (feat. Ilir808)",
+        "start": 37.92736961451247,
+        "deltasDb": [
+          0.7487068638008498,
+          2.0027163894491675,
+          1.459835877310109,
+          2.2476648279650053
+        ]
+      }
+    },
+    {
+      "title": "HIPHOP",
+      "strictHigh": 5,
+      "expandedHigh": 7,
+      "best": {
+        "title": "Bounce",
+        "start": 36.297188208616774,
+        "deltasDb": [
+          1.4172258124058814,
+          1.6283070160962776,
+          1.6790652655046134,
+          1.1448646872698873
+        ]
+      }
+    },
+    {
+      "title": "Ante Up (Robbin Hoodz Theory)",
+      "strictHigh": 4,
+      "expandedHigh": 12,
+      "best": {
+        "title": "中国风？ (已售)",
+        "start": 37.5172335600907,
+        "deltasDb": [
+          1.1565669945317723,
+          0.4129637834086175,
+          1.2467401938290443,
+          0.7722025647364301
+        ]
+      }
+    },
+    {
+      "title": "Clap Back (Instrumental Version)",
+      "strictHigh": 3,
+      "expandedHigh": 7,
+      "best": {
+        "title": "Snake Gang",
+        "start": 37.433083900226755,
+        "deltasDb": [
+          0.645537196659248,
+          0.6041667241653812,
+          1.170388325547135,
+          1.0959683367903583
+        ]
+      }
+    },
+    {
+      "title": "Just A Lil Bit (FENK Remix)",
+      "strictHigh": 0,
+      "expandedHigh": 1,
+      "best": {
+        "title": "RATATA",
+        "start": 36.48,
+        "deltasDb": [
+          3.4591158506059205,
+          2.9087035240824965,
+          0.49492426911479015,
+          -4.328610103041733
+        ]
+      }
+    }
+  ],
+  "historyCase": {
+    "source": "Pandaaaaaa",
+    "position": 39.32063718820864,
+    "nearby": {
+      "counts": {
+        "available": 146,
+        "styleCandidates": 30,
+        "tempoCandidates": 8,
+        "recentCandidates": 2
+      },
+      "checked": 6,
+      "stage": "fresh",
+      "qualified": [
+        "Bounce",
+        "Lightskin Lil Wayne",
+        "Rump Shaker",
+        "POPPING SEASON 01",
+        "DJ Alien-Track 17",
+        "MOP - Ante Up...Bang[Edit Beats]"
+      ],
+      "best": {
+        "title": "Bounce",
+        "start": 41.59543537414966,
+        "deltasDb": [
+          1.0944034374746767,
+          1.4068066895900824,
+          1.6163272038633139,
+          0.8103048375621391
+        ]
+      }
+    },
+    "automatic": {
+      "counts": {
+        "available": 146,
+        "styleCandidates": 30,
+        "tempoCandidates": 8,
+        "recentCandidates": 2
+      },
+      "checked": 6,
+      "stage": "fresh",
+      "qualified": [
+        "Rump Shaker",
+        "Bounce",
+        "Lightskin Lil Wayne",
+        "POPPING SEASON 01",
+        "DJ Alien-Track 17",
+        "MOP - Ante Up...Bang[Edit Beats]"
+      ],
+      "best": {
+        "title": "Rump Shaker",
+        "start": 98.72843537414965,
+        "deltasDb": [
+          1.2583402516152749,
+          0.630881305230222,
+          0.8709788574803188,
+          0.5949671821189249
+        ]
+      }
+    }
+  },
+  "limits": [
+    "No new listening votes",
+    "Energy is local digital RMS preference, not calibrated absolute perceived energy",
+    "Related genre map expands retrieval only; beat/source/vocal/EQ/continuity gates stay active"
+  ]
+}

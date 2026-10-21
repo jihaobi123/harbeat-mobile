@@ -5,19 +5,35 @@ import {sourceBound} from '../metric-upstream/v30/planner'
 import {buildV30Eq} from '../metric-upstream/v30/eq'
 import {nearbyPlan} from './nearby'
 
-export const SMART_POLICY='mobile-direction-quality-v1'
+export const SMART_POLICY='mobile-direction-preference-v2'
 export const styleKey=(value:string)=>value.toLocaleLowerCase().replace(/[\s_-]/g,'')
-export function shortlist(entries:LibraryEntry[],current:LibraryEntry,style:string,recent:string[],excluded:Set<string>,explicit?:string|null,preferred?:string|null){
- const options=entries.filter(t=>t.id!==current.id&&t.playStatus==='ready'&&t.mixStatus==='ready'&&!excluded.has(t.id)&&
-  (!explicit||t.id===explicit)&&(!style||explicit||t.styleLabels.some(s=>styleKey(s)===styleKey(style)))&&
-  !!t.bpm&&!!current.bpm&&current.bpm/t.bpm>=.94&&current.bpm/t.bpm<=1.06)
- const fresh=options.filter(t=>!recent.includes(t.id)),pool=fresh.length&&!explicit?fresh:options
- const sorted=pool.sort((a,b)=>{
-  const cost=(t:LibraryEntry)=>Math.abs(Math.log(t.bpm!/current.bpm!))+(t.styleLabels.some(s=>current.styleLabels.includes(s))?0:.02)
-  return cost(a)-cost(b)||a.id.localeCompare(b.id)
- }).slice(0,8)
+const hipHopFamily=new Set(['hiphop','boombap','trap','jazzhiphop','grime'])
+export function styleMatches(labels:string[],style:string){
+ const key=styleKey(style)
+ return !style||labels.some(s=>styleKey(s)===key||(key==='hiphop'&&hipHopFamily.has(styleKey(s))))
+}
+export function candidateStages(entries:LibraryEntry[],current:LibraryEntry,style:string,recent:string[],excluded:Set<string>,explicit?:string|null,preferred?:string|null){
+ const available=entries.filter(t=>t.id!==current.id&&t.playStatus==='ready'&&t.mixStatus==='ready'&&!excluded.has(t.id)&&(!explicit||t.id===explicit))
+ const matching=available.filter(t=>!!explicit||styleMatches(t.styleLabels,style))
+ const options=matching.filter(t=>!!t.bpm&&!!current.bpm&&current.bpm/t.bpm>=.94&&current.bpm/t.bpm<=1.06)
+ const cost=(t:LibraryEntry)=>Math.abs(Math.log(t.bpm!/current.bpm!))+(t.styleLabels.some(s=>current.styleLabels.includes(s))?0:.02)
+ const exact=(t:LibraryEntry)=>!style||t.styleLabels.some(s=>styleKey(s)===styleKey(style))?0:1
+ const sort=(a:LibraryEntry,b:LibraryEntry)=>exact(a)-exact(b)||cost(a)-cost(b)||a.id.localeCompare(b.id)
  const displayed=preferred?options.find(t=>t.id===preferred):undefined
- return displayed?[displayed,...sorted.filter(t=>t.id!==displayed.id)].slice(0,8):sorted
+ const rest=options.filter(t=>t!==displayed)
+ const fresh=rest.filter(t=>!recent.includes(t.id)).sort(sort)
+ const played=rest.filter(t=>recent.includes(t.id)).sort((a,b)=>recent.lastIndexOf(a.id)-recent.lastIndexOf(b.id)||sort(a,b))
+ const stages:{kind:'preferred'|'fresh'|'recent';entries:LibraryEntry[]}[]=[]
+ if(displayed)stages.push({kind:'preferred',entries:[displayed]})
+ if(fresh.length)stages.push({kind:'fresh',entries:fresh})
+ if(played.length)stages.push({kind:'recent',entries:played})
+ return {stages,counts:{available:available.length,styleCandidates:matching.length,tempoCandidates:options.length,recentCandidates:options.filter(t=>recent.includes(t.id)).length}}
+}
+/** Compatibility helper for callers that only need the first metadata batch. */
+export function shortlist(entries:LibraryEntry[],current:LibraryEntry,style:string,recent:string[],excluded:Set<string>,explicit?:string|null,preferred?:string|null){
+ const stages=candidateStages(entries,current,style,recent,excluded,explicit,preferred).stages
+ const first=stages[0]
+ return first?.kind==='preferred'?[...first.entries,...(stages[1]?.entries??[])].slice(0,8):(first?.entries??[]).slice(0,8)
 }
 
 /** A common digital source-power proxy. Never use per-song normalized energy
@@ -39,9 +55,9 @@ export function choiceForPlan(a:Track,b:Track,p:Plan,energy:number):SmartChoice|
  const before=measuredLevel(a,p.start-4,p.start),after=Array.from({length:4},(_,i)=>measuredLevel(b,p.window.end+i*4,p.window.end+(i+1)*4))
  if(before===null||after.some(x=>x===null))return null
  const afterDb=after as number[],deltas=afterDb.map(x=>x-before)
- if(deltas.some(x=>Math.abs(x)>6)||(level>3&&deltas.some(x=>x<1))||(level<3&&deltas.some(x=>x> -1)))return null
+ if(deltas.some(x=>Math.abs(x)>6))return null
  const distance=deltas.reduce((s,x)=>s+Math.abs(x-target),0)/4
- return {plan:p,track:b,score:p.score-.12*distance,energy:{beforeDb:before,afterDb,deltasDb:deltas,targetDeltaDb:target},reason:`完整 ${p.window.bars} 小节 · 接管后 16 秒能量${level>3?'持续提升':level<3?'持续降低':'接近当前方向'} · ${p.section}附近`}
+ return {plan:p,track:b,score:p.score-.12*distance,energy:{beforeDb:before,afterDb,deltasDb:deltas,targetDeltaDb:target},reason:`完整 ${p.window.bars} 小节 · 接管后 16 秒实测覆盖 · ${level>3?'优先升能，也可平稳接续':level<3?'优先降能，也可平稳接续':'优先平稳接续'} · ${p.section}附近`}
 }
 export function rankChoices(a:Track,tracks:Track[],position:number,energy:number,ready=new Set<string>()){
  const choices:SmartChoice[]=[],rejected:string[]=[]
@@ -65,7 +81,7 @@ export const NEARBY_DIRECTION_POLICY='mobile-direction-nearby-v1'
 export function rankNearbyChoices(a:Track,tracks:Track[],position:number,energy:number){
  const choices:SmartChoice[]=[],rejected:string[]=[]
  for(const b of tracks){
-  const plan=nearbyPlan(a,b,position,new Set(),p=>!!choiceForPlan(a,b,p,energy))
+  const plan=nearbyPlan(a,b,position,new Set(),p=>!!choiceForPlan(a,b,p,energy),p=>choiceForPlan(a,b,p,energy)?.score??-Infinity)
   const choice=plan?choiceForPlan(a,b,plan,energy):null
   if(choice)choices.push(choice);else rejected.push(b.id)
  }
