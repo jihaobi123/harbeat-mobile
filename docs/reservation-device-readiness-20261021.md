@@ -22,4 +22,4 @@
 
 本轮真实验收用 6 首曲目生成了 104 个候选；手动切歌命中预热的旋律滤波，自动接歌执行已准备的贝斯交接与旋律滤波，两次均在设备上完成。上线后新建的 4 首 Hip-Hop 预约完成了 72 个候选，失败数为 0，当前 ActivitySession 接受了完整清单与 282 个音频片段。详细记录见 [验收数据](reservation-prewarm-acceptance-20261021.json)。
 
-新版通过 301 项 TypeScript、156 项 Flutter、57 项预约后端测试，以及 Android 素材验证。此次没有编译 APK，Android WebView、手机性能和蓝牙延迟仍需实机试听。
+上述 Mac 网页验收通过 301 项 TypeScript、156 项 Flutter、57 项预约后端测试，以及 Android 素材验证，当时没有编译 APK。后续已在 Windows 构建 0.2.1 并完成安卓普通连续播放、滚动预热及准备结果复用，见 [手机部署记录](android-deployment-0.2.1-20261021.md)。预约专用缓存与离线播放、蓝牙延迟仍不在本次手机验收范围。

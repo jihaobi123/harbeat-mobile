@@ -2,11 +2,11 @@
 
 手机先完成选歌、播放与方向控制，饰品作为可选快捷控制。界面采用浅色背景、青绿与杏黄、细描边圆角卡片；播放、音乐、我的三个主入口保持不变。
 
-当前源码版本为 **Android Preview 0.2.1+16**：主播放器在设备上执行渐混和分轨增益、EQ、滤波，使用同一音频时钟。Jetson 提前分析并导出同源素材；预约预先规划多个接点和候选歌曲，手机按播放进度滚动预热。自动与手动接歌共用端侧准备结果，点击后仍等待合格拍点、人声句尾或段落边界。此次未生成 APK，Windows 构建步骤见 [打包前准备](docs/windows-pre-apk-20261021.md)，准备状态见 [预约与本机接歌](docs/reservation-device-readiness-20261021.md)。旧版界面与算法说明见 [统一播放与网络验证](docs/unified-playback-20261020.md)、[封面接入说明](docs/nas-cover-integration-20261016.md)。
+当前源码版本为 **Android Preview 0.3.0+17**：Jetson 判断具体接点的声部适配和混音手法，手机在同一音频时钟执行渐混、分轨增益、EQ 和滤波。预约预计算多个批准接点，手机滚动预热，自动与手动共用准备结果。点击后仍等待合格拍点、人声句尾或段落边界。新增执行分工和网页实测见 [本轮交接](docs/jetson-device-arrangement-20261021.md)。此前 0.2.1 已在 Windows 构建、安装并完成 3 次真机原渐混及预热复用，见 [0.2.1 真机记录](docs/android-deployment-0.2.1-20261021.md)；0.3.0 尚未编译 APK。构建步骤见 [打包前准备](docs/windows-pre-apk-20261021.md)。
 
 ## 运行
 
-准备在 Windows 编译新版 Android APK，请先按 [Windows 构建前检查](docs/windows-pre-apk-20261021.md) 运行 `tools/prepare_windows.ps1`。该脚本准备源码与音频引擎、运行检查和网页构建，完成后再手动编译 APK；本轮未生成新的 APK。
+准备在 Windows 编译新版 Android APK，请先按 [Windows 构建前检查](docs/windows-pre-apk-20261021.md) 运行 `tools/prepare_windows.ps1`。该脚本准备源码与音频引擎、运行检查和网页构建，完成后再编译 APK。0.2.1 的 Windows 构建和实体手机执行记录见 [部署说明](docs/android-deployment-0.2.1-20261021.md)。
 
 本机验证环境：Flutter 3.41.6 / Dart 3.11.4。
 
@@ -56,7 +56,7 @@ python tools/serve_preview.py --port 8766
 
 历史安装包：[下载 Android ARM64 APK 0.1.12 (14)](https://github.com/jihaobi123/harbeat-mobile/releases/download/v0.1.12-preview-20261020/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk)，[预览版本发布页](https://github.com/jihaobi123/harbeat-mobile/releases/tag/v0.1.12-preview-20261020)提供安装包与 SHA-256 校验文件。该 APK 固定于源码 `406525a`，对应旧执行方式，不包含后续最近接点修复及本机分轨执行；历史构建结果见 [交付说明](docs/unified-playback-20261020.md)。
 
-本次 **0.3.0+17** 只提交源码与构建前校验，不包含新 APK。Windows 应从本分支最新源码重新构建并验证手机音频性能。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；安装时使用保留数据的安全安装器。旧 APK 作为 GitHub Release 附件发布，不存入 Git 历史。
+此前 **0.2.1+16** 已在 Windows 构建为 `outputs/HarBeat-Preview-0.2.1-20261021-LocalExecution-arm64.apk` 并安装到手机，校验值和播放记录见 [部署说明](docs/android-deployment-0.2.1-20261021.md)。本次 **0.3.0+17** 提交源码与构建前校验，需要从最新分支重新编译并验收手机性能。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；安装时使用保留数据的安全安装器。APK 不存入 Git，上方历史 Release 附件也不包含本轮更新。
 
 默认构建使用并存预览包名，只有显式 `-PharbeatPreview=false` 才使用原包名。此次修复了应用未启用 Kotlin 插件、audio_session 0.2.4 与关闭内置 Kotlin 的兼容问题，以及网络配置缺少 includeSubdomains 属性的发布检查错误。Gradle 限制为 1536MB 堆、1 个 worker 和 2 个可用处理器，避免本机原生内存不足。
 
@@ -77,8 +77,8 @@ flutter build apk --release --target-platform android-arm64
 ## 当前入口
 
 - **播放**：一个播放器加音乐方向和下一首推荐；已发布歌曲自动使用智能衔接，风格和能量驱动候选、完整进入窗口和退出点的联合择优。自动完成下一首的准备与接入，显示封面、原因和倒计时。更多工具保留手动回放、方案选择、日志和 Android 定时舞程；本地/未分析音频继续原曲播放。
-- **音乐**：推荐、搜索（含 BPM）、本地音频导入、链接解析演示、歌曲详情、收藏与歌单管理。
-- **我的**：曲库入口、饰品快捷控制、饰品连接；HiFi Core / Party 留作后续扩展说明。
+- **音乐**：推荐、在线搜索、下载与分析进度、本地音频上传分析、真实歌单解析、歌曲详情、收藏与歌单管理。
+- **我的**：私人预约与素材缓存、曲库入口、饰品快捷控制、饰品连接；HiFi Core / Party 留作后续扩展说明。
 
 ## 实现边界
 
@@ -87,7 +87,7 @@ flutter build apk --release --target-platform android-arm64
 - 标准播放在 Android/iOS 使用 SoLoud 共享音频时钟执行双路原曲交叉淡化；“下一首 / 混入”支持当前队列，方向请求使用已分析风格/能量候选。网页标准播放仍为单曲；智能分轨在浏览器和 Android WebView 共用 Web Audio 执行器。旧成品转场保留兼容，旧 4 秒调度仅留在显式单元测试替身中。
 - 16 拍预览按示例 BPM 截取音频开头并循环，最多到音频末尾，未做真实下拍对齐；未分析的本地文件不开放此功能。
 - 饰品页面扫描真实广播、由用户选择设备、发现 GATT 通知特征。按固件协议配置三个完整十六进制按键包；未知包不执行动作。蓝牙连接不跨重启恢复，断开不停止手机播放。未配置固件时不自动猜测 UUID 或按键值。
-- 链接输入仅做 URL 校验并展示固定的元数据示例，不访问外部平台。
+- 链接入口解析真实歌单，先显示前 24 首，再逐首核对音源并确认下载；平台可用性和新歌分析进度如实显示，见 [搜索下载说明](docs/music-search-download-20261021.md)。
 - 手机导入复制到 App 私有目录。Web 导入使用浏览器 Blob URL，仅在本次页面生命周期可播；刷新后保留条目，但需重新导入音频。
 - 原来的 Pad、准备草稿和使用记录保留在本地存储；旧 RK 主流程不再占据当前导航。
 

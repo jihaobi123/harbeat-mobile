@@ -1,5 +1,7 @@
 # 本机执行与 Windows 构建交接
 
+后续更新（2026-10-21）：已在 Windows 构建并部署 Android 0.2.1，见 [最终真机记录](android-deployment-0.2.1-20261021.md)。以下“未生成 APK”保留此前 Mac 源码交接阶段的验证范围。
+
 当前源码版本 0.2.1+16。此次不生成 APK。macOS 也能构建 Android 应用；本次按约定把打包留给 Windows。0.2.0+15 接入本机执行，本版补齐预约多接点和滚动预热，详见 [准备状态](reservation-device-readiness-20261021.md)。
 
 ## 播放时的分工
