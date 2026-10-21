@@ -1,0 +1,29 @@
+[Unit]
+Description=HarBeat private reservations and retained activity sets
+After=network-online.target harbeat-metric-mix.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/harbeat-listen/activity-sets/code
+ExecStart=/srv/harbeat-listen/activity-sets/venv/bin/uvicorn activity_sets.service:create_app --factory --host 127.0.0.1 --port 8792 --workers 1 --limit-concurrency 24 --no-access-log
+Environment=ACTIVITY_SETS_ROOT=/srv/harbeat-listen/activity-sets
+Environment=LISTEN_SITE_CURRENT=/srv/harbeat-listen/current
+Environment=ACTIVITY_GATEWAY_MEDIA=/srv/harbeat-listen/metric-mix/media
+Environment=ACTIVITY_SET_PLANNER=/srv/harbeat-listen/activity-sets/code/set-plan.cjs
+Environment=ACTIVITY_NODE=/usr/bin/node
+Environment=PYTHONDONTWRITEBYTECODE=1
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=45
+CPUQuota=75%
+MemoryMax=800M
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/srv/harbeat-listen/activity-sets
+
+[Install]
+WantedBy=multi-user.target

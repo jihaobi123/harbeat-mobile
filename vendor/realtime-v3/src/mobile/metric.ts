@@ -13,8 +13,10 @@ import {localOriginal,preloadOriginal} from './local-original'
 import {nearbyResult} from './nearby-result'
 
 const hash=/^[a-f0-9]{64}$/
-export const METHODS:Method[]=['original','bass','filter','yield','vocal','bass_filter']
-export const METRIC_RELEASE={id:'metric-mix-mobile-20261021',sourceCommit:'978df49191450a602f1b473b31f630a687585a8d',policyVersion:'metric-mix-v1.0'}
+import {METHODS,METRIC_RELEASE,validatePrepared} from './prepared'
+export {METHODS,METRIC_RELEASE,validatePrepared} from './prepared'
+import {ActivitySession} from './activity-session'
+import {cacheActivityAssets,type SetCacheProgress} from './set-cache'
 let nativeSequence=0
 export function nativeMetricJob(host:Host,payload:object,signal:AbortSignal){return new Promise<any>((resolve,reject)=>{
  const id=++nativeSequence
@@ -37,20 +39,7 @@ async function requestJson(url:URL,options:RequestInit,signal?:AbortSignal){
 export async function readMetricJson(path:string,base:URL,signal?:AbortSignal){
  return requestJson(new URL(path,base),{cache:'no-store'},signal)
 }
-export function validatePrepared(value:Prepared,a:Track,b:Track,start:number,windowId:string):Prepared{
- if(value?.schema!=='harbeat.metric-mix-result.v1'||value.status!=='ready'||!hash.test(value.id)||value.policyVersion!==METRIC_RELEASE.policyVersion||!hash.test(value.codeVersion))throw Error('混音结果版本不匹配')
- const p=value.plan
- if(!p||p.from!==a.id||p.to!==b.id||p.windowId!==windowId||!Number.isFinite(p.start)||Math.abs(p.start-start)>.002||
-  ![p.end,p.duration,p.rate,p.bStart,p.bEnd,p.beatErrorMs].every(Number.isFinite)||p.duration<1||p.duration>32||
-  Math.abs(p.end-p.start-p.duration)>.01||p.end>a.duration+.05||p.rate<.95||p.rate>1.05||p.bStart<0||p.bEnd>b.duration-12||Math.abs(p.bStart+p.duration*p.rate-p.bEnd)>.05||p.beatErrorMs>65||p.beatErrorMs<0)throw Error('云端结果与本次接点不一致')
- if(!value.decision?.methods||!METHODS.includes(value.decision.recommended))throw Error('推荐方案不完整')
- for(const [key,asset] of Object.entries(value.assets??{})){
-  if(!METHODS.includes(key as Method)||!asset||asset.url!==`/listen/smart-media/${value.id}/${key}.wav`||!hash.test(asset.sha256)||!Number.isFinite(asset.bytes)||asset.bytes<=0||asset.bytes>64*1024*1024||!Number.isFinite(asset.duration)||Math.abs(asset.duration-p.duration)>.04)throw Error('交接素材身份或时长不一致')
- }
- const method=value.decision.recommended
- if(!value.assets[method]||value.decision.methods[method]?.eligible!==true)throw Error('推荐方案没有通过素材检查')
- return value
-}
+
 function delay(signal:AbortSignal,ms:number){return new Promise<void>((resolve,reject)=>{
  const timer=setTimeout(done,ms)
  function abort(){clearTimeout(timer);signal.removeEventListener('abort',abort);reject(new DOMException('已取消','AbortError'))}
@@ -83,6 +72,11 @@ export class MetricRun {
  result:Prepared|null=null;method:Method='original'
  recommendation:Record<string,unknown>|null=null
  phase='idle'
+ private activity:ActivitySession|null=null
+ private sessionSequence=0;private cacheSequence=0
+ private setCacheController:AbortController|null=null
+ private setCache:SetCacheProgress|null=null
+ private cachePackId:string|null=null
  private pair:{a:Track;b:Track}|null=null
  private revision=0;private request:AbortController|null=null;private alive=true;private lastCurrent:string|null=null
  private explicit:string|null=null;private recent:string[]=[];private excludedPlans=new Set<string>()
@@ -122,7 +116,26 @@ export class MetricRun {
   await initializeFromGesture(this.player)
   return this.player
  }
+ async setSession(manifest:unknown,name:string){
+  const sequence=++this.sessionSequence
+  const activity=await ActivitySession.open(manifest,name,id=>this.library.load(id))
+  if(!this.alive||sequence!==this.sessionSequence)throw new DOMException('预约载入已取消','AbortError')
+  if(this.player?.transition)throw Error('请先完成交接或停止，再进入预约')
+  this.stop();this.library.trim(new Set([activity.initialTrackId]),4);this.activity=activity;this.selected=this.explicit=null;this.recent=[];this.error='';this.notice='预约 set 已载入，可以开始播放';this.update()
+ }
+ clearSet(){this.sessionSequence++;if(this.player?.transition)throw Error('交接完成后可退出预约');this.invalidate();this.activity=null;this.notice='已回到完整曲库';this.update()}
+ async cacheSet(manifest:unknown){
+  const sequence=++this.cacheSequence;this.setCacheController?.abort();const controller=this.setCacheController=new AbortController()
+  if(this.setCache?.state==='downloading'){this.setCache={...this.setCache,state:'partial',message:'上一次下载已暂停'};this.update()}
+  let session:ActivitySession
+  try{session=await ActivitySession.open(manifest,'',id=>this.library.load(id))}catch(e){if(this.setCacheController===controller)this.setCacheController=null;throw e}
+  if(!this.alive||sequence!==this.cacheSequence||controller.signal.aborted)throw new DOMException('素材下载已取消','AbortError')
+  this.library.trim(new Set([this.player?.current?.id??'']),4);this.cachePackId=session.packId
+  this.setCache={completed:0,total:session.assets().length,bytes:0,state:'downloading',message:'正在下载到本机'};this.update()
+  try{return await cacheActivityAssets(session.assets(),this.base,controller.signal,progress=>{if(this.setCacheController===controller){this.setCache=progress;this.update()}})}catch(e){if(this.setCacheController===controller&&this.setCache){this.setCache={...this.setCache,state:'partial',message:controller.signal.aborted?'下载已暂停，可再次准备':(e as Error).message};this.update()}throw e}finally{if(this.setCacheController===controller)this.setCacheController=null}
+ }
  async start(id:string){
+  if(this.activity&&!this.activity.ids.has(id))throw Error('这首歌不在预约 set 中，请先退出预约')
   this.userIntent=null
   if(this.player?.transition)throw Error('请先完成交接或停止，再更换当前歌曲')
   this.invalidate();const token=this.revision;this.working=true;this.update()
@@ -136,6 +149,7 @@ export class MetricRun {
   }finally{if(token===this.revision){this.working=false;this.update()}}
  }
  choose(id:string){
+  if(this.activity&&!this.activity.ids.has(id))throw Error('这首歌不在预约 set 中，请先退出预约')
   if(this.player?.transition)throw Error('正在交接；完成后可以选择下一首')
   if(!this.index.tracks.some(t=>t.id===id&&t.playStatus==='ready'&&t.mixStatus==='ready'))throw Error('这首歌尚未具备智能混音条件')
   if(id===this.player?.current?.id)throw Error('请选择不同的下一首')
@@ -191,6 +205,8 @@ export class MetricRun {
   * local fallback and cannot fill the remote queue with expired cues. */
  private livePreparation(p:MetricTransport,a:Track,b:Track,budget={attempted:false}){
   return (plan:Plan,signal:AbortSignal)=>{
+   const saved=this.activity?.find(a,b,plan)
+   if(saved)return nearbyResult({plan,position:()=>p.position,signal,cloud:async()=>saved,original:local=>this.renderOriginal(p,a,b,plan,local),load:(r,remote)=>Promise.all([p.cache.load(r.assets[r.decision.recommended]!,remote),p.cache.load(nativeSegment(b,r.plan.bEnd).asset,remote)]),event:(kind,data)=>p.logs.push({kind,at:new Date().toISOString(),packId:this.activity?.packId,...data})})
    if(budget.attempted)return this.renderOriginal(p,a,b,plan,signal)
    return nearbyResult({plan,position:()=>p.position,signal,
     cloud:remote=>{budget.attempted=true;return this.cloud(a,b,plan,remote,250)},original:local=>this.renderOriginal(p,a,b,plan,local),
@@ -200,6 +216,7 @@ export class MetricRun {
  }
  /** Reserve local preparation time at an already selected automatic cue. */
  private async automaticResult(p:MetricTransport,a:Track,b:Track,plan:Plan,signal:AbortSignal){
+  const saved=this.activity?.find(a,b,plan);if(saved){p.logs.push({kind:'activity_prepared_reused',packId:this.activity?.packId,jobId:saved.id,at:new Date().toISOString()});return saved}
   const cloud=new AbortController(),cancel=()=>cloud.abort(signal.reason)
   let budgetExpired=false
   signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel()
@@ -248,7 +265,7 @@ export class MetricRun {
   const valid=()=>this.alive&&token===this.revision&&p.current?.id===a.id
   this.working=true;this.phase='selecting';this.notice='正在按风格、能量和接点比较下一首';this.update()
   try{
-   const search=candidateStages(this.index.tracks,entry,this.targetStyle,this.recent,this.excludedTracks,intent?null:this.explicit,intent?.preferred)
+   const search=candidateStages(this.activity?this.index.tracks.filter(t=>this.activity!.ids.has(t.id)):this.index.tracks,entry,this.targetStyle,this.recent,this.excludedTracks,intent?null:this.explicit,intent?.preferred)
    const selection:NonNullable<MetricRun['selection']>={...search.counts,checked:0,metadataFailed:0,qualified:0,stage:null,usedRecent:false}
    this.selection=selection
    if(!search.stages.length)throw Error(`当前风格有 ${selection.styleCandidates} 首候选，速度相容 ${selection.tempoCandidates} 首；请换个方向或补充这个速度区间的音乐`)
@@ -426,14 +443,14 @@ export class MetricRun {
  async resume(){const p=await this.ensure();await p.resume();this.retryAt=0}
  async seek(position:number){this.userIntent=null;if(this.player?.transition)throw Error('请先完成交接或停止，再调整位置');this.invalidate();this.excludedPlans.clear();this.retryAt=0;const paused=this.player?.paused;await this.player?.seek(position);if(paused)this.player?.pause()}
  cancel(){this.userIntent=null;if(this.player?.transition)throw Error('已安排交接，暂停可暂停时间轴，停止可取消');this.invalidate();this.retryAt=Date.now()+30000;this.notice='已取消这次准备，当前歌曲继续播放';this.update()}
- stop(){this.userIntent=null;this.invalidate();this.player?.stop();this.lastCurrent=null;this.retryAt=0;this.notice='已停止';this.save();this.update()}
- pauseForHost(){this.userIntent=null;this.invalidate(false);if(this.player?.busy){this.player.stop();this.notice='已暂停准备，回到前台后重新开始'}else this.player?.pause();this.save()}
+ stop(){this.sessionSequence++;this.userIntent=null;this.invalidate();this.player?.stop();this.lastCurrent=null;this.retryAt=0;this.notice='已停止';this.save();this.update()}
+ pauseForHost(){this.sessionSequence++;this.cacheSequence++;this.setCacheController?.abort();this.userIntent=null;this.invalidate(false);if(this.player?.busy){this.player.stop();this.notice='已暂停准备，回到前台后重新开始'}else this.player?.pause();this.save()}
  setVolume(value:number){if(!Number.isFinite(value))throw Error('音量无效');this.volume=Math.max(0,Math.min(1,value));this.player?.setVolume(this.volume);this.update()}
  filters(value:{label?:string;query?:string}){this.label=value.label??this.label;this.query=value.query??this.query;this.update()}
  export(){return {...this.player?.export(),schema:'harbeat.metric-mix-session.v1',release:METRIC_RELEASE,automaticPolicy:SMART_POLICY,direction:{style:this.targetStyle,energy:this.energyLevel,automatic:this.automatic},history:this.history,selectedResult:this.result??this.lastResult,selectedMethod:this.method,selection:this.selection,exportedAt:new Date().toISOString()}}
  save(){if(this.player)this.host?.saveSession(JSON.stringify(this.export()))}
- dispose(){this.warmController?.abort();this.alive=false;this.invalidate();this.save();this.player?.dispose()}
- snapshot(){const p=this.player,r=this.result;return {release:METRIC_RELEASE,selected:this.selected,label:this.label,query:this.query,volume:this.volume,working:this.working,notice:this.error||this.notice,canArm:!!r&&canArm(r.plan,p?.current?.id??null,p?.position??0)&&!p?.transition,
+ dispose(){this.setCacheController?.abort();this.warmController?.abort();this.alive=false;this.invalidate();this.save();this.player?.dispose()}
+ snapshot(){const p=this.player,r=this.result;return {activitySet:this.activity?{packId:this.activity.packId,name:this.activity.name,trackCount:this.activity.ids.size,prepared:this.activity.results.length,cache:this.cachePackId===this.activity.packId?this.setCache:null}:null,cache:this.setCache?{packId:this.cachePackId,...this.setCache}:null,release:METRIC_RELEASE,selected:this.selected,label:this.label,query:this.query,volume:this.volume,working:this.working,notice:this.error||this.notice,canArm:!!r&&canArm(r.plan,p?.current?.id??null,p?.position??0)&&!p?.transition,
   automatic:this.automatic,energyLevel:this.energyLevel,targetStyle:this.targetStyle,phase:this.phase,nearbyWorking:!!this.nearbyTask,recommendation:this.recommendation,selection:this.selection,
   result:r?{id:r.id,policyVersion:r.policyVersion,plan:r.plan,metrics:r.metrics,decision:r.decision,available:METHODS.filter(m=>r.assets[m]&&r.decision.methods[m]?.eligible)}:null,method:this.method}}
 }

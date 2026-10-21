@@ -30,6 +30,22 @@ class PhoneMixScreen extends StatelessWidget {
             const Text('无需连接设备', style: TextStyle(fontSize: 14)),
         ]),
         const SizedBox(height: 18),
+        if (c.v3Metric && c.activeActivityName != null) ...[
+          HardCard(
+              color: HB.mint,
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('预约 set · ${c.activeActivityName}',
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    const Text('在本 set 候选范围内选择音乐。',
+                        style: TextStyle(fontSize: 14)),
+                    TextButton(
+                        onPressed: c.exitActivity,
+                        child: const Text('退出 set，使用完整曲库')),
+                  ])),
+          const SizedBox(height: 12),
+        ],
         _PlaybackCard(c),
         if (c.v3Error != null)
           Padding(
@@ -1286,6 +1302,13 @@ class PersonalScreen extends StatelessWidget {
                 : '示例模式 · 连接你的后端曲库',
             icon: Icons.cloud_outlined,
             onTap: () => _openPhonePage(context, c, () => BackendScreen(c))),
+        const SizedBox(height: 18),
+        _SettingsCard(
+            title: '我的预约',
+            detail: '${c.activities.length} 次预约 · 提前准备，结束后保留 set',
+            icon: Icons.event_available,
+            onTap: () =>
+                _openPhonePage(context, c, () => ActivityListScreen(c))),
         const SizedBox(height: 18),
         _SettingsCard(
             title: '我的曲库',

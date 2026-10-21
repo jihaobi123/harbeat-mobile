@@ -1,0 +1,120 @@
+{
+  "deployedAt": "2026-10-21T05:18:33.291639+00:00",
+  "publicUrl": "https://8.136.120.255/listen/app/",
+  "release": "/srv/harbeat-listen/mobile-releases/activity-sets-20261021-v2",
+  "previousTarget": "mobile-releases/activity-sets-20261021",
+  "mobileCurrent": "/srv/harbeat-listen/mobile-current",
+  "mainSha256": "ac88e433e15854fc64911e5a8596927e23e9f2da6617561192dd4a78c2bf71f2",
+  "engineScript": "metric-engine-B_ZJ8Eo4.js",
+  "nginxChanged": false,
+  "browserReloaded": false,
+  "wasmMtimeChecks": [
+    {
+      "path": "assets/packages/flutter_soloud/web/libflutter_soloud_plugin.wasm",
+      "sha256": "d0ab88ba4f16bb62cf609cb5b02ac28ec463e0a81320d39f63e6dd1d9e88c283",
+      "sameBytesAsV1": true,
+      "mtimeAtLeastV1": true
+    },
+    {
+      "path": "canvaskit/canvaskit.wasm",
+      "sha256": "42e392d69fd05a8540cb1b2cd9b88ab2115659c9378c136d1377b3595e703839",
+      "sameBytesAsV1": true,
+      "mtimeAtLeastV1": true
+    },
+    {
+      "path": "canvaskit/wimp.wasm",
+      "sha256": "8d2bf4ac60320c1d7b14cc408cd16a10e78fdc70d4c92b46dd75e828058a99f5",
+      "sameBytesAsV1": true,
+      "mtimeAtLeastV1": true
+    },
+    {
+      "path": "canvaskit/skwasm.wasm",
+      "sha256": "f8bab54ad143745fb699ff1b534b1295b31a67f1a9e98d72db5b0a5c9200d3a8",
+      "sameBytesAsV1": true,
+      "mtimeAtLeastV1": true
+    },
+    {
+      "path": "canvaskit/skwasm_heavy.wasm",
+      "sha256": "33f5c52d1612df0af41d12204fd54ec276e436f7e3319c2871a689dee18f82d1",
+      "sameBytesAsV1": true,
+      "mtimeAtLeastV1": true
+    },
+    {
+      "path": "canvaskit/chromium/canvaskit.wasm",
+      "sha256": "2bf5ea09d70b8eadb22bb0471c9edfd7b2bee909dbf84456c32480d944660418",
+      "sameBytesAsV1": true,
+      "mtimeAtLeastV1": true
+    }
+  ],
+  "checks": [
+    {
+      "path": "/listen/app/main.dart.js",
+      "status": 200,
+      "sha256": "ac88e433e15854fc64911e5a8596927e23e9f2da6617561192dd4a78c2bf71f2",
+      "compiledCacheCopyMatched": true
+    },
+    {
+      "path": "/listen/app/canvaskit/chromium/canvaskit.wasm",
+      "requestHeaders": {},
+      "status": 200,
+      "contentType": "application/wasm",
+      "etag": "\"6ad84b29-56c660\"",
+      "lastModified": "Wed, 21 Oct 2026 05:18:33 GMT"
+    },
+    {
+      "path": "/listen/app/canvaskit/chromium/canvaskit.wasm",
+      "requestHeaders": {
+        "If-None-Match": "\"69c44958-56c660\""
+      },
+      "status": 200,
+      "contentType": "application/wasm",
+      "etag": "\"6ad84b29-56c660\"",
+      "lastModified": "Wed, 21 Oct 2026 05:18:33 GMT"
+    },
+    {
+      "path": "/listen/app/canvaskit/chromium/canvaskit.wasm",
+      "requestHeaders": {
+        "If-None-Match": "\"6ad84989-56c660\""
+      },
+      "status": 200,
+      "contentType": "application/wasm",
+      "etag": "\"6ad84b29-56c660\"",
+      "lastModified": "Wed, 21 Oct 2026 05:18:33 GMT"
+    },
+    {
+      "path": "/listen/app/canvaskit/chromium/canvaskit.wasm",
+      "requestHeaders": {
+        "If-Modified-Since": "Wed, 21 Oct 2026 05:11:37 GMT"
+      },
+      "status": 200,
+      "contentType": "application/wasm",
+      "etag": "\"6ad84b29-56c660\"",
+      "lastModified": "Wed, 21 Oct 2026 05:18:33 GMT"
+    },
+    {
+      "path": "/listen/app/",
+      "status": 200,
+      "contentType": "text/html"
+    },
+    {
+      "path": "/listen/app/metric-engine/metric-engine.html",
+      "status": 200,
+      "contentType": "text/html"
+    },
+    {
+      "path": "/listen/app/metric-engine/assets/metric-engine-B_ZJ8Eo4.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "path": "/listen/app/assets/fonts/MaterialIcons-Regular.otf",
+      "status": 200,
+      "contentType": "font/otf"
+    },
+    {
+      "path": "/listen/set-api/health",
+      "status": 200,
+      "contentType": "application/json"
+    }
+  ]
+}

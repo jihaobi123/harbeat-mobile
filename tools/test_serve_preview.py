@@ -59,6 +59,18 @@ class ProxyTest(unittest.TestCase):
                 data=json.dumps(payload), headers={'Origin': self.base}).status_code, 422)
             post.assert_not_called()
 
+    def test_reservations_forward_only_workspace_bearer_on_exact_paths(self):
+        upstream = MagicMock(status_code=200, content=b'{"reservations":[]}', headers={})
+        with patch('serve_preview.requests.request', return_value=upstream) as request:
+            client=requests.Session()
+            token='a'*43
+            response=client.get(self.base+'/listen/set-api/reservations',headers={'Authorization':'Bearer '+token,'Cookie':'private=ignore'})
+            self.assertEqual(response.status_code,200)
+            self.assertEqual(request.call_args.kwargs['headers'],{'Authorization':'Bearer '+token,'Origin':'https://8.136.120.255','Content-Type':'application/json','Accept':'application/json'})
+            self.assertEqual(client.get(self.base+'/listen/set-api/reservations?url=x').status_code,404)
+            self.assertEqual(client.post(self.base+'/listen/set-api/workspaces',json={},headers={'Origin':'https://bad.test'}).status_code,403)
+            self.assertEqual(request.call_count,1)
+
     def test_bad_media_hash_and_private_paths_are_not_forwarded(self):
         with patch('serve_preview.requests.get') as get:
             client = requests.Session()

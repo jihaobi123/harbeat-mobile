@@ -19,6 +19,7 @@ import 'nas_repository.dart';
 import 'realtime_engine.dart';
 import 'realtime_factory.dart';
 import 'dance_repository.dart';
+import 'activity_repository.dart';
 
 part 'phone_controller.dart';
 part 'network_controller.dart';
@@ -26,6 +27,7 @@ part 'nas_controller.dart';
 part 'realtime_controller.dart';
 part 'dance_controller.dart';
 part 'smart_controller.dart';
+part 'activity_controller.dart';
 
 class AppController extends ChangeNotifier {
   AppController(this.repository,
@@ -37,6 +39,7 @@ class AppController extends ChangeNotifier {
       this.nasRepository,
       RealtimeEngine? realtimeEngine,
       DanceRepository? danceRepository,
+      ActivityRepository? activityRepository,
       RemoteHarBeatRepository Function(BackendConfig)? backendFactory})
       : localStore = localStore ?? SharedPreferencesLocalStore(),
         audio = audio ?? createAudioService(),
@@ -45,7 +48,8 @@ class AppController extends ChangeNotifier {
         backendFactory = backendFactory ?? RemoteHarBeatRepository.new,
         mediaStorage = mediaStorage ?? createMediaStorage(),
         realtimeEngine = realtimeEngine ?? createRealtimeEngine(),
-        danceRepository = danceRepository ?? DanceRepository();
+        danceRepository = danceRepository ?? DanceRepository(),
+        activityRepository = activityRepository ?? ActivityRepository();
 
   HarBeatRepository repository;
   final LocalStore localStore;
@@ -56,6 +60,14 @@ class AppController extends ChangeNotifier {
   final NasCatalogRepository? nasRepository;
   final RealtimeEngine realtimeEngine;
   final DanceRepository danceRepository;
+  final ActivityRepository activityRepository;
+  List<ActivityReservation> activities = [];
+  bool activitiesLoading = false,
+      activityBusy = false,
+      activityRestoring = false;
+  int _activityGeneration = 0;
+  String? activityError, activeActivityId, activeActivityName;
+  final Map<String, Map<String, dynamic>> activityCaches = {};
   List<Map<String, dynamic>> danceStyles = [];
   Map<String, dynamic>? dancePlan;
   String danceStyle = 'Hip-Hop';
@@ -228,6 +240,7 @@ class AppController extends ChangeNotifier {
       }
     }
     _restore(state);
+    _restoreActivities(state);
     _restorePhoneState(state);
     _nasPlaylistCreated = state['nasPlaylistCreated'] == true;
     _ensureNasPlaylist();
@@ -910,6 +923,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> _persist() => localStore.write({
         'nasPlaylistCreated': _nasPlaylistCreated,
+        'activities': activities.map((a) => a.json).toList(),
         if (remoteRepository != null)
           'backend': remoteRepository!.config.toJson(),
         ..._phoneState(),
@@ -990,6 +1004,7 @@ class AppController extends ChangeNotifier {
     remoteRepository?.close();
     nasRepository?.close();
     danceRepository.close();
+    activityRepository.dispose();
     for (final subscription in _audioSubscriptions) {
       subscription.cancel();
     }

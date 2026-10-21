@@ -23,7 +23,35 @@ class PreviewHandler(SimpleHTTPRequestHandler):
         port = self.server.server_port
         return (f'127.0.0.1:{port}', f'localhost:{port}')
 
+    def activity_api(self):
+        parsed=urlsplit(self.path)
+        if parsed.query or not re.fullmatch(r'/listen/set-api/(?:health|workspaces|reservations(?:/[a-f0-9]{32}(?:/(?:reuse|prepare))?)?|packs/[a-f0-9]{32}/manifest)',parsed.path):
+            return self.send_error(404)
+        if self.headers.get('Host') not in self.allowed_hosts() or self.headers.get('Origin') not in (None, *(f'http://{h}' for h in self.allowed_hosts())):
+            return self.send_error(403)
+        if self.command=='POST' and self.headers.get('Origin') not in tuple(f'http://{h}' for h in self.allowed_hosts()):return self.send_error(403)
+        is_get=parsed.path.endswith('/health') or parsed.path.endswith('/manifest') or re.fullmatch(r'/listen/set-api/reservations(?:/[a-f0-9]{32})?',parsed.path)
+        is_post=parsed.path.endswith('/workspaces') or parsed.path.endswith('/reuse') or parsed.path.endswith('/prepare') or parsed.path=='/listen/set-api/reservations'
+        if not (self.command=='GET' and is_get or self.command=='POST' and is_post):return self.send_error(404)
+        headers={'Origin':'https://8.136.120.255','Content-Type':'application/json','Accept':'application/json'}
+        bearer=self.headers.get('Authorization','')
+        if bearer:
+            if not re.fullmatch(r'Bearer [A-Za-z0-9_-]{43}',bearer):return self.send_error(401)
+            headers['Authorization']=bearer
+        try:
+            size=int(self.headers.get('Content-Length','0'))
+            if size<0 or size>8192:return self.send_error(413)
+            body=self.rfile.read(size) if self.command=='POST' else None
+            if body:json.loads(body)
+            response=requests.request(self.command,'https://8.136.120.255'+parsed.path,headers=headers,data=body,timeout=(12,35),allow_redirects=False)
+            self.send_response(response.status_code)
+            self.send_header('Content-Type','application/json; charset=utf-8')
+            self.end_headers();self.wfile.write(response.content)
+        except (ValueError,TypeError):self.send_error(422)
+        except requests.RequestException:self.send_error(502,'Reservation service unavailable')
+
     def do_GET(self):
+        if self.path.startswith('/listen/set-api/'):return self.activity_api()
         if not self.path.startswith(('/api/analysis-lab/', '/analysis-lab-static/mobile-artwork-v1/', '/listen/')):
             return super().do_GET()
         # Development-only, loopback-bound, fixed upstream and read-only paths.
@@ -32,9 +60,9 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             return self.send_error(403)
         parsed = urlsplit(self.path)
         original = re.fullmatch(r'(?:/api/analysis-lab/(reports(?:/[a-f0-9]{64})?|media/[a-f0-9]{64})|/analysis-lab-static/mobile-artwork-v1/(?:catalog\.json|[a-f0-9]{64}\.jpg))', parsed.path)
-        listen = re.fullmatch(r'/listen/(?:library\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?details/[A-Za-z0-9_-]{1,160}\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?media/[A-Za-z0-9_.-]+\.(?:flac|wav)|smart-api/(?:health|rules|jobs/[a-f0-9]{64})|smart-media/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav)', parsed.path)
+        listen = re.fullmatch(r'/listen/(?:library\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?details/[A-Za-z0-9_-]{1,160}\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?media/[A-Za-z0-9_.-]+\.(?:flac|wav)|smart-api/(?:health|rules|jobs/[a-f0-9]{64})|set-media/[a-f0-9]{32}/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav|smart-media/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav)', parsed.path)
         query = parse_qs(parsed.query, keep_blank_values=True)
-        if not (original or listen) or (parsed.query and (not listen or not re.search(r'/media/|/smart-media/', parsed.path) or set(query) != {'sha256'} or len(query['sha256']) != 1 or not re.fullmatch('[a-f0-9]{64}',query['sha256'][0]))):
+        if not (original or listen) or (parsed.query and (not listen or not re.search(r'/media/|/smart-media/|/set-media/', parsed.path) or set(query) != {'sha256'} or len(query['sha256']) != 1 or not re.fullmatch('[a-f0-9]{64}',query['sha256'][0]))):
             return self.send_error(404)
         headers={'Accept-Encoding':'identity'}
         value=self.headers.get('Range')
@@ -55,6 +83,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             self.close_connection=True
 
     def do_POST(self):
+        if self.path.startswith('/listen/set-api/'):return self.activity_api()
         # Explicit, bounded render preparation only. No account/admin/upload API.
         if self.path != '/listen/smart-api/jobs':
             return self.send_error(404)

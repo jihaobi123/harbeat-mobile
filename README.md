@@ -115,3 +115,9 @@ python tools/serve_preview.py --port 8766
 ```
 
 Android 构建不传本机地址参数，默认直接访问阿里云 HTTPS。网页部署到其他域名时应配置对应的同源读取转发。
+
+## 活动预约与保留 set
+
+手机网页：[HarBeat](https://8.136.120.255/listen/app/)。在“我的 → 我的预约”选择风格、能量和时间，服务器提前准备；详情可进入播放、准备本机音频，结束后继续保留并再次预约。换设备请导出并恢复私人预约备份。
+
+使用与验收记录见 [预约说明](docs/activity-reservations-20261021.md)；独立后端及 Nginx 部署见 [部署文档](deploy/activity-sets/README.md)。预约复用既有正式选点和分轨规则，未准备的临时接点继续采用现有回退。

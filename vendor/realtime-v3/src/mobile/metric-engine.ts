@@ -23,6 +23,9 @@ window.HarBeatEngine={async dispatch({id,method,args}){try{
  else{
   if(!run)throw Error('请先开启智能分轨混音')
   switch(method){
+   case 'setSession':await run.setSession(args.manifest,String(args.name??''));break
+   case 'clearSet':run.clearSet();break
+   case 'cacheSet':void run.cacheSet(args.manifest).catch(e=>{if((e as Error).name!=='AbortError')error=(e as Error).message;publish()});break
    case 'start':await run.start(String(args.trackId));break
    case 'select':run.choose(String(args.trackId));break
    case 'metricPrepare':await run.prepare();break

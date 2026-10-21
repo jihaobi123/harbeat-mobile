@@ -1,0 +1,50 @@
+{
+  "deployedAt": "20261021T045858Z",
+  "nginxBackup": "/srv/harbeat-listen/activity-sets/deploy/harbeat-ssl.before-20261021T045858Z.conf",
+  "nginxConfig": "/etc/nginx/conf.d/harbeat-ssl.conf",
+  "nginxSnippet": "/etc/nginx/snippets/harbeat-activity-sets.conf",
+  "service": "harbeat-activity-sets",
+  "root": "/srv/harbeat-listen/activity-sets",
+  "loopbackHost": "127.0.0.1",
+  "port": 8792,
+  "publicApi": "https://8.136.120.255/listen/set-api/",
+  "verification": {
+    "health": 200,
+    "missingCredential": 401,
+    "crossWorkspaceReservation": 404,
+    "crossWorkspaceManifest": 404,
+    "otherWorkspaceEmpty": true,
+    "databaseMode": "0600",
+    "mediaRootMode": "0755",
+    "checkpointJobIdsUnchangedAfterRestart": true
+  },
+  "reservationId": "1d4fa8de0dfa4151b254f79c2e8cd9e3",
+  "packId": "2a635cfffaee4691a6018027c0efd179",
+  "verifiedPublicAssets": [
+    {
+      "method": "original",
+      "bytes": 3609816,
+      "shaMatches": true,
+      "byteLengthMatches": true,
+      "rangeStatus": 206,
+      "rangeLength": 128
+    }
+  ],
+  "completedPreparation": {
+    "packId": "2a635cfffaee4691a6018027c0efd179",
+    "state": "ready",
+    "prepared": 6,
+    "total": 6,
+    "failed": 0,
+    "warnings": [],
+    "error": null
+  },
+  "actualActivitySessionValidation": {
+    "accepted": true,
+    "packId": "2a635cfffaee4691a6018027c0efd179",
+    "trackCount": 4,
+    "prepared": 6,
+    "assetCount": 51,
+    "initialTrackId": "track-8ce53e93953814086ae0"
+  }
+}

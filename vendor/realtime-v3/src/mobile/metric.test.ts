@@ -63,3 +63,24 @@ it('validates exact pair, window, full hash, duration and fixed media paths',()=
   const r=prepared();change(r);expect(()=>validatePrepared(r,a,b,30,'w1')).toThrow()
  }
 })
+function setManifest(){
+ const proof=(id:string)=>({trackId:id,runId:'run',reportSha256:'a'.repeat(64),assets:{master:{sha256:'a'.repeat(64)},vocals:{sha256:'a'.repeat(64)}}})
+ const source=(t:any)=>({...t,reportId:'report',provenance:{runId:'run',reportSha256:'a'.repeat(64),masterSha256:'a'.repeat(64),vocalSha256:'a'.repeat(64)},native:{...t.native,sha256:'a'.repeat(64),bytes:10,duration:120}})
+ const tracks=[source(a),source(b)],result=prepared(),packId='f'.repeat(32);result.sourceProof={a:proof(aid),b:proof(bid)};result.assets.original.url=`/listen/set-media/${packId}/${job}/original.wav`
+ return {tracks,manifest:{schema:'harbeat.activity-set.v1',packId,state:'ready',trackIds:[aid,bid],initialTrackId:aid,sourceFingerprints:tracks,results:[result]}}
+}
+it('a reservation restricts selection and reuses an exact prepared cue without a cloud submission',async()=>{
+ const {tracks,manifest}=setManifest(),{run,host,p}=setup(async(path:string)=>({track:tracks.find(t=>t.id===path)}))
+ host.prepareMetric=vi.fn(()=>{throw Error('should not submit')})
+ p.logs=[];await run.setSession(manifest,'我的活动');expect(run.snapshot().activitySet?.trackCount).toBe(2)
+ expect(()=>run.choose('outside')).toThrow('预约');await run.start(aid)
+ const plan:any={start:30,end:34,rate:1,window:{id:'w1',start:2,end:6}}
+ expect((await (run as any).automaticResult(p,tracks[0],tracks[1],plan,new AbortController().signal)).id).toBe(job)
+ expect(host.prepareMetric).not.toHaveBeenCalled();run.clearSet();expect(run.snapshot().activitySet).toBe(null)
+})
+it('a slower session load cannot replace the latest reservation or restart after stop',async()=>{
+ const {ActivitySession}=await import('./activity-session'),{run}=setup();let finish!:(v:any)=>void
+ const old=new Promise<any>(resolve=>finish=resolve),session=(name:string)=>({packId:name,name,ids:new Set([aid,bid]),results:[],initialTrackId:aid})
+ vi.spyOn(ActivitySession,'open').mockImplementationOnce(()=>old).mockResolvedValueOnce(session('new') as any)
+ const first=run.setSession({},'old'),rejected=expect(first).rejects.toMatchObject({name:'AbortError'});await run.setSession({},'new');finish(session('old'));await rejected;expect(run.snapshot().activitySet?.packId).toBe('new')
+})

@@ -1,0 +1,38 @@
+{
+  "createdAt": "2026-10-21T04:59:35.146094+00:00",
+  "checks": {
+    "publicHealth": 200,
+    "unauthenticated": 401,
+    "create": 201,
+    "ownDetail": 200,
+    "otherWorkspaceEmpty": true,
+    "crossReservation": 404,
+    "crossManifest": 404
+  },
+  "reservation": {
+    "id": "1d4fa8de0dfa4151b254f79c2e8cd9e3",
+    "packId": "2a635cfffaee4691a6018027c0efd179",
+    "createdAt": "2026-10-21T04:59:34.955634+00:00",
+    "startsAt": "2026-10-22T04:59:34.876409+00:00",
+    "endsAt": "2026-10-22T05:59:34.876409+00:00",
+    "durationMinutes": 60,
+    "name": "预约功能验收 · Hip-Hop 4首",
+    "styles": [
+      "Hip-Hop"
+    ],
+    "energy": 3,
+    "trackLimit": 4,
+    "pack": {
+      "id": "2a635cfffaee4691a6018027c0efd179",
+      "state": "queued",
+      "prepared": 0,
+      "total": 0,
+      "failed": 0,
+      "warnings": [],
+      "error": null,
+      "trackIds": [],
+      "initialTrackId": null
+    }
+  },
+  "privateBackup": "/Users/jihaobi/Documents/New project/ops/private/activity-set-acceptance-workspace.json"
+}

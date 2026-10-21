@@ -1,0 +1,160 @@
+{
+  "deployedAt": "20261021T050755Z",
+  "publicUrl": "https://8.136.120.255/listen/app/",
+  "release": "/srv/harbeat-listen/mobile-releases/activity-sets-20261021",
+  "mobileCurrent": "/srv/harbeat-listen/mobile-current",
+  "previousTarget": null,
+  "nginxBackup": "/srv/harbeat-listen/activity-sets/deploy/harbeat-ssl.before-app-20261021T050755Z.conf",
+  "nginxSnippet": "/etc/nginx/snippets/harbeat-mobile-app.conf",
+  "mainSha256": "4ff9ef3386dcb39fd0e20e51b59cc084c9e0bd799a076fcf750160f4636563e2",
+  "engineScript": "metric-engine-B_ZJ8Eo4.js",
+  "originalListenRelease": "/srv/harbeat-listen/releases/import-1792558694829721527",
+  "checks": [
+    {
+      "path": "/listen/app/",
+      "status": 200,
+      "contentType": "text/html",
+      "bytes": 1526,
+      "cacheControl": "no-cache"
+    },
+    {
+      "path": "/listen/app/flutter_bootstrap.js",
+      "status": 200,
+      "contentType": "application/javascript",
+      "bytes": 10027,
+      "cacheControl": "no-cache"
+    },
+    {
+      "path": "/listen/app/main.dart.js",
+      "status": 200,
+      "contentType": "application/javascript",
+      "bytes": 3727860,
+      "cacheControl": "no-cache",
+      "sha256": "4ff9ef3386dcb39fd0e20e51b59cc084c9e0bd799a076fcf750160f4636563e2"
+    },
+    {
+      "path": "/listen/app/assets/AssetManifest.bin.json",
+      "status": 200,
+      "contentType": "application/json",
+      "bytes": 886,
+      "cacheControl": "no-cache"
+    },
+    {
+      "path": "/listen/app/metric-engine/metric-engine.html",
+      "status": 200,
+      "contentType": "text/html",
+      "bytes": 231,
+      "cacheControl": "no-cache"
+    },
+    {
+      "path": "/listen/app/metric-engine/assets/metric-engine-B_ZJ8Eo4.js",
+      "status": 200,
+      "contentType": "application/javascript",
+      "bytes": 103418,
+      "cacheControl": "no-cache"
+    },
+    {
+      "path": "/listen/app/activity/test",
+      "status": 200,
+      "contentType": "text/html",
+      "bytes": 1526,
+      "cacheControl": "no-cache"
+    },
+    {
+      "path": "/listen/set-api/health",
+      "status": 200,
+      "contentType": "application/json",
+      "bytes": 50,
+      "cacheControl": "no-store, no-store"
+    }
+  ],
+  "slashRedirect": 308,
+  "wasmAndFontChecks": [
+    {
+      "path": "/listen/app/assets/packages/flutter_soloud/web/libflutter_soloud_plugin.wasm",
+      "status": 200,
+      "contentType": "application/wasm",
+      "bytes": 1919701
+    },
+    {
+      "path": "/listen/app/canvaskit/wimp.wasm",
+      "status": 200,
+      "contentType": "application/wasm",
+      "bytes": 3461893
+    },
+    {
+      "path": "/listen/app/canvaskit/skwasm.wasm",
+      "status": 200,
+      "contentType": "application/wasm",
+      "bytes": 3549782
+    },
+    {
+      "path": "/listen/app/canvaskit/canvaskit.wasm",
+      "status": 200,
+      "contentType": "application/wasm",
+      "bytes": 7155824
+    },
+    {
+      "path": "/listen/app/canvaskit/skwasm_heavy.wasm",
+      "status": 200,
+      "contentType": "application/wasm",
+      "bytes": 5140187
+    },
+    {
+      "path": "/listen/app/canvaskit/chromium/canvaskit.wasm",
+      "status": 200,
+      "contentType": "application/wasm",
+      "bytes": 5686880
+    },
+    {
+      "path": "/listen/app/main.dart.js",
+      "status": 200,
+      "contentType": "application/javascript"
+    },
+    {
+      "path": "/listen/app/assets/AssetManifest.bin.json",
+      "status": 200,
+      "contentType": "application/json"
+    },
+    {
+      "path": "/listen/app/assets/fonts/MaterialIcons-Regular.otf",
+      "status": 200,
+      "contentType": "font/otf",
+      "bytes": 13852
+    }
+  ],
+  "woff2Note": "No woff2 files exist in this Flutter build; location maps future woff2 files to font/woff2.",
+  "oldWasmConditionalRequestsAfterMimeFix": [
+    {
+      "requestHeaders": {},
+      "status": 200,
+      "contentType": "application/wasm",
+      "etag": "\"6ad84989-56c660\""
+    },
+    {
+      "requestHeaders": {
+        "If-None-Match": "\"69c44958-56c660\""
+      },
+      "status": 200,
+      "contentType": "application/wasm",
+      "etag": "\"6ad84989-56c660\""
+    },
+    {
+      "requestHeaders": {
+        "If-Modified-Since": "Wed, 25 Mar 2026 20:45:12 GMT"
+      },
+      "status": 200,
+      "contentType": "application/wasm",
+      "etag": "\"6ad84989-56c660\""
+    },
+    {
+      "requestHeaders": {
+        "If-None-Match": "\"69c44958-56c660\"",
+        "If-Modified-Since": "Wed, 25 Mar 2026 20:45:12 GMT"
+      },
+      "status": 200,
+      "contentType": "application/wasm",
+      "etag": "\"6ad84989-56c660\""
+    }
+  ]
+}
