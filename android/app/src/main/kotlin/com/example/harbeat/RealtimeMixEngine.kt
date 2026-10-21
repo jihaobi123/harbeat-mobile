@@ -104,9 +104,12 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
                 if (request.method == "GET" && uri.scheme == "https" && uri.host == "appassets.androidplatform.net") {
                     val path = uri.encodedPath ?: ""
                     val hash = uri.getQueryParameter("sha256") ?: ""
+                    val executionAudio = Regex("/listen/execution-media/([a-f0-9]{64})\\.(flac|wav)").matchEntire(path)
+                    if (executionAudio != null && hash == executionAudio.groupValues[1]) return verifiedAudio(path, hash)
                     if (path.matches(Regex("/listen/(?:catalog/[A-Za-z0-9_-]{1,160}/)?media/[A-Za-z0-9_.-]+\\.(flac|wav)")) && hash.matches(Regex("[a-f0-9]{64}"))) return verifiedAudio(path, hash)
                     if (path.matches(Regex("/listen/smart-media/[a-f0-9]{64}/(original|bass|filter|yield|vocal|bass_filter)\\.wav")) && hash.matches(Regex("[a-f0-9]{64}"))) return verifiedAudio(path, hash)
                     if (path.matches(Regex("/listen/(library\\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?details/[A-Za-z0-9_-]{1,160}\\.json|smart-api/jobs/[a-f0-9]{64})"))) return continuousMetadata(path)
+                    if (path.matches(Regex("/listen/execution/(index\\.json|tracks/track-[a-f0-9]{20}\\.json|profiles/[a-f0-9]{64}\\.json)"))) return continuousMetadata(path)
                     val publishedAudio = path.matches(Regex("/analysis-lab-static/(v3-live-baseline-20260922|v31-candidate-20260923|vocal-overlap-corpus-20260924)/media/[A-Za-z0-9_.-]+\\.flac"))
                     val registeredAudio = path.matches(Regex("/api/analysis-lab/media/[a-f0-9]{64}"))
                     if ((publishedAudio || registeredAudio) && hash.matches(Regex("[a-f0-9]{64}"))) {

@@ -2,11 +2,15 @@
 
 手机先完成选歌、播放与方向控制，饰品作为可选快捷控制。界面采用浅色背景、青绿与杏黄、细描边圆角卡片；播放、音乐、我的三个主入口保持不变。
 
-当前版本为 **Android Preview 0.1.12+14**：播放与混音合成同一个界面，选择风格和能量后自动推荐下一首、选择完整接点、准备分轨转场并自动接歌。原曲和转场由同一音频时钟连续播放，无需切换模式或逐次确认。保留 NAS 封面、黑胶卡片和过渡动效，手动试听及原舞程收进更多工具。见 [统一播放与网络验证](docs/unified-playback-20261020.md)、[算法接入说明](docs/smart-mix-mobile-20261020.md)、[封面接入说明](docs/nas-cover-integration-20261016.md)。首次拉取仓库请先阅读 [环境与复现步骤](docs/release-0.1.6.md)，Android 打包前需准备引擎素材。本次手机未连接，真实设备验收待补。
+当前源码版本为 **Android Preview 0.2.0+15**：主播放器在设备上执行渐混和分轨增益、EQ、滤波，使用同一音频时钟。Jetson 提前分析并导出同源素材；手机先准备保调变速片段，再执行交接，不再等待按曲对生成的成品转场 WAV。保留选点、人声冲突、点击后就近接歌和自动接歌规则。此次未生成 APK，Windows 构建步骤见 [打包前准备](docs/windows-pre-apk-20261021.md)。旧版界面与算法说明见 [统一播放与网络验证](docs/unified-playback-20261020.md)、[封面接入说明](docs/nas-cover-integration-20261016.md)。
 
 ## 运行
 
+准备在 Windows 编译新版 Android APK，请先按 [Windows 构建前检查](docs/windows-pre-apk-20261021.md) 运行 `tools/prepare_windows.ps1`。该脚本准备源码与音频引擎、运行检查和网页构建，完成后再手动编译 APK；本轮未生成新的 APK。
+
 本机验证环境：Flutter 3.41.6 / Dart 3.11.4。
+
+本机执行、预处理、预约素材准备和验证范围见 [本次交接说明](docs/device-execution-20261021.md)。
 
 ```powershell
 $env:CI='true'
@@ -50,7 +54,7 @@ python tools/serve_preview.py --port 8766
 
 ### Android 测试安装包
 
-本次安装包：`outputs/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk`，版本 0.1.12 (14)，构建结果与校验值见 [交付说明](docs/unified-playback-20261020.md)。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；只用安全安装器保留数据更新。APK 为本机产物，不存入 Git；本次未安装到手机。
+历史安装包：`outputs/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk`，版本 0.1.12 (14)，对应旧执行方式。本次 0.2.0+15 只提交源码与构建前校验，不包含新 APK。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`；Windows 构建后仍需验证手机音频性能。
 
 默认构建使用并存预览包名，只有显式 `-PharbeatPreview=false` 才使用原包名。此次修复了应用未启用 Kotlin 插件、audio_session 0.2.4 与关闭内置 Kotlin 的兼容问题，以及网络配置缺少 includeSubdomains 属性的发布检查错误。Gradle 限制为 1536MB 堆、1 个 worker 和 2 个可用处理器，避免本机原生内存不足。
 

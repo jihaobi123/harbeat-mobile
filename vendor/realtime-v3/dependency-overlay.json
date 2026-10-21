@@ -1,0 +1,14 @@
+{
+  "schema": "harbeat.upstream-dependency-overlay.v1",
+  "reason": "Add @soundtouchjs/core 2.1.1 for client-side pitch-preserving tempo processing in a reusable source worker. Upstream DSP and audio clock remain pinned.",
+  "files": {
+    "web/package.json": {
+      "upstreamSha256": "4b449b19d54cbfcf3069f6ad8b60fda06261395e4fde04ebc9fa68febc19a023",
+      "sha256": "9f8bbeb57d8aac127b1bbb0d6f30958e047ca4962faf87dd21c595b749e36292"
+    },
+    "web/package-lock.json": {
+      "upstreamSha256": "dbdcd510b15ac4eef85a5fdae82944f4f03391823f8ddaddaa760bc0890e0523",
+      "sha256": "48479d2006fef216da75575f84920025bc60ffdbe65c110da47ca46edfd39550"
+    }
+  }
+}

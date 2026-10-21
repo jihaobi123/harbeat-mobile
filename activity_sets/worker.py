@@ -303,6 +303,27 @@ class Worker:
         try:
             if not pack.get('planned'):self.plan_pack(pack)
             if not current_sources_match(self.settings,pack['sourceFingerprints']):raise PreparationError('source_revision_changed')
+            if self.settings.execution_root is not None:
+                from .execution import read_execution_track,request_execution_tracks
+                try:
+                    execution_tracks=[read_execution_track(self.settings,s) for s in pack['sourceFingerprints']]
+                except PreparationError as error:
+                    if str(error)=='execution_assets_pending' and request_execution_tracks(self.settings,pack['trackIds']):
+                        pack.update(state='preparing',error=None,prepared=0,failed=0,executionRetryAt=time.time()+30)
+                        pack['warnings']=list(dict.fromkeys([*pack['warnings'],'preparing_source_assets']))
+                        self.store.save_pack(pack)
+                        self.stop.wait(2)
+                        return True
+                    raise
+                if not current_sources_match(self.settings,pack['sourceFingerprints']):raise PreparationError('source_revision_changed')
+                if not pack['tasks']:raise PreparationError('no_qualified_edges')
+                pack['execution']={'schema':'harbeat.activity-execution.v1','tracks':execution_tracks,'edges':[t['edge'] for t in pack['tasks']]}
+                for task in pack['tasks']:task.update(state='ready')
+                pack.update(state='ready',prepared=len(pack['tasks']),failed=0,error=None)
+                pack.pop('executionRetryAt',None)
+                pack['warnings']=[w for w in pack['warnings'] if w!='preparing_source_assets']
+                self.store.save_pack(pack)
+                return True
             if not pack['tasks']:
                 pack.update(state='partial',error='no_qualified_edges')
                 self.store.save_pack(pack)

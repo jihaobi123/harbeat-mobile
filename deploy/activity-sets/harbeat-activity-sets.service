@@ -12,6 +12,8 @@ Environment=LISTEN_SITE_CURRENT=/srv/harbeat-listen/current
 Environment=ACTIVITY_GATEWAY_MEDIA=/srv/harbeat-listen/metric-mix/media
 Environment=ACTIVITY_SET_PLANNER=/srv/harbeat-listen/activity-sets/code/set-plan.cjs
 Environment=ACTIVITY_NODE=/usr/bin/node
+Environment=ACTIVITY_EXECUTION_ROOT=/srv/harbeat-listen/execution-current
+Environment=ACTIVITY_EXECUTION_REQUESTS=/srv/harbeat-listen/execution-state/requests.json
 Environment=PYTHONDONTWRITEBYTECODE=1
 Environment=PYTHONPATH=/srv/harbeat-listen/import-service/code
 Environment=LISTEN_IMPORT_ROOT=/srv/harbeat-listen/imports
@@ -25,7 +27,7 @@ NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
-ReadWritePaths=/srv/harbeat-listen/activity-sets /srv/harbeat-listen/imports
+ReadWritePaths=/srv/harbeat-listen/activity-sets /srv/harbeat-listen/imports /srv/harbeat-listen/execution-state
 
 [Install]
 WantedBy=multi-user.target

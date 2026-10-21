@@ -1,6 +1,6 @@
 import {MetricRun,loadMetricIndex} from './metric'
 import type {Host} from './session'
-import {MetricTransport} from '../metric-upstream/metric-mix/transport'
+import {MetricTransport} from './device-transport'
 
 // Android exposes the APK-only bridge. Web embeds this same engine in a
 // same-origin frame, bound to the parent with an origin and per-frame nonce.

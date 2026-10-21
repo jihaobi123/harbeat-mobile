@@ -1,0 +1,51 @@
+{
+  "schema": "harbeat.device-execution-acceptance.v1",
+  "date": "2026-10-21",
+  "sourceVersion": "0.2.0+15",
+  "apkBuilt": false,
+  "androidGradleCompiled": false,
+  "androidDeviceAudioValidated": false,
+  "windowsPowerShellExecuted": false,
+  "backendCommit": "dc8a2fe1",
+  "cloudRelease": "/srv/harbeat-listen/mobile-releases/device-execution-20261021-1792574077",
+  "engine": "metric-engine-CesbuB8W.js",
+  "tests": {
+    "flutter": 150,
+    "flutterAnalyze": "passed",
+    "typescriptPassed": 273,
+    "typescriptSkipped": 3,
+    "activityPython": 42,
+    "preprocessingPythonMacAndJetson": 25,
+    "engineBuildPython": 6,
+    "previewProxyPython": 9,
+    "androidBundleFilesVerified": 260,
+    "androidSourceInputsVerified": 136
+  },
+  "realSong": {
+    "from": "track-d2d58531421de0eb9690",
+    "to": "track-831997216a86a4914ef9",
+    "method": "bass_filter",
+    "windowId": "w24-4",
+    "aStart": 63.49437641723356,
+    "aEnd": 72.5,
+    "bStart": 63.62,
+    "bEnd": 72.66,
+    "rate": 1.0038166666666666,
+    "beatErrorMs": 54.37641723356279,
+    "handoffComplete": true,
+    "cloudRenderRequests": 0,
+    "pausedPositionPreserved": true,
+    "listeningPreferenceClaimed": false
+  },
+  "catalogSnapshot": {
+    "profiles": 106,
+    "completeStemTracks": 6,
+    "backfillContinues": true,
+    "privateImportsPublished": false
+  },
+  "limitations": [
+    "Device source-window pitch-preserving preparation still requires cached audio and processing time.",
+    "Browser numerical control parity does not certify Android performance or subjective real-song parity.",
+    "Long stable overlap remains disabled pending separate listening and device verification."
+  ]
+}

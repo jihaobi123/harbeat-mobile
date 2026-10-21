@@ -101,6 +101,21 @@ class ProxyTest(unittest.TestCase):
                 self.assertEqual(client.get(self.base + path).status_code, 404)
             get.assert_not_called()
 
+    def test_execution_assets_are_read_only_hash_bound_and_public(self):
+        upstream=MagicMock(status_code=200,headers={'Content-Type':'audio/flac'})
+        upstream.__enter__.return_value=upstream
+        upstream.iter_content.return_value=[b'fixture']
+        sha='a'*64
+        with patch('serve_preview.requests.get',return_value=upstream) as get:
+            client=requests.Session()
+            for path in ['/listen/execution/index.json','/listen/execution/tracks/track-a.json',f'/listen/execution-media/{sha}.flac?sha256={sha}',f'/listen/execution/profiles/{sha}.json?sha256={sha}']:
+                self.assertEqual(client.get(self.base+path,headers={'Authorization':'Bearer private'}).status_code,200,path)
+                self.assertNotIn('Authorization',get.call_args.kwargs['headers'])
+            calls=get.call_count
+            for path in [f'/listen/execution-media/{sha}.flac?sha256='+('b'*64),'/listen/execution/tracks/..%2Fprivate.json','/listen/execution/credentials.json']:
+                self.assertEqual(client.get(self.base+path).status_code,404,path)
+            self.assertEqual(get.call_count,calls)
+
     def test_dart_multipart_boundary_with_plus_and_dot_is_forwarded(self):
         boundary='dart-http-boundary-abc+DEF.123_-'
         body=('--'+boundary+'\r\nContent-Disposition: form-data; name="audio"; filename="clip.mp3"\r\n\r\nsmall audio\r\n--'+boundary+'--\r\n').encode()

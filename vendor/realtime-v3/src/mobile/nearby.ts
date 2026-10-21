@@ -1,10 +1,12 @@
 import type {Plan,Track} from '../metric-upstream/realtime/planner'
 import {planContinuous} from '../metric-upstream/continuous/beatAlignment'
 import {nativeSegment} from '../metric-upstream/continuous/segments'
-import type {MetricTransport} from '../metric-upstream/metric-mix/transport'
+import type {MetricTransport} from './device-transport'
 import type {Prepared,Method} from '../metric-upstream/metric-mix/types'
 import {canArm} from '../metric-upstream/metric-mix/plan'
 import {fullVocalCollision} from './original-quality'
+import {loadPrepared} from './device-prepare'
+import {hasMethod} from './device-execution'
 import {buildV30Eq} from '../metric-upstream/v30/eq'
 export type NearbyOptions={player:MetricTransport;a:Track;b:Track;signal:AbortSignal;prepare:(plan:Plan,signal:AbortSignal)=>Promise<Prepared>;preload?:(plan:Plan,signal:AbortSignal)=>Promise<unknown>;material?:Plan;ready?:{result:Prepared;method:Method};onStatus?:(message:string)=>void;acceptPlan?:(plan:Plan)=>boolean;onCandidate?:(plan:Plan)=>void;scorePlan?:(plan:Plan)=>number;leadSeconds?:number}
 function wait<T>(operation:Promise<T>,signal:AbortSignal){return new Promise<T>((resolve,reject)=>{
@@ -73,8 +75,8 @@ export async function mixNearby(o:NearbyOptions){
    valid();controller.signal.throwIfAborted()
    if(result.plan.from!==a.id||result.plan.to!==b.id||Math.abs(result.plan.start-cue.start)>.002)throw Error('交接结果与本次歌曲和接点不一致')
    const method=cached?.method??result.decision.recommended
-   if(!result.assets[method]||!result.decision.methods[method]?.eligible)throw Error('该方案没有可用的交接素材')
-   await wait(Promise.all([p.cache.load(result.assets[method]!,controller.signal),p.cache.load(nativeSegment(b,result.plan.bEnd).asset,controller.signal)]),controller.signal)
+   if(!hasMethod(result,method))throw Error('该方案没有可用的交接素材')
+   await wait(loadPrepared(p,result,b,controller.signal),controller.signal)
    valid();controller.signal.throwIfAborted()
    if(!canArm(result.plan,p.current!.id,p.position))throw expired()
    await p.arm(result,method,b,controller.signal)

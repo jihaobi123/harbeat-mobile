@@ -1,5 +1,6 @@
 import {afterEach,expect,it,vi} from 'vitest'
 import {MetricRun,validatePrepared,nativeMetricJob} from './metric'
+import * as devicePreparation from './device-prepare'
 vi.mock('../metric-upstream/continuous/beatAlignment',()=>({planContinuous:()=>({best:{start:30,window:{id:'w1'},rate:1}})}))
 const aid='track-'+'a'.repeat(20),bid='track-'+'b'.repeat(20),job='c'.repeat(64)
 const a:any={id:aid,title:'A',duration:120,bpm:100,native:{url:'/listen/media/a.flac'},windows:[],bars:[]}
@@ -21,6 +22,14 @@ it('choosing next keeps current audio and only prepare requests cloud measuremen
  const {run,p}=setup();await run.start(aid);run.choose(bid);expect(p.start).toHaveBeenCalledTimes(1);expect(p.current.id).toBe(aid);expect(run.result).toBe(null)
  await run.prepare();expect(run.result?.id).toBe(job);expect(run.snapshot().canArm).toBe(true);expect(p.start).toHaveBeenCalledTimes(1)
 })
+it('the device executor prepares locally without submitting a rendered transition job',async()=>{
+ const {run,p,host}=setup(),result=prepared();result.schema='harbeat.device-execution-plan.v1';result.assets={};result.execution={schema:result.schema}
+ p.localExecution=true
+ const local=vi.spyOn(devicePreparation,'prepareDevice').mockResolvedValue(result)
+ host.prepareMetric=vi.fn(()=>{throw Error('per-pair rendering forbidden')})
+ await run.start(aid);run.choose(bid);await run.prepare()
+ expect(local).toHaveBeenCalledTimes(1);expect(host.prepareMetric).not.toHaveBeenCalled();expect(run.result?.schema).toBe('harbeat.device-execution-plan.v1');expect(run.snapshot().result?.available).toContain('original')
+})
 it('cancel ignores a late cloud result without stopping the current song',async()=>{
  let done!:(x:any)=>void,entered!:(x?:any)=>void;const waiting=new Promise(r=>entered=r)
  const {run,p}=setup(async(path:string)=>path===aid?{track:a}:path===bid?{track:b}:(entered(),await new Promise(r=>done=r)))
@@ -32,6 +41,12 @@ it('pause during preparation cancels its adoption and suspends current audio',as
  const {run,p}=setup(async(path:string)=>path===aid?{track:a}:path===bid?{track:b}:(entered(),await new Promise(r=>done=r)))
  await run.start(aid);run.choose(bid);const preparing=run.prepare();await waiting;run.pause();done(prepared());await preparing
  expect(run.result).toBe(null);expect(p.pause).toHaveBeenCalledTimes(1);expect(p.current.id).toBe(aid)
+})
+it('arming a prepared handoff while paused keeps the audio clock suspended until resume',async()=>{
+ const {run,p}=setup();await run.start(aid);run.choose(bid);await run.prepare();run.pause()
+ p.ctx.resume=vi.fn(async()=>{});p.arm=vi.fn(async()=>{})
+ await run.apply()
+ expect(p.arm).toHaveBeenCalledTimes(1);expect(p.ctx.resume).not.toHaveBeenCalled();expect(p.paused).toBe(true)
 })
 it('backgrounding while metadata loads cannot start stale audio',async()=>{
  let done!:(x:any)=>void,entered!:(x?:any)=>void;const waiting=new Promise(r=>entered=r)

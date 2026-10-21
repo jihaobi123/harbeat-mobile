@@ -2,30 +2,33 @@
 
 Run after flutter build web. Does not bundle or download source music.
 """
-import hashlib
-import json
+import argparse
 from pathlib import Path
 import shutil
 import subprocess
+from engine_build import npm_executable, stage_notices, verify_bundle, verify_metric_source
 
 ROOT = Path(__file__).resolve().parents[1]
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--output', default='build/web', help='Existing Flutter web output, relative to the repository or absolute')
+    args = parser.parse_args()
     source = ROOT / 'vendor/realtime-v3'
-    manifest = json.loads((source / 'metric-upstream.json').read_text(encoding='utf-8'))
-    if hashlib.sha256((source / 'public/v3-clock.js').read_bytes()).hexdigest() != manifest['clockSha256']:
-        raise ValueError('Metric audio clock differs')
-    for path, expected in manifest['files'].items():
-        file = source / 'src/metric-upstream' / path.removeprefix('web/src/')
-        if hashlib.sha256(file.read_bytes()).hexdigest() != expected:
-            raise ValueError('Metric source differs: ' + path)
-    npm = shutil.which('npm.cmd') or shutil.which('npm')
+    verify_metric_source(source)
+    npm = npm_executable()
     subprocess.run([npm, 'exec', '--', 'tsc', '--noEmit'], cwd=source, check=True)
     subprocess.run([npm, 'exec', '--', 'vite', 'build', '--config', 'vite.metric-mobile.config.ts'], cwd=source, check=True)
-    web = ROOT / 'build/web'
+    stage_notices(source, source / 'dist-metric-mobile')
+    verify_bundle(source / 'dist-metric-mobile')
+    web = ROOT / args.output
     if not (web / 'index.html').is_file():
         raise ValueError('Build Flutter web first')
-    shutil.copytree(source / 'dist-metric-mobile', web / 'metric-engine', dirs_exist_ok=True)
+    # Replace only generated engine output; stale chunks must not enter releases.
+    destination = web / 'metric-engine'
+    if destination.exists():
+        shutil.rmtree(destination)
+    shutil.copytree(source / 'dist-metric-mobile', destination)
     print('Staged metric engine:', web / 'metric-engine')
 
 if __name__ == '__main__':

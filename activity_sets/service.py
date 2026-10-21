@@ -30,6 +30,8 @@ class Settings:
     gateway_media: Path = Path('/srv/harbeat-listen/metric-mix/media')
     planner: Path = Path('/srv/harbeat-listen/activity-sets/code/set-plan.cjs')
     node: str = '/usr/bin/node'
+    execution_root: Path | None = None
+    execution_requests: Path | None = None
     max_active: int = 3
     max_reservations: int = 50
 
@@ -37,7 +39,8 @@ class Settings:
     def from_env(cls):
         values = {key: Path(os.environ[env]) for key, env in (
             ('root', 'ACTIVITY_SETS_ROOT'), ('site', 'LISTEN_SITE_CURRENT'),
-            ('gateway_media', 'ACTIVITY_GATEWAY_MEDIA'), ('planner', 'ACTIVITY_SET_PLANNER')) if env in os.environ}
+            ('gateway_media', 'ACTIVITY_GATEWAY_MEDIA'), ('planner', 'ACTIVITY_SET_PLANNER'),
+            ('execution_root','ACTIVITY_EXECUTION_ROOT'),('execution_requests','ACTIVITY_EXECUTION_REQUESTS')) if env in os.environ}
         if 'ACTIVITY_NODE' in os.environ: values['node'] = os.environ['ACTIVITY_NODE']
         return cls(**values)
 
@@ -194,14 +197,28 @@ class Store:
 
     def next_pack(self):
         with self.connection() as db:
-            row=db.execute("SELECT data FROM packs WHERE state IN ('queued','preparing') ORDER BY priority,created LIMIT 1").fetchone()
-        return json.loads(row['data']) if row else None
+            rows=db.execute("SELECT data FROM packs WHERE state IN ('queued','preparing') ORDER BY priority,created LIMIT 20").fetchall()
+        for row in rows:
+            pack=json.loads(row['data'])
+            if pack.get('executionRetryAt',0)<=time.time():return pack
+        return None
 
     def public_manifest(self, workspace, pack_id):
         from .worker import valid_pinned_result, current_sources_match
         pack=self.pack(pack_id,workspace)
         results=[]
         corrupted=False
+        if pack.get('execution'):
+            from .execution import validate_execution_pack
+            output={k:v for k,v in pack.items() if k not in ('tasks','request')}
+            output['results']=[]
+            if not validate_execution_pack(self.settings,pack):
+                output.update(state='partial',prepared=0,failed=pack['total'])
+                output['warnings']=list(dict.fromkeys([*output['warnings'],'execution_assets_invalid']))
+            if not current_sources_match(self.settings,pack['sourceFingerprints']):
+                output['state']='stale'
+                output['warnings']=list(dict.fromkeys([*output['warnings'],'source_revision_changed']))
+            return output
         for task in pack['tasks']:
             if task.get('state')=='ready':
                 if valid_pinned_result(self.settings,pack_id,task['result']): results.append(task['result'])
@@ -322,19 +339,20 @@ def create_app(settings: Settings | None = None, *, run_worker=True, music_queue
     @app.post('/reservations/{reservation_id}/prepare')
     def prepare(reservation_id: str,ws=Depends(workspace)):
         from .worker import valid_pinned_result
+        from .execution import validate_execution_pack
         reservation=store.reservation(ws,reservation_id)
         # Serialize reset against worker checkpoints; active packs already continue.
         with store.connection() as db:
             db.execute('BEGIN IMMEDIATE')
             row=db.execute('SELECT data FROM packs WHERE id=? AND workspace=?',(reservation['packId'],ws)).fetchone()
             pack=json.loads(row['data'])
-            corrupted=any(task.get('state')=='ready' and not valid_pinned_result(settings,pack['packId'],task['result']) for task in pack['tasks'])
+            corrupted=(not validate_execution_pack(settings,pack)) if pack.get('execution') else any(task.get('state')=='ready' and not valid_pinned_result(settings,pack['packId'],task['result']) for task in pack['tasks'])
             if pack['state'] not in ('queued','preparing') and (pack['state']!='ready' or corrupted):
                 active=db.execute("SELECT count(*) FROM packs WHERE workspace=? AND state IN ('queued','preparing')",(ws,)).fetchone()[0]
                 global_active=db.execute("SELECT count(*) FROM packs WHERE state IN ('queued','preparing')").fetchone()[0]
                 if active>=settings.max_active or global_active>=20: raise HTTPException(429,'Preparation queue full')
                 for task in pack['tasks']:
-                    if task.get('state')!='ready' or not valid_pinned_result(settings,pack['packId'],task['result']):
+                    if pack.get('execution') or task.get('state')!='ready' or not valid_pinned_result(settings,pack['packId'],task['result']):
                         task.update(state='pending');task.pop('result',None);task.pop('error',None);task.pop('jobId',None)
                 pack.update(state='queued',error=None,prepared=sum(t['state']=='ready' for t in pack['tasks']),failed=0)
                 pack['warnings']=[w for w in pack['warnings'] if w!='some_edges_failed']

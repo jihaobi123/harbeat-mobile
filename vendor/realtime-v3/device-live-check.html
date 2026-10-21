@@ -1,0 +1,34 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HarBeat 实曲本机执行检查</title>
+<style>body{font:16px system-ui;margin:20px;background:#fafbf8;color:#152b24}button,select,input{font:inherit;padding:9px;margin:5px}button{background:#daf0e5;border:1px solid #345b4b;border-radius:8px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;border:1px solid #cbd6cd;padding:12px;max-height:650px;overflow:auto}iframe{width:1px;height:1px;border:0}label{display:inline-block}</style>
+<h1>实曲本机执行检查</h1><p>通过产品同一 iframe 消息桥控制 MetricRun 和设备执行器。素材、策略、音频调度均使用真实实现。</p>
+<button data-command="prepare">开启引擎</button>
+<label>当前曲目<select id="from"><option value="track-d2d58531421de0eb9690">HIPHOP</option></select></label>
+<button id="start">播放当前曲目</button>
+<label>下一首<select id="to"><option value="track-831997216a86a4914ef9">Make It Right</option></select></label>
+<button id="select">选择下一首</button>
+<div><button data-command="metricPrepare">准备固定曲对策略</button><button data-command="metricApply">安排交接</button><button id="audition">完整试听策略</button><button data-command="mixSoon">最近接点交接</button><button data-command="pause">暂停</button><button data-command="resume">继续</button><button data-command="stop">停止</button><button data-command="cancel">取消准备</button></div>
+<label>定位秒数<input id="position" type="number" value="0" min="0" step="0.1"></label><button id="seek">定位</button>
+<label>方法<select id="method"><option value="original">原渐混</option><option value="bass">贝斯交接</option><option value="filter">旋律滤波</option><option value="yield">旋律让位</option><option value="vocal">人声交接</option><option value="bass_filter">贝斯＋滤波</option></select></label><button id="choose-method">使用方法</button>
+<button data-command="export">读取执行记录</button>
+<h2>命令与关键记录</h2><pre id="summary">等待开启引擎</pre>
+<h2>实时状态</h2><pre id="state">尚未连接</pre><details><summary>完整导出记录</summary><pre id="logs">尚未导出</pre></details>
+<iframe id="engine" allow="autoplay" title="产品音频执行器"></iframe>
+<script type="module">
+const token=crypto.randomUUID(),frame=document.querySelector('#engine'),origin=location.origin,pending=new Map(),commands=[];let next=0,exportSummary=null;
+frame.src='./metric-engine/metric-engine.html#'+token;
+const show=()=>document.querySelector('#summary').textContent=JSON.stringify({commands:commands.slice(-20),export:exportSummary},null,2);
+function dispatch(method,args={}){return new Promise((resolve,reject)=>{const id=++next,record={id,method,status:'requested'};commands.push(record);show();const timer=setTimeout(()=>{pending.delete(id);record.status='timeout';show();reject(Error('命令超时'))},420000);pending.set(id,{resolve,reject,timer,record});frame.contentWindow.postMessage(JSON.stringify({harbeat:'metric-command',token,id,method,args}),origin)})}
+function run(task){task().catch(error=>{commands.push({status:'error',error:String(error)});show()})}
+window.addEventListener('message',event=>{if(event.source!==frame.contentWindow||event.origin!==origin||typeof event.data!=='string')return;let message;try{message=JSON.parse(event.data)}catch{return}if(message.token!==token)return;
+ if(message.harbeat==='metric-state'){document.querySelector('#state').textContent=JSON.stringify(JSON.parse(message.json),null,2)}
+ if(message.harbeat==='metric-reply'){const active=pending.get(message.id);if(!active)return;pending.delete(message.id);clearTimeout(active.timer);const reply=JSON.parse(message.json);Object.assign(active.record,{status:reply.ok?'ok':'failed',error:reply.error});if(reply.tracks){for(const [selector,favorite] of [['#from','HIPHOP'],['#to','Make It Right']]){const select=document.querySelector(selector),selected=select.value;select.replaceChildren(...reply.tracks.map(t=>{const option=new Option(t.title+' · '+t.bpm+' BPM',t.id);option.selected=t.id===selected||!selected&&t.title===favorite;return option}))}}show();reply.ok?active.resolve(reply):active.reject(Error(reply.error))}
+ if(message.harbeat==='metric-export'){document.querySelector('#logs').textContent=message.text;const data=JSON.parse(message.text),logs=data.logs||[],relevant=new Set(['device_plan_ready','device_plan_scheduled','handoff_complete','device_stems_unavailable','device_features_unknown','nearby_candidate_failed','plan_scheduled','pause','resume']);exportSummary={release:data.release,selectedMethod:data.selectedMethod,resultSchema:data.selectedResult?.schema,policyVersion:data.selectedResult?.policyVersion,cloudRenderRequests:logs.filter(x=>x.kind==='metric_cloud_requested').length,relevant:logs.filter(x=>relevant.has(x.kind)).slice(-12),limitations:data.limitations};show()}
+});
+document.querySelectorAll('[data-command]').forEach(button=>button.addEventListener('click',()=>run(()=>dispatch(button.dataset.command))));
+document.querySelector('#start').addEventListener('click',()=>run(async()=>{await dispatch('direction',{automatic:false});await dispatch('start',{trackId:document.querySelector('#from').value})}));
+document.querySelector('#select').addEventListener('click',()=>run(()=>dispatch('select',{trackId:document.querySelector('#to').value})));
+document.querySelector('#audition').addEventListener('click',()=>run(()=>dispatch('metricApply',{audition:true})));
+document.querySelector('#seek').addEventListener('click',()=>run(()=>dispatch('seek',{position:Number(document.querySelector('#position').value)})));
+document.querySelector('#choose-method').addEventListener('click',()=>run(()=>dispatch('metricMethod',{method:document.querySelector('#method').value})));
+</script></html>

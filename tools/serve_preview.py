@@ -84,9 +84,13 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             return self.send_error(403)
         parsed = urlsplit(self.path)
         original = re.fullmatch(r'(?:/api/analysis-lab/(reports(?:/[a-f0-9]{64})?|media/[a-f0-9]{64})|/analysis-lab-static/mobile-artwork-v1/(?:catalog\.json|[a-f0-9]{64}\.jpg))', parsed.path)
+        execution = re.fullmatch(r'/listen/(?:execution/(?:index\.json|tracks/[A-Za-z0-9_-]{1,160}\.json|profiles/(?P<profile_digest>[a-f0-9]{64})\.json)|execution-media/(?P<digest>[a-f0-9]{64})\.(?:flac|wav))',parsed.path)
         listen = re.fullmatch(r'/listen/(?:music-covers/[a-f0-9]{64}\.jpg|library\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?details/[A-Za-z0-9_-]{1,160}\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?media/[A-Za-z0-9_.-]+\.(?:flac|wav)|smart-api/(?:health|rules|jobs/[a-f0-9]{64})|set-media/[a-f0-9]{32}/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav|smart-media/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav)', parsed.path)
         query = parse_qs(parsed.query, keep_blank_values=True)
-        if not (original or listen) or (parsed.query and (not listen or not re.search(r'/media/|/smart-media/|/set-media/', parsed.path) or set(query) != {'sha256'} or len(query['sha256']) != 1 or not re.fullmatch('[a-f0-9]{64}',query['sha256'][0]))):
+        if execution:
+            expected=execution.group('digest') or execution.group('profile_digest')
+            if parsed.query and (not expected or set(query)!={'sha256'} or query['sha256']!=[expected]):return self.send_error(404)
+        elif not (original or listen) or (parsed.query and (not listen or not re.search(r'/media/|/smart-media/|/set-media/', parsed.path) or set(query) != {'sha256'} or len(query['sha256']) != 1 or not re.fullmatch('[a-f0-9]{64}',query['sha256'][0]))):
             return self.send_error(404)
         headers={'Accept-Encoding':'identity'}
         value=self.headers.get('Range')

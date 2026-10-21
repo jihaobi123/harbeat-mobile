@@ -4,7 +4,7 @@ import {fullVocalCollision} from './original-quality'
 import {scheduleV30Eq} from '../metric-upstream/v30/eq'
 import {localBeatGate} from '../metric-upstream/continuous/beatAlignment'
 import {requireBoundVocals} from '../metric-upstream/vocal-overlap/planner'
-import type {MetricTransport} from '../metric-upstream/metric-mix/transport'
+import type {MetricTransport} from './device-transport'
 import type {Prepared,Method} from '../metric-upstream/metric-mix/types'
 export const LOCAL_ORIGINAL='browser-v3-original-v1'
 /** Original verified PCM, existing stretched entry, and eight native B tail ms. */

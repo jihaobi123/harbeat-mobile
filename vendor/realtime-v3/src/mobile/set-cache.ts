@@ -6,7 +6,7 @@ const defaults={read:readEncoded,write:storeEncoded,remove:deleteEncoded,fetch:(
 /** Persist encoded audio only; decoding a whole set would exceed phone memory. */
 export async function cacheActivityAssets(assets:Asset[],base:URL,signal:AbortSignal,changed:(p:SetCacheProgress)=>void,io=defaults){
  if(io===defaults&&typeof caches==='undefined')throw Error('当前设备无法保存本机缓存，播放时仍可联网读取')
- const limit=256*1024*1024,files=assets.map(asset=>{const u=new URL(asset.url,base);if(u.origin!==base.origin||!/^\/listen\/(?:(?:catalog\/[A-Za-z0-9_-]+\/)?media\/[A-Za-z0-9_.-]+\.(?:flac|wav)|set-media\/[a-f0-9]{32}\/[a-f0-9]{64}\/(?:original|bass|filter|yield|vocal|bass_filter)\.wav)$/.test(u.pathname)||!/^[a-f0-9]{64}$/.test(asset.sha256)||!(asset.bytes>0))throw Error('预约音频地址或身份无效');u.searchParams.set('sha256',asset.sha256);return {asset,url:u}})
+ const limit=256*1024*1024,files=assets.map(asset=>{const u=new URL(asset.url,base);if(u.origin!==base.origin||!/^\/listen\/(?:(?:catalog\/[A-Za-z0-9_-]+\/)?media\/[A-Za-z0-9_.-]+\.(?:flac|wav)|execution-media\/[a-f0-9]{64}\.(?:flac|wav)|set-media\/[a-f0-9]{32}\/[a-f0-9]{64}\/(?:original|bass|filter|yield|vocal|bass_filter)\.wav)$/.test(u.pathname)||!/^[a-f0-9]{64}$/.test(asset.sha256)||!(asset.bytes>0)||(u.pathname.includes('/execution-media/')&&!u.pathname.includes('/'+asset.sha256+'.')))throw Error('预约音频地址或身份无效');u.searchParams.set('sha256',asset.sha256);return {asset,url:u}})
  const result:SetCacheProgress={completed:0,total:files.length,bytes:0,message:'正在下载到本机',state:'downloading'}
  const retained:typeof files=[];let budget=0
  for(const file of files){signal.throwIfAborted();const {asset,url}=file;if(asset.bytes>64*1024*1024||budget+asset.bytes>limit)continue;budget+=asset.bytes

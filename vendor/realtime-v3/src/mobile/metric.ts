@@ -1,7 +1,7 @@
 import {TrackLibrary, readLibraryIndex, type LibraryIndex} from '../metric-upstream/continuous/catalog'
 import {planContinuous} from '../metric-upstream/continuous/beatAlignment'
 import {initializeFromGesture} from '../metric-upstream/continuous/activation'
-import {MetricTransport} from '../metric-upstream/metric-mix/transport'
+import {MetricTransport} from './device-transport'
 import {canArm} from '../metric-upstream/metric-mix/plan'
 import type {Prepared, Method} from '../metric-upstream/metric-mix/types'
 import type {Track,Plan} from '../metric-upstream/realtime/planner'
@@ -17,6 +17,8 @@ import {METHODS,METRIC_RELEASE,validatePrepared} from './prepared'
 export {METHODS,METRIC_RELEASE,validatePrepared} from './prepared'
 import {ActivitySession} from './activity-session'
 import {cacheActivityAssets,type SetCacheProgress} from './set-cache'
+import {prepareDevice,preloadDevice,loadPrepared} from './device-prepare'
+import {hasMethod} from './device-execution'
 let nativeSequence=0
 export function nativeMetricJob(host:Host,payload:object,signal:AbortSignal){return new Promise<any>((resolve,reject)=>{
  const id=++nativeSequence
@@ -111,10 +113,11 @@ export class MetricRun {
   if(clear){this.result=null;this.pair=null;this.recommendation=null;this.selection=null;this.phase='idle'}
   this.update()
  }
- private async ensure(){
+ private async ensure(wake=true){
   if(this.host&&!this.host.requestFocus())throw Error('请回到前台后再播放')
   if(!this.player){this.player=this.create(this.base,()=>this.update());this.player.setVolume(this.volume)}
-  await initializeFromGesture(this.player)
+  if(wake)await initializeFromGesture(this.player)
+  else await this.player.initialize()
   return this.player
  }
  /** Append published imports without replacing a playing source or its committed clock. */
@@ -145,7 +148,7 @@ export class MetricRun {
   if(!this.alive||sequence!==this.cacheSequence||controller.signal.aborted)throw new DOMException('素材下载已取消','AbortError')
   this.library.trim(new Set([this.player?.current?.id??'']),4);this.cachePackId=session.packId
   this.setCache={completed:0,total:session.assets().length,bytes:0,state:'downloading',message:'正在下载到本机'};this.update()
-  try{return await cacheActivityAssets(session.assets(),this.base,controller.signal,progress=>{if(this.setCacheController===controller){this.setCache=progress;this.update()}})}catch(e){if(this.setCacheController===controller&&this.setCache){this.setCache={...this.setCache,state:'partial',message:controller.signal.aborted?'下载已暂停，可再次准备':(e as Error).message};this.update()}throw e}finally{if(this.setCacheController===controller)this.setCacheController=null}
+  try{await session.cacheMetadata(this.base,controller.signal);return await cacheActivityAssets(session.assets(),this.base,controller.signal,progress=>{if(this.setCacheController===controller){this.setCache=progress;this.update()}})}catch(e){if(this.setCacheController===controller&&this.setCache){this.setCache={...this.setCache,state:'partial',message:controller.signal.aborted?'下载已暂停，可再次准备':(e as Error).message};this.update()}throw e}finally{if(this.setCacheController===controller)this.setCacheController=null}
  }
  async start(id:string){
   if(this.activity&&!this.activity.ids.has(id))throw Error('这首歌不在预约 set 中，请先退出预约')
@@ -188,6 +191,7 @@ export class MetricRun {
   this.update()
  }
  private async cloud(a:Track,b:Track,plan:Plan,signal:AbortSignal,pollMs=2000){
+  if(this.player?.localExecution)return prepareDevice(this.player,a,b,plan,this.base,signal)
   const payload={from:a.id,to:b.id,windowId:plan.window.id,start:plan.start}
   const started=Date.now(),event=(kind:string,data:Record<string,unknown>)=>this.player?.logs?.push({kind,at:new Date().toISOString(),...payload,elapsedMs:Date.now()-started,...data})
   event('metric_cloud_requested',{})
@@ -217,6 +221,7 @@ export class MetricRun {
  /** One bounded cloud attempt per explicit action. Retries retain the same
   * local fallback and cannot fill the remote queue with expired cues. */
  private livePreparation(p:MetricTransport,a:Track,b:Track,budget={attempted:false}){
+  if(p.localExecution)return (plan:Plan,signal:AbortSignal)=>prepareDevice(p,a,b,plan,this.base,signal)
   return (plan:Plan,signal:AbortSignal)=>{
    const saved=this.activity?.find(a,b,plan)
    if(saved)return nearbyResult({plan,position:()=>p.position,signal,cloud:async()=>saved,original:local=>this.renderOriginal(p,a,b,plan,local),load:(r,remote)=>Promise.all([p.cache.load(r.assets[r.decision.recommended]!,remote),p.cache.load(nativeSegment(b,r.plan.bEnd).asset,remote)]),event:(kind,data)=>p.logs.push({kind,at:new Date().toISOString(),packId:this.activity?.packId,...data})})
@@ -229,6 +234,7 @@ export class MetricRun {
  }
  /** Reserve local preparation time at an already selected automatic cue. */
  private async automaticResult(p:MetricTransport,a:Track,b:Track,plan:Plan,signal:AbortSignal){
+  if(p.localExecution)return prepareDevice(p,a,b,plan,this.base,signal)
   const saved=this.activity?.find(a,b,plan);if(saved){p.logs.push({kind:'activity_prepared_reused',packId:this.activity?.packId,jobId:saved.id,at:new Date().toISOString()});return saved}
   const cloud=new AbortController(),cancel=()=>cloud.abort(signal.reason)
   let budgetExpired=false
@@ -262,7 +268,7 @@ export class MetricRun {
    const plan=planContinuous(a,[b],p.position+25,{kind:'next',targetId:b.id},new Set(),60,false).best
    if(!plan)throw Error('附近没有通过拍点、人声和速度检查的接点，请换歌或调整位置')
    if(Math.abs(plan.rate-1)>.05)throw Error('这组需要超过 5% 的变速，请换一首速度更接近的歌')
-   this.notice='云端正在准备转场，当前歌曲继续播放';this.update()
+   this.notice=p.localExecution?'正在缓存同源素材并安排本机声部控制':'云端正在准备转场，当前歌曲继续播放';this.update()
    const result=await this.cloud(a,b,plan,controller.signal)
    if(!this.alive||token!==this.revision)return
    this.adopt(result,a,b);this.phase='ready'
@@ -330,7 +336,7 @@ export class MetricRun {
      alternatives:choices.slice(0,3).map(c=>({id:c.track.id,title:c.track.title,start:c.plan.start,windowId:c.plan.window.id,score:c.score}))}
     }
     describe(choice)
-    this.notice='为 '+b.title+' 准备最合适的分轨转场';this.update()
+    this.notice='为 '+b.title+' 缓存同源素材并准备本机交接';this.update()
     // A cloud queue/read or audio download must not keep an obsolete cue in
     // charge. This stops local waiting; the server has no job-cancel endpoint.
     const candidate=new AbortController()
@@ -341,7 +347,7 @@ export class MetricRun {
     try{
      if(intent){
       const outcome=await mixNearby({player:p,a,b,signal:candidate.signal,ready,material:choice.plan,
-       preload:(plan,signal)=>preloadOriginal(p,a,b,plan,signal),
+       preload:(plan,signal)=>(p.localExecution?preloadDevice(p,a,b,plan,signal):preloadOriginal(p,a,b,plan,signal)),
        acceptPlan:plan=>!!choiceForPlan(a,b,plan,energy),
        scorePlan:plan=>choiceForPlan(a,b,plan,energy)?.score??-Infinity,
        onCandidate:plan=>{if(valid()){const actual=choiceForPlan(a,b,plan,energy);if(actual)describe(actual)}},
@@ -356,7 +362,7 @@ export class MetricRun {
      if(!valid())return
      if(!canArm(result.plan,p.current?.id??null,p.position))throw expiredCue()
      const method=result.decision.recommended
-     await abortable(Promise.all([p.cache.load(result.assets[method]!,candidate.signal),p.cache.load(nativeSegment(b,result.plan.bEnd).asset,candidate.signal)]),candidate.signal)
+     await abortable(loadPrepared(p,result,b,candidate.signal),candidate.signal)
      if(!valid())return
      if(!canArm(result.plan,p.current?.id??null,p.position))throw expiredCue()
      this.adopt(result,a,b,'automatic');this.phase='ready';this.notice='下一首已就绪，将在合适的小节自动接入'
@@ -385,7 +391,7 @@ export class MetricRun {
   void this.library.load(id).then(async b=>{
    controller.signal.throwIfAborted()
    const plan=nearbyPlan(a,b,p.position)
-   if(plan)await preloadOriginal(p,a,b,plan,controller.signal)
+   if(plan)await (p.localExecution?preloadDevice(p,a,b,plan,controller.signal):preloadOriginal(p,a,b,plan,controller.signal))
   }).catch(e=>{if(!controller.signal.aborted)p.logs.push({kind:'nearby_preload_failed',reason:(e as Error).message})})
    .finally(()=>{if(this.warmController===controller){this.warmRunning=false;this.warmAt=Date.now()+2000}})
  }
@@ -429,7 +435,7 @@ export class MetricRun {
   try{
    const b=await abortable(this.library.load(id),controller.signal)
    if(!this.alive||token!==this.revision)return
-   const outcome=await mixNearby({player:p,a,b,signal:controller.signal,ready,preload:(plan,signal)=>preloadOriginal(p,a,b,plan,signal),prepare:this.livePreparation(p,a,b),onStatus:message=>{if(this.alive&&token===this.revision){this.notice=message;this.update()}}})
+   const outcome=await mixNearby({player:p,a,b,signal:controller.signal,ready,preload:(plan,signal)=>(p.localExecution?preloadDevice(p,a,b,plan,signal):preloadOriginal(p,a,b,plan,signal)),prepare:this.livePreparation(p,a,b),onStatus:message=>{if(this.alive&&token===this.revision){this.notice=message;this.update()}}})
    if(!this.alive||token!==this.revision)return
    this.adopt(outcome.result,a,b,'nearby');this.method=outcome.method;this.phase='armed';this.notice='已安排附近合适接点，将自动混入下一首'
    this.history.push({kind:'handoff_requested',origin:'nearby',jobId:outcome.result.id,method:outcome.method,sourcePosition:p.position,at:new Date().toISOString()});this.history=this.history.slice(-12)
@@ -443,12 +449,12 @@ export class MetricRun {
   this.notice=this.player?.playing?'正在按当前方向接入下一首':'继续播放后，按当前方向接入下一首';this.update()
  }
 
- selectMethod(method:Method){if(this.player?.transition||this.player?.busy)throw Error('请等待本次交接完成');if(!this.result?.assets[method]||!this.result.decision.methods[method]?.eligible)throw Error('该方法没有通过本轮检查');this.method=method;this.update()}
+ selectMethod(method:Method){if(this.player?.transition||this.player?.busy)throw Error('请等待本次交接完成');if(!this.result||!hasMethod(this.result,method))throw Error('该方法没有通过本轮检查');this.method=method;this.update()}
  async apply(audition=false,origin='manual'){
   if(!this.result||!this.pair||this.working||this.player?.transition)throw Error('请先准备本次交接')
   this.request?.abort();const controller=this.request=new AbortController()
   const result=this.result,pair=this.pair,method=this.method,token=++this.revision;this.working=true;this.update()
-  try{const p=await this.ensure();if(!this.alive||token!==this.revision)return;if(audition)await p.audition(result,method,pair.a,pair.b);else await p.arm(result,method,pair.b,controller.signal)
+  try{const p=await this.ensure(audition||!this.player?.paused);if(!this.alive||token!==this.revision)return;if(audition)await p.audition(result,method,pair.a,pair.b);else await p.arm(result,method,pair.b,controller.signal)
    if(p.transition?.result.id===result.id){this.history.push({kind:'handoff_requested',origin,jobId:result.id,method,sourcePosition:p.position,at:new Date().toISOString()});this.history=this.history.slice(-12)}
   }finally{if(token===this.revision){this.working=false;this.update()}}
  }
@@ -465,6 +471,6 @@ export class MetricRun {
  dispose(){this.setCacheController?.abort();this.warmController?.abort();this.alive=false;this.invalidate();this.save();this.player?.dispose()}
  snapshot(){const p=this.player,r=this.result;return {activitySet:this.activity?{packId:this.activity.packId,name:this.activity.name,trackCount:this.activity.ids.size,prepared:this.activity.results.length,cache:this.cachePackId===this.activity.packId?this.setCache:null}:null,cache:this.setCache?{packId:this.cachePackId,...this.setCache}:null,release:METRIC_RELEASE,selected:this.selected,label:this.label,query:this.query,volume:this.volume,working:this.working,notice:this.error||this.notice,canArm:!!r&&canArm(r.plan,p?.current?.id??null,p?.position??0)&&!p?.transition,
   automatic:this.automatic,energyLevel:this.energyLevel,targetStyle:this.targetStyle,phase:this.phase,nearbyWorking:!!this.nearbyTask,recommendation:this.recommendation,selection:this.selection,
-  result:r?{id:r.id,policyVersion:r.policyVersion,plan:r.plan,metrics:r.metrics,decision:r.decision,available:METHODS.filter(m=>r.assets[m]&&r.decision.methods[m]?.eligible)}:null,method:this.method}}
+  result:r?{id:r.id,policyVersion:r.policyVersion,plan:r.plan,metrics:r.metrics,decision:r.decision,available:METHODS.filter(m=>hasMethod(r,m))}:null,method:this.method}}
 }
 export async function loadMetricIndex(base:URL){return readLibraryIndex(await readMetricJson('/listen/library.json',base))}
