@@ -8,8 +8,8 @@
 
 **Tech Stack:** TypeScript, Vitest, existing metric cloud/Jetson renderer and Flutter Web host.
 
-- [ ] Add red-first coordinator cases for playable non-original result, slow generation, slow asset load, cancellation and identity mismatch. Run and inspect expected failures.
-- [ ] Implement `mobile/nearby-result.ts` with a maximum two-second window and one-second scheduling reserve, strict plan identity and cancellation of losing preparation.
-- [ ] Wire both live request entry points to the coordinator, at most one cloud attempt per explicit request; leave existing ready-result reuse and automatic planner unchanged. Add MetricRun integration regressions.
-- [ ] Add bounded stage diagnostics to existing cloud requests. Measure worker stages and a public asset transfer, saving evidence without credentials or source audio.
-- [ ] Run full engine tests, typecheck, source fingerprint validation and build. Review changes independently, address findings, verify real UI handoff/export and preserve user preferences. Document method inventory and limitations, commit verified changes.
+- [x] Add red-first coordinator cases for playable non-original result, slow generation, slow asset load, cancellation and identity mismatch. Run and inspect expected failures.
+- [x] Implement `mobile/nearby-result.ts` with a maximum two-second window and one-second scheduling reserve, strict plan identity and cancellation of losing preparation.
+- [x] Wire both live request entry points to the coordinator, at most one cloud attempt per explicit request; leave existing ready-result reuse and automatic planner unchanged. Add MetricRun integration regressions.
+- [x] Add bounded stage diagnostics to existing cloud requests. Measure worker stages and a public asset transfer, saving evidence without credentials or source audio.
+- [x] Run full engine tests, typecheck, source fingerprint validation and build. Review changes independently, address findings, verify real UI handoff/export and preserve user preferences. Document method inventory and limitations, commit verified changes.

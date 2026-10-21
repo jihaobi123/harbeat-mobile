@@ -68,7 +68,7 @@ export async function mixNearby(o:NearbyOptions){
    else if(!canArm(cue,p.current.id,p.position))controller.abort(expired())
   },100)
   try{
-   o.onStatus?.(cached?'正在装入已准备好的交接':'已找到最近合格接点，正在装入原渐混素材…')
+   o.onStatus?.(cached?'正在装入已准备好的交接':'已找到合格接点，正在核对可用方案并准备原渐混后备…')
    const result=cached?.result??await wait(o.prepare(plan!,controller.signal),controller.signal)
    valid();controller.signal.throwIfAborted()
    if(result.plan.from!==a.id||result.plan.to!==b.id||Math.abs(result.plan.start-cue.start)>.002)throw Error('交接结果与本次歌曲和接点不一致')

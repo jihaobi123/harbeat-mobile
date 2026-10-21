@@ -1,0 +1,24 @@
+{
+  "timingsSec": {
+    "validated_plan": 0.09905815590173006,
+    "source_assets": 26.11998287588358,
+    "joint_stretch": 4.639720932580531,
+    "vocal_exit": 0.006183029152452946,
+    "describe": 0.09913265705108643,
+    "mix_candidates": 1.2650794396176934,
+    "render_stats": 0.012830224819481373,
+    "workerTotal": 32.66446967609227
+  },
+  "bytesAllOutputs": 8235160,
+  "method": "filter",
+  "cloudRoundTripIncludingWorkerSec": 35.35107862902805,
+  "publicDownload": {
+    "urlPath": "/listen/smart-media/00c6efdbb0a1973e0023053406eadde63f2bf5bf70d2863c2015085bcd88df0c/filter.wav",
+    "bytes": 1647032,
+    "connectSeconds": 0.002604,
+    "ttfbSeconds": 0.155366,
+    "totalSeconds": 1.730707,
+    "speedBytesPerSecond": 951652,
+    "scope": "One public download on this Mac; not purchased bandwidth or all network paths."
+  }
+}

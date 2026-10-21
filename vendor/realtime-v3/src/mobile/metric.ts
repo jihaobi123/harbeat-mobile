@@ -10,6 +10,7 @@ import {candidateStages,rankChoices,rankNearbyChoices,choiceForPlan,SMART_POLICY
 import type {Host} from './session'
 import {mixNearby,nearbyPlan} from './nearby'
 import {localOriginal,preloadOriginal} from './local-original'
+import {nearbyResult} from './nearby-result'
 
 const hash=/^[a-f0-9]{64}$/
 export const METHODS:Method[]=['original','bass','filter','yield','vocal','bass_filter']
@@ -159,26 +160,43 @@ export class MetricRun {
   this.notice=enabled?'方向已更新，正在自动寻找下一首':'自动接歌已关闭，当前歌曲继续播放'
   this.update()
  }
- private async cloud(a:Track,b:Track,plan:Plan,signal:AbortSignal){
+ private async cloud(a:Track,b:Track,plan:Plan,signal:AbortSignal,pollMs=2000){
   const payload={from:a.id,to:b.id,windowId:plan.window.id,start:plan.start}
+  const started=Date.now(),event=(kind:string,data:Record<string,unknown>)=>this.player?.logs?.push({kind,at:new Date().toISOString(),...payload,elapsedMs:Date.now()-started,...data})
+  event('metric_cloud_requested',{})
   let job:any
   if(this.host?.requestMetric)job=await nativeMetricJob(this.host,payload,signal)
   else if(this.host?.prepareMetric){const response=JSON.parse(this.host.prepareMetric(JSON.stringify(payload)));if(!response.ok)throw Error(response.error||'云端准备失败');job=response.data}
   else job=await requestJson(new URL('/listen/smart-api/jobs',this.base),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)},signal)
   if(!hash.test(job?.id))throw Error('云端任务编号无效')
+  event('metric_cloud_ack',{jobId:job.id,status:job.status??'unknown',cached:job.cached===true})
+  let previousStatus=''
   for(let i=0;i<180;i++){
    signal.throwIfAborted()
    const data=await this.read('/listen/smart-api/jobs/'+job.id,this.base,signal)
    signal.throwIfAborted()
+   if(data.status!==previousStatus){event('metric_cloud_state',{jobId:job.id,status:data.status});previousStatus=data.status}
    if(data.status==='failed')throw Error(data.message||'本次准备未完成')
    if(data.status==='ready'){
     if(data.id!==job.id)throw Error('交接任务身份不一致')
-    return validatePrepared(data,a,b,plan.start,plan.window.id)
+    const result=validatePrepared(data,a,b,plan.start,plan.window.id)
+    event('metric_cloud_ready',{jobId:job.id,method:result.decision.recommended});return result
    }
    this.notice=data.message||'云端正在准备转场，当前歌曲继续播放';this.update()
-   await delay(signal,2000)
+   await delay(signal,pollMs)
   }
   throw Error('云端准备超时，请稍后重试')
+ }
+ /** One bounded cloud attempt per explicit action. Retries retain the same
+  * local fallback and cannot fill the remote queue with expired cues. */
+ private livePreparation(p:MetricTransport,a:Track,b:Track,budget={attempted:false}){
+  return (plan:Plan,signal:AbortSignal)=>{
+   if(budget.attempted)return this.renderOriginal(p,a,b,plan,signal)
+   return nearbyResult({plan,position:()=>p.position,signal,
+    cloud:remote=>{budget.attempted=true;return this.cloud(a,b,plan,remote,250)},original:local=>this.renderOriginal(p,a,b,plan,local),
+    load:(r,remote)=>Promise.all([p.cache.load(r.assets[r.decision.recommended]!,remote),p.cache.load(nativeSegment(b,r.plan.bEnd).asset,remote)]),
+    event:(kind,data)=>p.logs.push({kind,at:new Date().toISOString(),from:a.id,to:b.id,start:plan.start,sourcePosition:p.position,...data})})
+  }
  }
  /** Reserve local preparation time at an already selected automatic cue. */
  private async automaticResult(p:MetricTransport,a:Track,b:Track,plan:Plan,signal:AbortSignal){
@@ -267,6 +285,7 @@ export class MetricRun {
    if(!valid())return
    if(!choices.length)throw Error(`已检查 ${selection.checked} 首，暂时没有通过接点与响度连续性检查的歌曲${selection.metadataFailed?`（${selection.metadataFailed} 首分析资料读取失败）`:''}；当前音乐继续播放`)
    let lastError='',expired=false
+   const liveBudget={attempted:false}
    for(const choice of choices.slice(0,3)){
     if(!valid())return
     if(!intent&&choice.plan.start<p.position+12){
@@ -296,7 +315,7 @@ export class MetricRun {
        acceptPlan:plan=>!!choiceForPlan(a,b,plan,energy),
        scorePlan:plan=>choiceForPlan(a,b,plan,energy)?.score??-Infinity,
        onCandidate:plan=>{if(valid()){const actual=choiceForPlan(a,b,plan,energy);if(actual)describe(actual)}},
-       prepare:(plan,signal)=>this.renderOriginal(p,a,b,plan,signal),
+       prepare:this.livePreparation(p,a,b,liveBudget),
        onStatus:message=>{if(valid()){this.notice=message;this.update()}}})
       if(!valid())return
       this.adopt(outcome.result,a,b,intent.kind);this.method=outcome.method;this.phase='armed';this.notice='已按当前音乐方向安排最近合格接点'
@@ -380,7 +399,7 @@ export class MetricRun {
   try{
    const b=await abortable(this.library.load(id),controller.signal)
    if(!this.alive||token!==this.revision)return
-   const outcome=await mixNearby({player:p,a,b,signal:controller.signal,ready,preload:(plan,signal)=>preloadOriginal(p,a,b,plan,signal),prepare:(plan,signal)=>this.renderOriginal(p,a,b,plan,signal),onStatus:message=>{if(this.alive&&token===this.revision){this.notice=message;this.update()}}})
+   const outcome=await mixNearby({player:p,a,b,signal:controller.signal,ready,preload:(plan,signal)=>preloadOriginal(p,a,b,plan,signal),prepare:this.livePreparation(p,a,b),onStatus:message=>{if(this.alive&&token===this.revision){this.notice=message;this.update()}}})
    if(!this.alive||token!==this.revision)return
    this.adopt(outcome.result,a,b,'nearby');this.method=outcome.method;this.phase='armed';this.notice='已安排附近合适接点，将自动混入下一首'
    this.history.push({kind:'handoff_requested',origin:'nearby',jobId:outcome.result.id,method:outcome.method,sourcePosition:p.position,at:new Date().toISOString()});this.history=this.history.slice(-12)

@@ -57,7 +57,7 @@ export async function localOriginal(p:MetricTransport,a:Track,b:Track,plan:Plan,
  const asset=await p.cache.localWav(wave(rendered),rendered.duration,signal);signal.throwIfAborted()
  let peak=0;for(let c=0;c<2;c++)for(const x of rendered.getChannelData(c))peak=Math.max(peak,Math.abs(x))
  const names={original:'原渐混（就近接歌）',bass:'独立贝斯交接',filter:'旋律滤波',yield:'旋律让位',vocal:'人声唱完再退出',bass_filter:'贝斯交接＋旋律滤波'}
- const methods=Object.fromEntries(Object.entries(names).map(([key,name])=>[key,{name,eligible:key==='original',score:key==='original'?50:null,reason:key==='original'?'最近合格接点采用原有浏览器渐混；该接点的分轨方案尚未就绪':'本次未等待云端生成此接点的分轨方案',processingCost:0,levelPenalty:0}])) as Prepared['decision']['methods']
+ const methods=Object.fromEntries(Object.entries(names).map(([key,name])=>[key,{name,eligible:key==='original',score:key==='original'?50:null,reason:key==='original'?'本接点采用原有浏览器渐混；分轨方案未在本次接歌预算内可播放':'该分轨方案未在本次接歌预算内可播放，具体阶段见播放记录',processingCost:0,levelPenalty:0}])) as Prepared['decision']['methods']
  return {schema:'harbeat.metric-mix-result.v1',id:asset.sha256,status:'ready',policyVersion:LOCAL_ORIGINAL,codeVersion:LOCAL_ORIGINAL,
   plan:{from:a.id,to:b.id,windowId:plan.window.id,start:plan.start,end:plan.end,duration:d,rate:plan.rate,bStart:plan.window.start,bEnd:plan.window.end,beatErrorMs:inputs.beatErrorMs},
   metrics:{bassOverlap:null,otherOverlap:null,bassDifference:null,otherDifference:null,vocalSafe:false,vocalBenefit:0,definitions:{status:'本地原渐混；保留原有选点的人声检查，未计算本接点的分轨指标'}},

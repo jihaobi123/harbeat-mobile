@@ -1,0 +1,696 @@
+{
+  "exportedAt": "2026-10-21T04:13:44.780Z",
+  "engineAsset": "metric-engine-BJKBhO7v.js",
+  "testSurface": "Actual production engine embedded via the same origin/token command bridge; deterministic seek before Next. Separate QA host, not Flutter screen gestures.",
+  "direction": {
+    "style": "",
+    "energy": 3,
+    "automatic": false
+  },
+  "logs": [
+    {
+      "kind": "nearby_request",
+      "at": "2026-10-21T04:13:01.228Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "sourcePosition": 193.74950113378685
+    },
+    {
+      "kind": "nearby_candidate",
+      "at": "2026-10-21T04:13:01.276Z",
+      "sourcePosition": 193.7959410430839,
+      "start": 194.95820861678004,
+      "end": 199.44,
+      "reused": false,
+      "policy": "formal-material-quality-v2"
+    },
+    {
+      "kind": "nearby_cloud_attempt",
+      "at": "2026-10-21T04:13:01.276Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "start": 194.95820861678004,
+      "sourcePosition": 193.7959410430839,
+      "budgetMs": 162.2675736961412
+    },
+    {
+      "kind": "metric_cloud_requested",
+      "at": "2026-10-21T04:13:01.277Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "windowId": "w24-2",
+      "start": 194.95820861678004,
+      "elapsedMs": 0
+    },
+    {
+      "kind": "nearby_original_fallback",
+      "at": "2026-10-21T04:13:01.441Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "start": 194.95820861678004,
+      "sourcePosition": 193.96428571428572,
+      "stage": "preparing",
+      "reason": "budget"
+    },
+    {
+      "kind": "nearby_armed",
+      "at": "2026-10-21T04:13:01.441Z",
+      "sourcePosition": 193.96428571428572,
+      "start": 194.95820861678004,
+      "method": "original"
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T04:13:02.435Z",
+      "name": "交接开始",
+      "frame": 318648,
+      "planId": "2ecf8cf694f1983c1ccb185887dd2b471384a9a45c259fcecc6a47fc8b4a8994",
+      "requestId": "original",
+      "observedFrame": 318720,
+      "quantumStart": 318592,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6000000238418579,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T04:13:06.920Z",
+      "name": "B正文接管",
+      "frame": 516295,
+      "planId": "2ecf8cf694f1983c1ccb185887dd2b471384a9a45c259fcecc6a47fc8b4a8994",
+      "requestId": "original",
+      "observedFrame": 516352,
+      "quantumStart": 516224,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6703481674194336,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "handoff_complete",
+      "at": "2026-10-21T04:13:06.991Z",
+      "context": 11.781224489795918,
+      "track": "track-56ae507c37842aeb5294",
+      "sourceOffset": 81.03385487528345,
+      "method": "original"
+    },
+    {
+      "kind": "nearby_request",
+      "at": "2026-10-21T04:13:25.295Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "sourcePosition": 188.75820861678005
+    },
+    {
+      "kind": "nearby_candidate",
+      "at": "2026-10-21T04:13:25.645Z",
+      "sourcePosition": 189.0822902494331,
+      "start": 192.75820861678005,
+      "end": 197.24,
+      "reused": false,
+      "policy": "formal-material-quality-v2"
+    },
+    {
+      "kind": "nearby_cloud_attempt",
+      "at": "2026-10-21T04:13:25.645Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "start": 192.75820861678005,
+      "sourcePosition": 189.0822902494331,
+      "budgetMs": 2000
+    },
+    {
+      "kind": "metric_cloud_requested",
+      "at": "2026-10-21T04:13:25.645Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "windowId": "w16-2",
+      "start": 192.75820861678005,
+      "elapsedMs": 0
+    },
+    {
+      "kind": "metric_cloud_ack",
+      "at": "2026-10-21T04:13:25.862Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "windowId": "w16-2",
+      "start": 192.75820861678005,
+      "elapsedMs": 217,
+      "jobId": "cabd22154f2101517d8665b90a14049eda1ad315b2f6867e155e5e2928192579",
+      "status": "ready",
+      "cached": true
+    },
+    {
+      "kind": "metric_cloud_state",
+      "at": "2026-10-21T04:13:25.986Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "windowId": "w16-2",
+      "start": 192.75820861678005,
+      "elapsedMs": 341,
+      "jobId": "cabd22154f2101517d8665b90a14049eda1ad315b2f6867e155e5e2928192579",
+      "status": "ready"
+    },
+    {
+      "kind": "metric_cloud_ready",
+      "at": "2026-10-21T04:13:25.987Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "windowId": "w16-2",
+      "start": 192.75820861678005,
+      "elapsedMs": 342,
+      "jobId": "cabd22154f2101517d8665b90a14049eda1ad315b2f6867e155e5e2928192579",
+      "method": "bass_filter"
+    },
+    {
+      "kind": "nearby_cloud_downloading",
+      "at": "2026-10-21T04:13:25.987Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "start": 192.75820861678005,
+      "sourcePosition": 189.42478458049888,
+      "method": "bass_filter",
+      "bytes": 1584088
+    },
+    {
+      "kind": "nearby_cloud_playable",
+      "at": "2026-10-21T04:13:25.994Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "start": 192.75820861678005,
+      "sourcePosition": 189.43639455782312,
+      "method": "bass_filter"
+    },
+    {
+      "kind": "nearby_armed",
+      "at": "2026-10-21T04:13:25.995Z",
+      "sourcePosition": 189.43639455782312,
+      "start": 192.75820861678005,
+      "method": "bass_filter"
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T04:13:29.315Z",
+      "name": "交接开始",
+      "frame": 983228,
+      "planId": "cabd22154f2101517d8665b90a14049eda1ad315b2f6867e155e5e2928192579",
+      "requestId": "bass_filter",
+      "observedFrame": 983296,
+      "quantumStart": 983168,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6703481674194336,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T04:13:33.801Z",
+      "name": "B正文接管",
+      "frame": 1180875,
+      "planId": "cabd22154f2101517d8665b90a14049eda1ad315b2f6867e155e5e2928192579",
+      "requestId": "bass_filter",
+      "observedFrame": 1180928,
+      "quantumStart": 1180800,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.7440811395645142,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "handoff_complete",
+      "at": "2026-10-21T04:13:33.871Z",
+      "context": 26.850975056689343,
+      "track": "track-56ae507c37842aeb5294",
+      "sourceOffset": 62.403764172335606,
+      "method": "bass_filter"
+    },
+    {
+      "kind": "plan_scheduled",
+      "method": "original",
+      "plan": {
+        "from": "track-c627eee8f3d2862aa161",
+        "to": "track-56ae507c37842aeb5294",
+        "windowId": "w24-2",
+        "start": 194.95820861678004,
+        "end": 199.44,
+        "duration": 4.481791383219955,
+        "rate": 1.0397624999999993,
+        "bStart": 76.3,
+        "bEnd": 80.96,
+        "beatErrorMs": 41.79138321995879
+      },
+      "policyVersion": "browser-v3-original-v1"
+    },
+    {
+      "kind": "plan_scheduled",
+      "method": "bass_filter",
+      "plan": {
+        "from": "track-c627eee8f3d2862aa161",
+        "to": "track-56ae507c37842aeb5294",
+        "windowId": "w16-2",
+        "start": 192.75820861678005,
+        "end": 197.24,
+        "duration": 4.481791383219955,
+        "rate": 1.0397624999999993,
+        "bStart": 57.67,
+        "bEnd": 62.33,
+        "lastBarStart": 2.2417913832199474,
+        "bassTiming": {
+          "duckStart": 0.021791383219948557,
+          "swapStart": 1.6817913832199451,
+          "swapEnd": 2.2417913832199474
+        },
+        "restore": 3.361343203948246,
+        "beatErrorMs": 33.58926975653276,
+        "vocalExit": null,
+        "vocalBenefit": 0,
+        "eq": {
+          "a": [
+            {
+              "t": 0,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 0.24898841017888637,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 0.49797682035777274,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 0.7469652305366591,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 0.9959536407155455,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 1.244942050894432,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 1.4939304610733182,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 1.7429188712522046,
+              "low": -9,
+              "mid": 0,
+              "high": -1.5451295289927853
+            },
+            {
+              "t": 1.991907281431091,
+              "low": -9,
+              "mid": 0,
+              "high": -1.8054283406132285
+            },
+            {
+              "t": 2.2408956916099774,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 2.489884101788864,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 2.73887251196775,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 2.9878609221466363,
+              "low": -9,
+              "mid": 0,
+              "high": -2.1469652305366584
+            },
+            {
+              "t": 3.236849332325523,
+              "low": -9,
+              "mid": 0,
+              "high": -2.566817945421912
+            },
+            {
+              "t": 3.485837742504409,
+              "low": -9,
+              "mid": 0,
+              "high": -1.8198527148852537
+            },
+            {
+              "t": 3.7348261526832953,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 3.983814562862182,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 4.232802973041069,
+              "low": -9,
+              "mid": 0,
+              "high": -1.5266049605745313
+            },
+            {
+              "t": 4.481791383219955,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            }
+          ],
+          "b": [
+            {
+              "t": 0,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 0.24898841017888637,
+              "low": -7,
+              "mid": -0.41975308641975306,
+              "high": 1.2
+            },
+            {
+              "t": 0.49797682035777274,
+              "low": -7,
+              "mid": -0.7901234567901234,
+              "high": 1.2
+            },
+            {
+              "t": 0.7469652305366591,
+              "low": -7,
+              "mid": -0.8329470059629153,
+              "high": 1.2
+            },
+            {
+              "t": 0.9959536407155455,
+              "low": -7,
+              "mid": -0.4977777777778752,
+              "high": 1.2
+            },
+            {
+              "t": 1.244942050894432,
+              "low": -7,
+              "mid": -0.8987654320988603,
+              "high": 1.2
+            },
+            {
+              "t": 1.4939304610733182,
+              "low": -7,
+              "mid": -0.8101721676325219,
+              "high": 1.2
+            },
+            {
+              "t": 1.7429188712522046,
+              "low": -7,
+              "mid": -0.06320693709586267,
+              "high": 1.2
+            },
+            {
+              "t": 1.991907281431091,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 2.2408956916099774,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 2.489884101788864,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 2.73887251196775,
+              "low": -7.040788774644616,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 2.9878609221466363,
+              "low": -7.225916877468102,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 3.236849332325523,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 3.485837742504409,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 3.7348261526832953,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 3.983814562862182,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 4.232802973041069,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            },
+            {
+              "t": 4.481791383219955,
+              "low": -7,
+              "mid": 0,
+              "high": 1.2
+            }
+          ]
+        }
+      },
+      "policyVersion": "metric-mix-v1.0"
+    }
+  ],
+  "suite": {
+    "passed": 251,
+    "skipped": 3
+  },
+  "limits": [
+    "Existing cloud cache and warm source metadata were deliberately tested; this does not demonstrate instant cold generation.",
+    "First cold metadata load shifted the position, and the uncached cue correctly used original.",
+    "Client cancellation cannot stop an already submitted server worker.",
+    "Methods and scores remain metric-mix-v1.0; experimental techniques outside those six are not automatically enabled."
+  ],
+  "mainFlutterPage": {
+    "url": "http://127.0.0.1:8766/",
+    "engineAsset": "metric-engine-BJKBhO7v.js",
+    "direction": {
+      "style": "KPOP",
+      "energy": 3,
+      "automatic": true
+    },
+    "logs": [
+      {
+        "kind": "metric_cloud_requested",
+        "at": "2026-10-21T04:14:19.114Z",
+        "from": "track-7425f6cd2e624e01a32a",
+        "to": "track-62f1425047763578f494",
+        "windowId": "w20-2",
+        "start": 168.51,
+        "elapsedMs": 0
+      },
+      {
+        "kind": "metric_cloud_ack",
+        "at": "2026-10-21T04:14:19.344Z",
+        "from": "track-7425f6cd2e624e01a32a",
+        "to": "track-62f1425047763578f494",
+        "windowId": "w20-2",
+        "start": 168.51,
+        "elapsedMs": 230,
+        "jobId": "45832caf7c9a2ad7d72890e39dd9e7e7a3610a154be44520dfac93774060b231",
+        "status": "queued",
+        "cached": false
+      },
+      {
+        "kind": "metric_cloud_state",
+        "at": "2026-10-21T04:14:19.467Z",
+        "from": "track-7425f6cd2e624e01a32a",
+        "to": "track-62f1425047763578f494",
+        "windowId": "w20-2",
+        "start": 168.51,
+        "elapsedMs": 353,
+        "jobId": "45832caf7c9a2ad7d72890e39dd9e7e7a3610a154be44520dfac93774060b231",
+        "status": "running"
+      },
+      {
+        "kind": "nearby_request",
+        "at": "2026-10-21T04:14:24.015Z",
+        "from": "track-7425f6cd2e624e01a32a",
+        "to": "track-62f1425047763578f494",
+        "sourcePosition": 23.320544217687075
+      },
+      {
+        "kind": "nearby_inputs_loading",
+        "at": "2026-10-21T04:14:24.022Z",
+        "sourcePosition": 23.332154195011338,
+        "windowId": "w20-2"
+      },
+      {
+        "kind": "nearby_candidate",
+        "at": "2026-10-21T04:14:24.030Z",
+        "sourcePosition": 23.33795918367347,
+        "start": 24.5,
+        "end": 29.3,
+        "reused": false,
+        "policy": "formal-material-quality-v2"
+      },
+      {
+        "kind": "nearby_cloud_attempt",
+        "at": "2026-10-21T04:14:24.030Z",
+        "from": "track-7425f6cd2e624e01a32a",
+        "to": "track-62f1425047763578f494",
+        "start": 24.5,
+        "sourcePosition": 23.33795918367347,
+        "budgetMs": 162.040816326531
+      },
+      {
+        "kind": "metric_cloud_requested",
+        "at": "2026-10-21T04:14:24.030Z",
+        "from": "track-7425f6cd2e624e01a32a",
+        "to": "track-62f1425047763578f494",
+        "windowId": "w20-2",
+        "start": 24.5,
+        "elapsedMs": 0
+      },
+      {
+        "kind": "nearby_original_fallback",
+        "at": "2026-10-21T04:14:24.193Z",
+        "from": "track-7425f6cd2e624e01a32a",
+        "to": "track-62f1425047763578f494",
+        "start": 24.5,
+        "sourcePosition": 23.503401360544217,
+        "stage": "preparing",
+        "reason": "budget"
+      },
+      {
+        "kind": "nearby_armed",
+        "at": "2026-10-21T04:14:24.194Z",
+        "sourcePosition": 23.503401360544217,
+        "start": 24.5,
+        "method": "original"
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-21T04:14:25.201Z",
+        "name": "交接开始",
+        "frame": 1129646,
+        "planId": "228fb2c8975a7912459812310b87f80ef71b8e1321062f4bf9064defe6b0d0e1",
+        "requestId": "original",
+        "observedFrame": 1129728,
+        "quantumStart": 1129600,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.5769104361534119,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-21T04:14:29.994Z",
+        "name": "B正文接管",
+        "frame": 1341326,
+        "planId": "228fb2c8975a7912459812310b87f80ef71b8e1321062f4bf9064defe6b0d0e1",
+        "requestId": "original",
+        "observedFrame": 1341440,
+        "quantumStart": 1341312,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6480149030685425,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "handoff_complete",
+        "at": "2026-10-21T04:14:30.074Z",
+        "context": 30.49360544217687,
+        "track": "track-62f1425047763578f494",
+        "sourceOffset": 74.76804988662131,
+        "method": "original"
+      },
+      {
+        "kind": "metric_cloud_requested",
+        "at": "2026-10-21T04:14:30.403Z",
+        "from": "track-62f1425047763578f494",
+        "to": "track-56ae507c37842aeb5294",
+        "windowId": "w16-2",
+        "start": 144.28,
+        "elapsedMs": 0
+      },
+      {
+        "kind": "metric_cloud_ack",
+        "at": "2026-10-21T04:14:30.645Z",
+        "from": "track-62f1425047763578f494",
+        "to": "track-56ae507c37842aeb5294",
+        "windowId": "w16-2",
+        "start": 144.28,
+        "elapsedMs": 242,
+        "jobId": "ac47f21fbba0012a0896eff129b015c371a739c6edac6164eca505524a14063a",
+        "status": "queued",
+        "cached": false
+      },
+      {
+        "kind": "metric_cloud_state",
+        "at": "2026-10-21T04:14:30.819Z",
+        "from": "track-62f1425047763578f494",
+        "to": "track-56ae507c37842aeb5294",
+        "windowId": "w16-2",
+        "start": 144.28,
+        "elapsedMs": 416,
+        "jobId": "ac47f21fbba0012a0896eff129b015c371a739c6edac6164eca505524a14063a",
+        "status": "queued"
+      }
+    ]
+  }
+}
