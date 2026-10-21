@@ -1,0 +1,48 @@
+{
+  "schema": "harbeat.android-stop-diagnosis.v1",
+  "installedVersionBefore": "0.2.1+16",
+  "originalSessionSha256": "6dab17b6d48bb12ba6ae249be871e3fe6294cf5706f3d680956c72fb06ba9b48",
+  "firstEndedTrack": "track-326d0ae03ba1586414e1",
+  "title": "DjAspro (Track 2)",
+  "duration": 137.35290249433106,
+  "handoffContext": 238.9689455782313,
+  "takeoverSourceOffset": 68.313,
+  "firstPause": {
+    "kind": "pause",
+    "at": "2026-10-21T12:04:44.622Z",
+    "context": 307.9807709750567
+  },
+  "calculatedPauseSourcePosition": 137.3248253968254,
+  "lastChunk": {
+    "kind": "native_chunk",
+    "at": 290.6559455782313,
+    "context": 267.33714285714285,
+    "track": "track-326d0ae03ba1586414e1",
+    "asset": {
+      "url": "/listen/media/e93625f2442d8ad87ef7b85b65d91595408ae8617ee949c05f775f8a7ac1eff9.flac",
+      "sha256": "e93625f2442d8ad87ef7b85b65d91595408ae8617ee949c05f775f8a7ac1eff9",
+      "duration": 17.352902494331065,
+      "bytes": 2149915
+    },
+    "sourceStart": 120,
+    "sourceEnd": 137.35290249433106
+  },
+  "lastChunkRechecked": {
+    "httpStatus": 200,
+    "bytes": 2149915,
+    "sha256Verified": true
+  },
+  "actualLibraryReplay": {
+    "sourcePosition": 90,
+    "old35SecondHorizonChoices": 0,
+    "recoveredChoices": 174,
+    "bestCueStart": 108.77019047619048,
+    "target": "HIPHOP",
+    "scope": "six original compatible tracks; current server metadata, not a reconstruction of historical server state"
+  },
+  "limits": [
+    "Old pause events have no reason; first pause matches track end, subsequent manual/focus/background pauses cannot be distinguished.",
+    "AudioTrack zero-data messages include a separate idle native audio track; they are not proof that the WebAudio mix was silent.",
+    "Old audio_observation peak is session maximum, not current-window sound."
+  ]
+}

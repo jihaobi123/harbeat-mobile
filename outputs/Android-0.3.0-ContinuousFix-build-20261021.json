@@ -1,0 +1,14 @@
+{
+  "schema": "harbeat.android-apk-verification.v1",
+  "apk": "HarBeat-Preview-0.3.0-20261021-ContinuousFix-arm64.apk",
+  "bytes": 333262447,
+  "sha256": "7314fb94b881c17623320deafd2f8cbba8be6df2c73ec7e7773989b1d7932456",
+  "assetsVerified": 261,
+  "sources": 164,
+  "engines": [
+    "assets/metric-engine-B615FOrb.js"
+  ],
+  "version": "0.3.0+17",
+  "baseCommit": "e86de81",
+  "sourceFixCommit": "4706ee242c85848aa0e707c81ca49e41ad4bf7e6"
+}

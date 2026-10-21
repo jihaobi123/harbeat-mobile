@@ -1,0 +1,134 @@
+{
+  "schema": "harbeat.android-continuous-acceptance.v1",
+  "version": "0.3.0+17",
+  "sourceFixCommit": "4706ee242c85848aa0e707c81ca49e41ad4bf7e6",
+  "device": "Xiaomi 2106118C / Android 12 / ARM64",
+  "sessionSha256": "952cc39e63cc181a3ff2535ef235a39534dee40673fe6337127b79cc373497c4",
+  "sessionBytes": 401278,
+  "startedAt": "2026-10-21T15:51:40.649Z",
+  "pausedAt": "2026-10-21T16:07:46.311Z",
+  "elapsedSeconds": 965.662,
+  "audioClockElapsedSeconds": 965.6656689342403,
+  "direction": {
+    "style": "",
+    "energy": 3,
+    "automatic": true
+  },
+  "trackStarts": 1,
+  "manualSeeks": 0,
+  "manualNextRequests": 0,
+  "orderedTracks": [
+    {
+      "id": "track-49d4ac83da372eab5722",
+      "title": "24K Magic (1)",
+      "arrival": "track_start",
+      "at": "2026-10-21T15:51:40.649Z",
+      "sourceOffset": 0,
+      "method": null,
+      "mixed": false
+    },
+    {
+      "id": "track-160ae213bbe0b921dd79",
+      "title": "Calm Down",
+      "arrival": "sequential_complete",
+      "at": "2026-10-21T15:55:26.781Z",
+      "sourceOffset": 0.03891156462583467,
+      "method": null,
+      "mixed": false
+    },
+    {
+      "id": "track-a7ba523770c8e09e4351",
+      "title": "ORIENTRACK 06",
+      "arrival": "handoff_complete",
+      "at": "2026-10-21T15:58:44.141Z",
+      "sourceOffset": 29.641111111111112,
+      "method": "original",
+      "mixed": true
+    },
+    {
+      "id": "track-99a9ba016b98e7615752",
+      "title": "Buummm (Popping Edit)",
+      "arrival": "sequential_complete",
+      "at": "2026-10-21T16:00:25.502Z",
+      "sourceOffset": 0.04621315192741804,
+      "method": null,
+      "mixed": false
+    },
+    {
+      "id": "track-326d0ae03ba1586414e1",
+      "title": "DjAspro (Track 2)",
+      "arrival": "handoff_complete",
+      "at": "2026-10-21T16:04:32.460Z",
+      "sourceOffset": 68.35384580498852,
+      "method": "original",
+      "mixed": true
+    },
+    {
+      "id": "track-200f23d2aea5e32ac7cd",
+      "title": "울고 싶지 않아 (不想哭)",
+      "arrival": "sequential_complete",
+      "at": "2026-10-21T16:05:41.500Z",
+      "sourceOffset": 0.03967346938770788,
+      "method": null,
+      "mixed": false
+    }
+  ],
+  "approvedRealtimeHandoffs": 2,
+  "wholeTrackContinuations": 3,
+  "methods": {
+    "original": 2
+  },
+  "audioObservations": 4,
+  "maximumObservationLateFrames": 0,
+  "outputHealthWindows": 193,
+  "zeroOutputHealthWindows": 0,
+  "minimumOutputRMS": 0.03830270707595808,
+  "maximumOutputPeak": 0.8512614965438843,
+  "bufferingStarts": 0,
+  "pauses": [
+    {
+      "kind": "pause",
+      "at": "2026-10-21T16:07:46.311Z",
+      "context": 967.8222222222222,
+      "reason": "user",
+      "track": "track-200f23d2aea5e32ac7cd",
+      "position": 124.85273469387744,
+      "buffering": false
+    }
+  ],
+  "finalTransport": {
+    "track": "track-200f23d2aea5e32ac7cd",
+    "position": 124.85273469387744,
+    "duration": 203.42668934240362,
+    "state": "suspended",
+    "paused": true,
+    "buffering": false,
+    "status": "素材已就绪",
+    "streams": [
+      {
+        "track": "track-200f23d2aea5e32ac7cd",
+        "offset": 0,
+        "at": 842.9694875283448,
+        "deadline": 1022.9694875283448,
+        "coveredSourceEnd": 180,
+        "error": null,
+        "late": false
+      }
+    ]
+  },
+  "stemsUnavailable": [
+    {
+      "kind": "device_stems_unavailable",
+      "reason": "分轨目录尚未发布 404",
+      "approvedPlanId": "e994f8e05bf489cdccc4ed11dd6256a8d91c1d42a2e85231fe252b24b85bd9c7",
+      "from": "track-160ae213bbe0b921dd79",
+      "to": "track-a7ba523770c8e09e4351"
+    }
+  ],
+  "limits": [
+    "Two approved transitions used original master crossfades; no advanced stem effect success is claimed.",
+    "Three native end-to-start continuations are unmixed and are not counted as approved DJ overlaps.",
+    "Digital output measurements do not establish Bluetooth latency or subjective listening quality.",
+    "Server publication and some strategy job failures remain; see backend follow-up."
+  ]
+}

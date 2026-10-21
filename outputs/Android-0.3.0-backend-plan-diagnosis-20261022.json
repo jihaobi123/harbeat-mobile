@@ -1,0 +1,33 @@
+{
+  "schema": "harbeat.backend-plan-diagnosis.v1",
+  "checkedAt": "2026-10-21T16:03:25.632105+00:00",
+  "executionIndexSha256": "d62cf73847be7607070a562cd1ef440d8027472f2c9f9d748b63c7c565b6042d",
+  "executionProfiles": 153,
+  "publishedStemTracks": 9,
+  "missingProfileTrack": "track-49d4ac83da372eab5722",
+  "rejectedRequest": {
+    "from": "track-49d4ac83da372eab5722",
+    "to": "track-86141f55b6b1219e1c38",
+    "windowId": "w0-4",
+    "start": 196.30802721088435,
+    "status": 422
+  },
+  "failedFreshRequest": {
+    "id": "f6b76fdb77eaef92a3fb9cd3c2866a09e980ebd25721b617bf139f15589f3dfa",
+    "from": "track-86141f55b6b1219e1c38",
+    "to": "track-d2d58531421de0eb9690",
+    "windowId": "w0-2",
+    "start": 143.56802721088434,
+    "status": "failed",
+    "privateCauseVerified": false
+  },
+  "workingFreshRequest": {
+    "id": "06514a2cb4c70ccfe407fa5daccb79ac8c96de03ee74cd80d292039498bee815",
+    "from": "track-d2d58531421de0eb9690",
+    "to": "track-831997216a86a4914ef9",
+    "windowId": "w0-2",
+    "start": 113.25718820861678,
+    "status": "ready"
+  },
+  "serverChangesMade": false
+}
