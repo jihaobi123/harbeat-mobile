@@ -241,7 +241,7 @@ export class MetricRun {
     this.notice=stage.kind==='recent'?'未播候选暂不合适，正在回查已播歌曲':'正在逐首比较候选的合格接点';this.update()
     const qualified=new Set<string>()
     const compare=(x:SmartChoice,y:SmartChoice)=>(stage.kind==='recent'?this.recent.lastIndexOf(x.track.id)-this.recent.lastIndexOf(y.track.id):0)||
-     (intent?x.plan.start-y.plan.start||y.score-x.score:y.score-x.score||y.plan.end-x.plan.end)||x.plan.id.localeCompare(y.plan.id)
+     (intent?(x.nearbyBudget??60)-(y.nearbyBudget??60)||y.score-x.score||x.plan.start-y.plan.start:y.score-x.score||y.plan.end-x.plan.end)||x.plan.id.localeCompare(y.plan.id)
     // Rank and release each eight-track batch. Keep only the three render
     // attempts, rather than holding every track's full analysis in memory.
     for(let batch=0;batch<stage.entries.length;batch+=8){
@@ -291,7 +291,7 @@ export class MetricRun {
     const deadline=intent?undefined:setInterval(()=>{if(!canArm(choice.plan,p.current?.id??null,p.position))candidate.abort(expiredCue())},250)
     try{
      if(intent){
-      const outcome=await mixNearby({player:p,a,b,signal:candidate.signal,ready,
+      const outcome=await mixNearby({player:p,a,b,signal:candidate.signal,ready,material:choice.plan,
        preload:(plan,signal)=>preloadOriginal(p,a,b,plan,signal),
        acceptPlan:plan=>!!choiceForPlan(a,b,plan,energy),
        scorePlan:plan=>choiceForPlan(a,b,plan,energy)?.score??-Infinity,

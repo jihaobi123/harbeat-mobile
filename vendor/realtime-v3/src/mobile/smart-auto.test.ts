@@ -263,14 +263,14 @@ it('bounds metadata retention while exhausting a large no-match fresh pool',asyn
  expect(maximum).toBeLessThanOrEqual(18);expect(run.library.values().length).toBeLessThanOrEqual(10)
 })
 
-it('renders the same energy-preferred entry that nearby selection reports',async()=>{
+it('renders the same formal entry material that nearby selection reports',async()=>{
  const {run,tracks,render}=setup();const [a,b]=tracks
  for(const t of [a,b]){t.vocals=[];t.preprocessing!.vocalActivity!.intervals=[]}
  b.windows=[{...b.windows[0],id:'a-flat'},{...b.windows[0],id:'z-loud',start:24,end:32}]
  b.alignment!.bandFrames=[{...b.alignment!.bandFrames[0],end:32},{...b.alignment!.bandFrames[0],start:32,rmsDbfs:-12}]
  run.direction({style:'Hip-Hop',automatic:false});await run.start('a');run.direction({energy:5});run.tick();await finished(run)
- expect(render.mock.calls[0][3].window.id).toBe('z-loud')
- expect((run.recommendation?.cue as any).bStart).toBe(24)
+ expect(render.mock.calls[0][3].window.id).toBe('a-flat')
+ expect((run.recommendation?.cue as any).bStart).toBe(0)
 })
 
 it('keeps the selected automatic cue with original fade when cloud preparation misses its budget',async()=>{
@@ -283,4 +283,14 @@ it('keeps the selected automatic cue with original fade when cloud preparation m
  expect(run.export().history.some(h=>h.kind==='automatic_original_fallback')).toBe(true)
  p.position=payload.start-9;run.tick();await vi.advanceTimersByTimeAsync(1)
  expect(p.arm).toHaveBeenCalledTimes(1);expect(p.start).toHaveBeenCalledTimes(1)
+})
+
+it('keeps short-budget qualified choices ahead of sixty-second fallbacks across batches',async()=>{
+ const {run,tracks}=setup();run.index.tracks[2].styleLabels=['Hip-Hop']
+ tracks[0].vocals=[[0,22]];tracks[0].preprocessing!.vocalActivity!.intervals=[{start_ms:0,end_ms:22000}]
+ const long=(t:any)=>{t.vocals=[[0,80]];t.preprocessing.vocalActivity.intervals=[{start_ms:0,end_ms:80000}];t.alignment.bandFrames[0].rmsDbfs=-12}
+ long(tracks[1]);tracks[2].vocals=[];tracks[2].preprocessing!.vocalActivity!.intervals=[];tracks[2].alignment!.bandFrames[0].rmsDbfs=-18
+ for(let i=0;i<7;i++){const t=qualityTrack('b'+i);long(t);tracks.push(t);run.index.tracks.push({...run.index.tracks[1],id:t.id,detailUrl:t.id,title:t.title})}
+ run.direction({style:'Hip-Hop',energy:5,automatic:false});await run.start('a');run.requestNext();run.tick();await finished(run)
+ expect(run.result?.plan.to).toBe('c');expect(run.result?.plan.start).toBeLessThan(10)
 })

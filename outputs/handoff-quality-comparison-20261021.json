@@ -1,0 +1,446 @@
+[
+  {
+    "from": "DJ Alien-Track 17",
+    "to": "POPPING SEASON 01",
+    "position": 36.20471655328798,
+    "actual": {
+      "start": 36.95401360544217,
+      "end": 41.44,
+      "duration": 4.485986394557823,
+      "window": "w0-2",
+      "bStart": 18.27,
+      "bEnd": 22.84,
+      "bars": 2,
+      "score": null,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 35.708,
+          "tailEnd": 125.172
+        }
+      ],
+      "cutB": [
+        {
+          "start": 17.95,
+          "tailEnd": 18.479999999999997
+        }
+      ]
+    },
+    "legacy18": {
+      "start": 41.47401360544218,
+      "end": 45.96,
+      "duration": 4.485986394557823,
+      "window": "w24-2",
+      "bStart": 73.14,
+      "bEnd": 77.71,
+      "bars": 2,
+      "score": 0.8697435153691128,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 35.708,
+          "tailEnd": 125.172
+        }
+      ],
+      "cutB": [
+        {
+          "start": 70.95,
+          "tailEnd": 77.13
+        }
+      ]
+    },
+    "legacy60": {
+      "start": 41.47401360544218,
+      "end": 45.96,
+      "duration": 4.485986394557823,
+      "window": "w24-2",
+      "bStart": 73.14,
+      "bEnd": 77.71,
+      "bars": 2,
+      "score": 1.054568471277402,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 35.708,
+          "tailEnd": 125.172
+        }
+      ],
+      "cutB": [
+        {
+          "start": 70.95,
+          "tailEnd": 77.13
+        }
+      ]
+    }
+  },
+  {
+    "from": "POPPING SEASON 01",
+    "to": "MOP - Ante Up...Bang[Edit Beats]",
+    "position": 82.03718820861678,
+    "actual": {
+      "start": 84.55714285714286,
+      "end": 93.7,
+      "duration": 9.142857142857142,
+      "window": "w12-4",
+      "bStart": 56.08,
+      "bEnd": 65.12,
+      "bars": 4,
+      "score": null,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 87.15,
+          "tailEnd": 95.38
+        }
+      ],
+      "cutB": [
+        {
+          "start": 0,
+          "tailEnd": 194.78
+        }
+      ]
+    },
+    "legacy18": {
+      "start": 86.84857142857143,
+      "end": 91.42,
+      "duration": 4.571428571428571,
+      "window": "w6-2",
+      "bStart": 42.48,
+      "bEnd": 47.02,
+      "bars": 2,
+      "score": 0.8966857835726902,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 87.15,
+          "tailEnd": 95.38
+        }
+      ],
+      "cutB": [
+        {
+          "start": 0,
+          "tailEnd": 194.78
+        }
+      ]
+    },
+    "legacy60": {
+      "start": 86.84857142857143,
+      "end": 91.42,
+      "duration": 4.571428571428571,
+      "window": "w6-2",
+      "bStart": 42.48,
+      "bEnd": 47.02,
+      "bars": 2,
+      "score": 1.0742682350718085,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 87.15,
+          "tailEnd": 95.38
+        }
+      ],
+      "cutB": [
+        {
+          "start": 0,
+          "tailEnd": 194.78
+        }
+      ]
+    }
+  },
+  {
+    "from": "MOP - Ante Up...Bang[Edit Beats]",
+    "to": "Pandaaaaaa",
+    "position": 78.47668934240363,
+    "actual": {
+      "start": 81.01718820861677,
+      "end": 85.52,
+      "duration": 4.50281179138322,
+      "window": "w16-2",
+      "bStart": 53.023,
+      "bEnd": 57.597,
+      "bars": 2,
+      "score": null,
+      "weightedVocals": 0.11738260486405777,
+      "cutA": [
+        {
+          "start": 0,
+          "tailEnd": 194.78
+        }
+      ],
+      "cutB": [
+        {
+          "start": 25.85,
+          "tailEnd": 61.83
+        }
+      ]
+    },
+    "legacy18": {
+      "start": 81.01718820861677,
+      "end": 85.52,
+      "duration": 4.50281179138322,
+      "window": "w24-2",
+      "bStart": 71.308,
+      "bEnd": 75.871,
+      "bars": 2,
+      "score": 0.7925841761778825,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 0,
+          "tailEnd": 194.78
+        }
+      ],
+      "cutB": [
+        {
+          "start": 62.45,
+          "tailEnd": 80.53
+        }
+      ]
+    },
+    "legacy60": {
+      "start": 81.03437641723357,
+      "end": 90.04,
+      "duration": 9.00562358276644,
+      "window": "w24-4",
+      "bStart": 71.308,
+      "bEnd": 80.446,
+      "bars": 4,
+      "score": 0.9351441611866982,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 0,
+          "tailEnd": 194.78
+        }
+      ],
+      "cutB": [
+        {
+          "start": 62.45,
+          "tailEnd": 80.53
+        }
+      ]
+    }
+  },
+  {
+    "from": "Rump Shaker",
+    "to": "Straight (Battle Beat)",
+    "position": 106.60043990929708,
+    "actual": {
+      "start": 108.5438231292517,
+      "end": 113.186,
+      "duration": 4.642176870748299,
+      "window": "w24-2",
+      "bStart": 80.77,
+      "bEnd": 85.25,
+      "bars": 2,
+      "score": null,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 73.468,
+          "tailEnd": 218.068
+        }
+      ],
+      "cutB": [
+        {
+          "start": 0,
+          "tailEnd": 183.9542857142857
+        }
+      ]
+    },
+    "legacy18": {
+      "start": 110.86766893424036,
+      "end": 120.152,
+      "duration": 9.284331065759638,
+      "window": "w0-4",
+      "bStart": 26.93,
+      "bEnd": 35.91,
+      "bars": 4,
+      "score": 0.7946213863693631,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 73.468,
+          "tailEnd": 218.068
+        }
+      ],
+      "cutB": [
+        {
+          "start": 0,
+          "tailEnd": 183.9542857142857
+        }
+      ]
+    },
+    "legacy60": {
+      "start": 110.86766893424036,
+      "end": 120.152,
+      "duration": 9.284331065759638,
+      "window": "w0-4",
+      "bStart": 26.93,
+      "bEnd": 35.91,
+      "bars": 4,
+      "score": 1.0532628325774753,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 73.468,
+          "tailEnd": 218.068
+        }
+      ],
+      "cutB": [
+        {
+          "start": 0,
+          "tailEnd": 183.9542857142857
+        }
+      ]
+    }
+  },
+  {
+    "from": "Straight (Battle Beat)",
+    "to": "Make It Right",
+    "position": 123.72856689342399,
+    "actual": {
+      "start": 125.62401360544219,
+      "end": 130.11,
+      "duration": 4.485986394557823,
+      "window": "w24-2",
+      "bStart": 63.62,
+      "bEnd": 68.14,
+      "bars": 2,
+      "score": null,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 0,
+          "tailEnd": 183.9542857142857
+        }
+      ],
+      "cutB": [
+        {
+          "start": 37.65,
+          "tailEnd": 69.13
+        }
+      ]
+    },
+    "legacy18": {
+      "start": 125.62802721088434,
+      "end": 134.6,
+      "duration": 8.971972789115647,
+      "window": "w16-4",
+      "bStart": 45.5,
+      "bEnd": 54.54,
+      "bars": 4,
+      "score": 0.9043435248173333,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 0,
+          "tailEnd": 183.9542857142857
+        }
+      ],
+      "cutB": [
+        {
+          "start": 37.65,
+          "tailEnd": 69.13
+        }
+      ]
+    },
+    "legacy60": {
+      "start": 125.62802721088434,
+      "end": 134.6,
+      "duration": 8.971972789115647,
+      "window": "w16-4",
+      "bStart": 45.5,
+      "bEnd": 54.54,
+      "bars": 4,
+      "score": 1.1108713907785335,
+      "weightedVocals": 0,
+      "cutA": [
+        {
+          "start": 0,
+          "tailEnd": 183.9542857142857
+        }
+      ],
+      "cutB": [
+        {
+          "start": 37.65,
+          "tailEnd": 69.13
+        }
+      ]
+    }
+  },
+  {
+    "from": "Make It Right",
+    "to": "아무노래",
+    "position": 90.38877097505663,
+    "actual": {
+      "start": 93.052947845805,
+      "end": 97.56,
+      "duration": 4.507052154195011,
+      "window": "w0-2",
+      "bStart": 9.46,
+      "bEnd": 13.9,
+      "bars": 2,
+      "score": null,
+      "weightedVocals": 0.9999999999855231,
+      "cutA": [
+        {
+          "start": 76.572,
+          "tailEnd": 127.92999999999999
+        }
+      ],
+      "cutB": [
+        {
+          "start": 9.25,
+          "tailEnd": 120.276
+        }
+      ]
+    },
+    "legacy18": {
+      "start": 95.31294784580498,
+      "end": 99.82,
+      "duration": 4.507052154195011,
+      "window": "w16-2",
+      "bStart": 45,
+      "bEnd": 49.46,
+      "bars": 2,
+      "score": 0.6303533604225832,
+      "weightedVocals": 0.9999999999855231,
+      "cutA": [
+        {
+          "start": 76.572,
+          "tailEnd": 127.92999999999999
+        }
+      ],
+      "cutB": [
+        {
+          "start": 9.25,
+          "tailEnd": 120.276
+        }
+      ]
+    },
+    "legacy60": {
+      "start": 95.31294784580498,
+      "end": 99.82,
+      "duration": 4.507052154195011,
+      "window": "w16-2",
+      "bStart": 45,
+      "bEnd": 49.46,
+      "bars": 2,
+      "score": 0.8088772581298154,
+      "weightedVocals": 0.9999999999855231,
+      "cutA": [
+        {
+          "start": 76.572,
+          "tailEnd": 127.92999999999999
+        }
+      ],
+      "cutB": [
+        {
+          "start": 9.25,
+          "tailEnd": 120.276
+        }
+      ]
+    }
+  }
+]

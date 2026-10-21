@@ -1,0 +1,29 @@
+{
+  "pair": [
+    "Straight (Battle Beat)",
+    "Make It Right"
+  ],
+  "sampleRate": 44100,
+  "offset": 121.62401360544219,
+  "former": {
+    "start": 125.62401360544219,
+    "end": 130.11,
+    "window": "w24-2",
+    "bars": 2
+  },
+  "repaired": {
+    "start": 125.62802721088434,
+    "end": 134.6,
+    "window": "w16-4",
+    "bars": 4
+  },
+  "commonGain": 0.6,
+  "noPerVersionNormalization": true,
+  "sameCueInterior": {
+    "maxAbsDifference": 0.000001385807991027832,
+    "rmsDifference": 3.646960841090296e-8,
+    "relativeErrorDb": -127.17345921109427,
+    "excludedEdgeSeconds": 0.03,
+    "scope": "Overlap interior only; fixed gain matched. Not a perceptual verdict; device/limiter excluded."
+  }
+}

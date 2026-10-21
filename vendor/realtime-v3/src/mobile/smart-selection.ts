@@ -4,8 +4,9 @@ import {planAutomaticQuality} from '../metric-upstream/continuous/qualityPlan'
 import {sourceBound} from '../metric-upstream/v30/planner'
 import {buildV30Eq} from '../metric-upstream/v30/eq'
 import {nearbyPlan} from './nearby'
+import {fullVocalCollision} from './original-quality'
 
-export const SMART_POLICY='mobile-direction-preference-v2'
+export const SMART_POLICY='mobile-direction-quality-v3'
 export const styleKey=(value:string)=>value.toLocaleLowerCase().replace(/[\s_-]/g,'')
 const hipHopFamily=new Set(['hiphop','boombap','trap','jazzhiphop','grime'])
 export function styleMatches(labels:string[],style:string){
@@ -48,10 +49,10 @@ export function measuredLevel(track:Track,start:number,end:number):number|null {
  }
  return covered>=end-start-.005&&power>0?10*Math.log10(power/covered):null
 }
-export type SmartChoice={plan:Plan;track:Track;score:number;energy:{beforeDb:number;afterDb:number[];deltasDb:number[];targetDeltaDb:number};reason:string}
+export type SmartChoice={nearbyBudget?:number;plan:Plan;track:Track;score:number;energy:{beforeDb:number;afterDb:number[];deltasDb:number[];targetDeltaDb:number};reason:string}
 export function choiceForPlan(a:Track,b:Track,p:Plan,energy:number):SmartChoice|null{
  const level=Math.round(Math.max(1,Math.min(5,energy))),target=(level-3)*1.25
- if(p.window.end+16>b.duration)return null
+ if(p.window.end+16>b.duration||fullVocalCollision(a,b,p))return null
  const before=measuredLevel(a,p.start-4,p.start),after=Array.from({length:4},(_,i)=>measuredLevel(b,p.window.end+i*4,p.window.end+(i+1)*4))
  if(before===null||after.some(x=>x===null))return null
  const afterDb=after as number[],deltas=afterDb.map(x=>x-before)
@@ -77,14 +78,18 @@ export function rankChoices(a:Track,tracks:Track[],position:number,energy:number
  return {best:choices[0]??null,choices,rejected,policy:SMART_POLICY}
 }
 
-export const NEARBY_DIRECTION_POLICY='mobile-direction-nearby-v1'
+export const NEARBY_DIRECTION_POLICY='mobile-direction-formal-nearby-v2'
 export function rankNearbyChoices(a:Track,tracks:Track[],position:number,energy:number){
  const choices:SmartChoice[]=[],rejected:string[]=[]
- for(const b of tracks){
-  const plan=nearbyPlan(a,b,position,new Set(),p=>!!choiceForPlan(a,b,p,energy),p=>choiceForPlan(a,b,p,energy)?.score??-Infinity)
-  const choice=plan?choiceForPlan(a,b,plan,energy):null
-  if(choice)choices.push(choice);else rejected.push(b.id)
+ for(const budget of [18,60]){
+  for(const b of tracks){
+   const plan=nearbyPlan(a,b,position,new Set(),p=>!!choiceForPlan(a,b,p,energy),p=>choiceForPlan(a,b,p,energy)?.score??-Infinity,budget)
+   const choice=plan?choiceForPlan(a,b,plan,energy):null
+   if(choice)choices.push({...choice,nearbyBudget:budget})
+  }
+  if(choices.length)break
  }
- choices.sort((a,b)=>a.plan.start-b.plan.start||b.score-a.score||a.plan.id.localeCompare(b.plan.id))
+ for(const b of tracks)if(!choices.some(c=>c.track.id===b.id))rejected.push(b.id)
+ choices.sort((a,b)=>b.score-a.score||a.plan.start-b.plan.start||a.plan.id.localeCompare(b.plan.id))
  return {best:choices[0]??null,choices,rejected,policy:NEARBY_DIRECTION_POLICY}
 }

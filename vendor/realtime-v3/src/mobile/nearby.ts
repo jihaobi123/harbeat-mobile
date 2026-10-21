@@ -4,32 +4,30 @@ import {nativeSegment} from '../metric-upstream/continuous/segments'
 import type {MetricTransport} from '../metric-upstream/metric-mix/transport'
 import type {Prepared,Method} from '../metric-upstream/metric-mix/types'
 import {canArm} from '../metric-upstream/metric-mix/plan'
+import {fullVocalCollision} from './original-quality'
 import {buildV30Eq} from '../metric-upstream/v30/eq'
-export type NearbyOptions={player:MetricTransport;a:Track;b:Track;signal:AbortSignal;prepare:(plan:Plan,signal:AbortSignal)=>Promise<Prepared>;preload?:(plan:Plan,signal:AbortSignal)=>Promise<unknown>;ready?:{result:Prepared;method:Method};onStatus?:(message:string)=>void;acceptPlan?:(plan:Plan)=>boolean;onCandidate?:(plan:Plan)=>void;scorePlan?:(plan:Plan)=>number;leadSeconds?:number}
+export type NearbyOptions={player:MetricTransport;a:Track;b:Track;signal:AbortSignal;prepare:(plan:Plan,signal:AbortSignal)=>Promise<Prepared>;preload?:(plan:Plan,signal:AbortSignal)=>Promise<unknown>;material?:Plan;ready?:{result:Prepared;method:Method};onStatus?:(message:string)=>void;acceptPlan?:(plan:Plan)=>boolean;onCandidate?:(plan:Plan)=>void;scorePlan?:(plan:Plan)=>number;leadSeconds?:number}
 function wait<T>(operation:Promise<T>,signal:AbortSignal){return new Promise<T>((resolve,reject)=>{
  const cleanup=()=>signal.removeEventListener('abort',abort),abort=()=>{cleanup();reject(signal.reason??new DOMException('已取消','AbortError'))}
  signal.addEventListener('abort',abort,{once:true});operation.then(x=>{cleanup();resolve(x)},e=>{cleanup();reject(e)});if(signal.aborted)abort()
 })}
 const expired=()=>Object.assign(Error('准备期间接点已过，重新寻找后续接点'),{code:'cue_expired'})
-/** Keep every existing gate, then prefer the closest upcoming start. Compare
- * each existing entry window; do not substitute automatic late-song ranking. */
-export function nearbyPlan(a:Track,b:Track,position:number,excluded=new Set<string>(),acceptPlan:(plan:Plan)=>boolean=()=>true,scorePlan?:(plan:Plan)=>number){
+/** Restore formal entry-material selection before comparing future A points.
+ * An earlier fractional timestamp cannot replace its B material or duration. */
+export function nearbyPlan(a:Track,b:Track,position:number,excluded=new Set<string>(),acceptPlan:(plan:Plan)=>boolean=()=>true,scorePlan?:(plan:Plan)=>number,budget?:number){
  const windows=b.windows.filter(w=>{const v=w.variants[a.id];return v&&v.rate>=.95&&v.rate<=1.05&&v.duration>=1&&v.duration<=32&&[2,4,8].includes(w.bars)})
- const candidates=windows.flatMap(w=>planContinuous(a,[{...b,windows:[w]}],position+.25,{kind:'next',targetId:b.id},new Set(),60,false).candidates)
-  candidates.sort((x,y)=>x.start-y.start||y.score-x.score||x.id.localeCompare(y.id))
-  let best:Plan|null=null,bestScore=-Infinity
-  for(const plan of candidates){
-   if(best&&plan.start>best.start)break
-   if(excluded.has(plan.id))continue
-   try{
-    const accepted={...plan,v30Eq:buildV30Eq(a,b,plan)}
-    if(!acceptPlan(accepted))continue
-    if(!scorePlan)return accepted
-    const score=scorePlan(accepted)
-    if(Number.isFinite(score)&&(!best||score>bestScore)){best=accepted;bestScore=score}
-   }catch{excluded.add(plan.id)}
+ for(const limit of budget?[budget]:[18,60]){
+  let remaining=windows
+  while(remaining.length){
+   const result=planContinuous(a,[{...b,windows:remaining}],position,{kind:'next',targetId:b.id},new Set(),limit,false)
+   const anchor=result.best
+   if(!anchor)break
+   const candidates=result.candidates.filter(p=>p.window.id===anchor.window.id&&p.asset.sha256===anchor.asset.sha256&&p.duration===anchor.duration&&p.rate===anchor.rate&&p.start>=position+.5&&!excluded.has(p.id)&&!fullVocalCollision(a,b,p))
+   candidates.sort((x,y)=>(scorePlan?scorePlan(y)-scorePlan(x):y.score-x.score)||x.start-y.start||x.id.localeCompare(y.id))
+   for(const plan of candidates){try{const accepted={...plan,v30Eq:buildV30Eq(a,b,plan)};if(acceptPlan(accepted))return accepted}catch{excluded.add(plan.id)}}
+   remaining=remaining.filter(w=>w.id!==anchor.window.id)
   }
-  if(best)return best
+ }
  return null
 }
 /** One explicit live request: no restart, seek or audition. A missed candidate
@@ -38,11 +36,14 @@ export async function mixNearby(o:NearbyOptions){
  const {player:p,a,b,signal}=o,excluded=new Set<string>()
  const valid=()=>{signal.throwIfAborted();if(p.current?.id!==a.id||!p.playing)throw new DOMException('播放状态已变化，已取消这次混入','AbortError')}
  p.logs.push({kind:'nearby_request',at:new Date().toISOString(),from:a.id,to:b.id,sourcePosition:p.position})
+ let material=o.material
+ const choose=()=>nearbyPlan(a,material?{...b,windows:[material.window]}:b,p.position,excluded,o.acceptPlan,o.scorePlan)
  let lastError:unknown=Error('附近没有通过拍点、人声和速度检查的接点，请换歌或稍后再试')
  for(let attempt=0;attempt<3;attempt++){
   valid()
-  let plan=nearbyPlan(a,b,p.position,excluded,o.acceptPlan,o.scorePlan)
+  let plan=choose()
   if(!plan)throw lastError
+  material??=plan
   const preparedFor=(plan:Plan)=>{
    const r=o.ready?.result
    return attempt===0&&r&&r.plan.from===a.id&&r.plan.to===b.id&&r.plan.windowId===plan.window.id&&Math.abs(r.plan.start-plan.start)<.002&&Math.abs(r.plan.end-plan.end)<.002&&canArm(r.plan,a.id,p.position)?o.ready:null
@@ -54,13 +55,13 @@ export async function mixNearby(o:NearbyOptions){
    // Keep a cold download alive across passing cues; a superseded user request
    // still cancels it. Select the actual nearest cue only after inputs arrive.
    await wait(o.preload(plan,signal),signal);valid()
-   plan=nearbyPlan(a,b,p.position,excluded,o.acceptPlan,o.scorePlan)
+   plan=choose()
    if(!plan)throw lastError
    cached=preparedFor(plan)
   }
   o.onCandidate?.(plan)
   const cue=cached?.result.plan??plan,controller=new AbortController(),cancel=()=>controller.abort(signal.reason)
-  p.logs.push({kind:'nearby_candidate',at:new Date().toISOString(),sourcePosition:p.position,start:cue.start,end:cue.end,reused:!!cached,policy:'nearest-qualified-start'})
+  p.logs.push({kind:'nearby_candidate',at:new Date().toISOString(),sourcePosition:p.position,start:cue.start,end:cue.end,reused:!!cached,policy:'formal-material-quality-v2'})
   signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel()
   const timer=setInterval(()=>{
    if(p.current?.id!==a.id||!p.playing)controller.abort(new DOMException('已取消这次混入','AbortError'))

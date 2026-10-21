@@ -1,0 +1,446 @@
+{
+  "exportedAt": "2026-10-21T03:57:52.714Z",
+  "release": {
+    "id": "metric-mix-mobile-20261021",
+    "sourceCommit": "978df49191450a602f1b473b31f630a687585a8d",
+    "policyVersion": "metric-mix-v1.0"
+  },
+  "automaticPolicy": "mobile-direction-quality-v3",
+  "direction": {
+    "style": "KPOP",
+    "energy": 3,
+    "automatic": true
+  },
+  "logs": [
+    {
+      "kind": "nearby_request",
+      "at": "2026-10-21T03:54:22.786Z",
+      "from": "track-c627eee8f3d2862aa161",
+      "to": "track-56ae507c37842aeb5294",
+      "sourcePosition": 22.046349206349205
+    },
+    {
+      "kind": "nearby_inputs_loading",
+      "at": "2026-10-21T03:54:22.795Z",
+      "sourcePosition": 22.057959183673468,
+      "windowId": "w24-2"
+    },
+    {
+      "kind": "nearby_candidate",
+      "at": "2026-10-21T03:54:22.803Z",
+      "sourcePosition": 22.0637641723356,
+      "start": 22.738208616780042,
+      "end": 27.22,
+      "reused": false,
+      "policy": "formal-material-quality-v2"
+    },
+    {
+      "kind": "nearby_armed",
+      "at": "2026-10-21T03:54:22.840Z",
+      "sourcePosition": 22.101496598639454,
+      "start": 22.738208616780042,
+      "method": "original"
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T03:54:23.475Z",
+      "name": "交接开始",
+      "frame": 1045807,
+      "planId": "049289605e8ced0da1553bbdde624a30e0c34506779a930b0452a4bf298078d9",
+      "requestId": "original",
+      "observedFrame": 1045888,
+      "quantumStart": 1045760,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6000000238418579,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T03:54:27.955Z",
+      "name": "B正文接管",
+      "frame": 1243454,
+      "planId": "049289605e8ced0da1553bbdde624a30e0c34506779a930b0452a4bf298078d9",
+      "requestId": "original",
+      "observedFrame": 1243520,
+      "quantumStart": 1243392,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6148238182067871,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "handoff_complete",
+      "at": "2026-10-21T03:54:28.019Z",
+      "context": 28.25578231292517,
+      "track": "track-56ae507c37842aeb5294",
+      "sourceOffset": 81.01954648526078,
+      "method": "original"
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T03:56:12.813Z",
+      "name": "交接开始",
+      "frame": 5867771,
+      "planId": "00c6efdbb0a1973e0023053406eadde63f2bf5bf70d2863c2015085bcd88df0c",
+      "requestId": "filter",
+      "observedFrame": 5867776,
+      "quantumStart": 5867648,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6148238182067871,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-21T03:56:17.475Z",
+      "name": "B正文接管",
+      "frame": 6073286,
+      "planId": "00c6efdbb0a1973e0023053406eadde63f2bf5bf70d2863c2015085bcd88df0c",
+      "requestId": "filter",
+      "observedFrame": 6073344,
+      "quantumStart": 6073216,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6148238182067871,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "handoff_complete",
+      "at": "2026-10-21T03:56:17.537Z",
+      "context": 137.77560090702949,
+      "track": "track-3fc3a237d246c10f2968",
+      "sourceOffset": 23.68936507936508,
+      "method": "filter"
+    },
+    {
+      "kind": "pause",
+      "at": "2026-10-21T03:57:36.753Z",
+      "context": 216.99337868480725
+    },
+    {
+      "kind": "plan_scheduled",
+      "at": 23.714444444444442,
+      "context": 23.077732426303854,
+      "method": "original",
+      "plan": {
+        "from": "track-c627eee8f3d2862aa161",
+        "to": "track-56ae507c37842aeb5294",
+        "windowId": "w24-2",
+        "start": 22.738208616780042,
+        "end": 27.22,
+        "duration": 4.481791383219955,
+        "rate": 1.0397624999999993,
+        "bStart": 76.3,
+        "bEnd": 80.96,
+        "beatErrorMs": 61.79138321995836
+      },
+      "policyVersion": "browser-v3-original-v1",
+      "end": 28.196235827664395
+    },
+    {
+      "kind": "plan_scheduled",
+      "at": 133.05603174603175,
+      "context": 123.23410430839002,
+      "method": "filter",
+      "plan": {
+        "from": "track-56ae507c37842aeb5294",
+        "to": "track-3fc3a237d246c10f2968",
+        "windowId": "w0-2",
+        "start": 185.81979591836733,
+        "end": 190.48,
+        "duration": 4.660204081632653,
+        "rate": 0.9978124999999998,
+        "bStart": 18.98,
+        "bEnd": 23.63,
+        "lastBarStart": 2.3302040816326723,
+        "bassTiming": {
+          "duckStart": 0.00020408163265983603,
+          "swapStart": 1.7502040816326598,
+          "swapEnd": 2.3302040816326723
+        },
+        "restore": 3.4951555379433326,
+        "beatErrorMs": 8.93255015756722,
+        "vocalExit": null,
+        "vocalBenefit": 0,
+        "eq": {
+          "a": [
+            {
+              "t": 0,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 0.24527389903329752,
+              "low": -9,
+              "mid": 0,
+              "high": -1.7617425486084246
+            },
+            {
+              "t": 0.49054779806659504,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 0.7358216970998925,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 0.9810955961331901,
+              "low": -9,
+              "mid": 0,
+              "high": -1.5343911101362402
+            },
+            {
+              "t": 1.2263694951664876,
+              "low": -9,
+              "mid": 0,
+              "high": -2.270212807236133
+            },
+            {
+              "t": 1.471643394199785,
+              "low": -9,
+              "mid": 0,
+              "high": -1.5343911101362406
+            },
+            {
+              "t": 1.7169172932330825,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 1.9621911922663802,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 2.207465091299678,
+              "low": -9,
+              "mid": 0,
+              "high": -2.1358216970998933
+            },
+            {
+              "t": 2.4527389903329753,
+              "low": -9,
+              "mid": 0,
+              "high": -2.871643394199785
+            },
+            {
+              "t": 2.6980128893662725,
+              "low": -9,
+              "mid": 0,
+              "high": -2.1358216970998933
+            },
+            {
+              "t": 2.94328678839957,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4000000000000004
+            },
+            {
+              "t": 3.188560687432868,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 3.433834586466165,
+              "low": -9,
+              "mid": 0,
+              "high": -1.9187727181652128
+            },
+            {
+              "t": 3.6791084854994627,
+              "low": -9,
+              "mid": 0,
+              "high": -2.1509846869170683
+            },
+            {
+              "t": 3.9243823845327603,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4151629898171754
+            },
+            {
+              "t": 4.169656283566058,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 4.414930182599356,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            },
+            {
+              "t": 4.660204081632653,
+              "low": -9,
+              "mid": 0,
+              "high": -1.4
+            }
+          ],
+          "b": [
+            {
+              "t": 0,
+              "low": -7,
+              "mid": -5,
+              "high": 1.2
+            },
+            {
+              "t": 0.24527389903329752,
+              "low": -7,
+              "mid": -5.3988919667590025,
+              "high": 1.2
+            },
+            {
+              "t": 0.49054779806659504,
+              "low": -7,
+              "mid": -5.753462603878116,
+              "high": 1.2
+            },
+            {
+              "t": 0.7358216970998925,
+              "low": -7.033766994573801,
+              "mid": -6.06371191135734,
+              "high": 1.2
+            },
+            {
+              "t": 0.9810955961331901,
+              "low": -7,
+              "mid": -6.329639889196676,
+              "high": 1.2
+            },
+            {
+              "t": 1.2263694951664876,
+              "low": -7,
+              "mid": -6.551246537396122,
+              "high": 1.2
+            },
+            {
+              "t": 1.471643394199785,
+              "low": -7,
+              "mid": -6.728531855955678,
+              "high": 1.2
+            },
+            {
+              "t": 1.7169172932330825,
+              "low": -7,
+              "mid": -6.861495844875346,
+              "high": 1.2
+            },
+            {
+              "t": 1.9621911922663802,
+              "low": -7.214225381236216,
+              "mid": -6.950138504155125,
+              "high": 1.2
+            },
+            {
+              "t": 2.207465091299678,
+              "low": -7,
+              "mid": -6.9944598337950135,
+              "high": 1.2
+            },
+            {
+              "t": 2.4527389903329753,
+              "low": -7,
+              "mid": -6.994459833795014,
+              "high": 1.2
+            },
+            {
+              "t": 2.6980128893662725,
+              "low": -7,
+              "mid": -6.950138504155125,
+              "high": 1.2
+            },
+            {
+              "t": 2.94328678839957,
+              "low": -7,
+              "mid": -6.861495844875346,
+              "high": 1.2
+            },
+            {
+              "t": 3.188560687432868,
+              "low": -7,
+              "mid": -6.728531855955678,
+              "high": 1.2
+            },
+            {
+              "t": 3.433834586466165,
+              "low": -7,
+              "mid": -6.551246537396122,
+              "high": 1.2
+            },
+            {
+              "t": 3.6791084854994627,
+              "low": -7.337552542109337,
+              "mid": -6.329639889196676,
+              "high": 1.2
+            },
+            {
+              "t": 3.9243823845327603,
+              "low": -8.07337423920923,
+              "mid": -6.063711911357341,
+              "high": 0.6765808603296929
+            },
+            {
+              "t": 4.169656283566058,
+              "low": -8.130193905817173,
+              "mid": -5.753462603878115,
+              "high": 0.06980609418282646
+            },
+            {
+              "t": 4.414930182599356,
+              "low": -7.598337950138502,
+              "mid": -5.398891966759002,
+              "high": 0.6016620498614976
+            },
+            {
+              "t": 4.660204081632653,
+              "low": -7,
+              "mid": -5,
+              "high": 1.2
+            }
+          ]
+        }
+      },
+      "policyVersion": "metric-mix-v1.0",
+      "end": 137.7162358276644
+    }
+  ],
+  "checks": {
+    "realManualNextCompleted": true,
+    "automaticFilterHandoffCompleted": true,
+    "observationsLateFrames": [
+      0,
+      0,
+      0,
+      0
+    ],
+    "suitePassed": 241,
+    "suiteSkipped": 3,
+    "typecheck": "passed",
+    "engineAsset": "metric-engine-BcgKbmcq.js"
+  },
+  "limits": [
+    "Audio timing observations do not prove listening preference.",
+    "Two bars can remain valid when selected by the formal planner.",
+    "The full-duration vocal gate is not semantic phrase-end recognition.",
+    "Offline renderer comparison excludes device and limiter, and 30ms overlap edges.",
+    "Local web preview updated; no new Android build or cloud UI deployment."
+  ]
+}

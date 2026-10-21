@@ -63,11 +63,11 @@ it('allows steady measured energy at high preference and still rejects large jum
  expect(rankNearbyChoices(a,[b],0,5).best).toBeNull()
 })
 
-it('uses the energy preference to break same-start entry-window ties',()=>{
+it('keeps formal entry material fixed when another window better matches energy',()=>{
  const a=track('a'),b=track('b')
  for(const t of [a,b]){t.vocals=[];t.preprocessing!.vocalActivity!.intervals=[]}
  b.windows=[{...b.windows[0],id:'a-flat'},{...b.windows[0],id:'z-loud',start:24,end:32}]
  b.alignment!.bandFrames=[{...b.alignment!.bandFrames[0],end:32},{...b.alignment!.bandFrames[0],start:32,rmsDbfs:-12}]
- expect(rankNearbyChoices(a,[b],0,5).best!.plan.window.id).toBe('z-loud')
+ expect(rankNearbyChoices(a,[b],0,5).best!.plan.window.id).toBe('a-flat')
  expect(rankNearbyChoices(a,[b],0,1).best!.plan.window.id).toBe('a-flat')
 })

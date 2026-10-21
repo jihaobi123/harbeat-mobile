@@ -58,7 +58,7 @@ it('a later prepared render cannot bypass a closer legal baseline cue',async()=>
  expect(s.player.arm.mock.calls[0][0].plan.start).toBeLessThanOrEqual(14)
 })
 
-it('compares start times across different overlap lengths before choosing a cue',()=>{
+it('retains formal material instead of replacing it with an earlier long entry',()=>{
  const a=qualityTrack('a'),b=qualityTrack('b')
  for(const t of [a,b]){t.bpm=60;t.bars=Array.from({length:20},(_,i)=>i*4);t.alignment!.bars=t.bars.map((start,i)=>({index:i,start,end:start+4,lastBeat:start+3,beats:[0,1,2,3].map(x=>start+x),valid:true}))}
  for(const start of [16,20])a.alignment!.bars.find(r=>r.start===start)!.beats[1]+=.2
@@ -66,7 +66,7 @@ it('compares start times across different overlap lengths before choosing a cue'
  for(let i=0;i<2;i++){const aa=a.alignment!.bars.find(r=>r.start===16+i*4)!,bb=b.alignment!.bars[i];bb.beats=aa.beats.map(x=>x-aa.start+bb.start)}
  b.windows=[{...b.windows[0],id:'short',start:0,end:8,bars:2,variants:{a:{url:'short',sha256:'s',duration:8,rate:1,bytes:1}}},{...b.windows[0],id:'long',start:8,end:40,bars:8,variants:{a:{url:'long',sha256:'l',duration:32,rate:1,bytes:1}}}]
  const result=nearbyPlan(a,b,10)
- expect(result?.start).toBe(12);expect(result?.window.id).toBe('long')
+ expect(result?.start).toBe(16);expect(result?.window.id).toBe('short')
 })
 it('keeps a caller acceptance gate when selecting the actual nearby cue',async()=>{
  const s=setup();await mixNearby({...s,acceptPlan:(plan:any)=>plan.start>=20} as any)

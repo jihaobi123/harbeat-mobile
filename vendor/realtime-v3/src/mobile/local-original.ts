@@ -1,5 +1,6 @@
 import type {Track,Plan,Asset} from '../metric-upstream/realtime/planner'
 import {nativeSegments,nativeSegment} from '../metric-upstream/continuous/segments'
+import {fullVocalCollision} from './original-quality'
 import {scheduleV30Eq} from '../metric-upstream/v30/eq'
 import {localBeatGate} from '../metric-upstream/continuous/beatAlignment'
 import {requireBoundVocals} from '../metric-upstream/vocal-overlap/planner'
@@ -9,6 +10,7 @@ export const LOCAL_ORIGINAL='browser-v3-original-v1'
 /** Original verified PCM, existing stretched entry, and eight native B tail ms. */
 export function originalInputs(a:Track,b:Track,plan:Plan){
  requireBoundVocals(a);requireBoundVocals(b)
+ if(fullVocalCollision(a,b,plan))throw Error('整段交接均有人声重叠，不能使用普通原渐混回退')
  if(plan.from!==a.id||plan.to!==b.id||!plan.v30Eq||plan.start<0||plan.end>a.duration||plan.rate<.95||plan.rate>1.05||plan.window.end+.008>b.duration)throw Error('原渐混的来源或接点不一致')
  const timing=localBeatGate(a,b,{start:plan.start,end:plan.end,window:plan.window,rate:plan.rate,duration:plan.duration});if(timing)throw Error(timing)
  const rows=(t:Track,start:number)=>{const first=t.alignment!.bars.findIndex(r=>Math.abs(r.start-start)<=.065);return t.alignment!.bars.slice(first,first+plan.window.bars)}
