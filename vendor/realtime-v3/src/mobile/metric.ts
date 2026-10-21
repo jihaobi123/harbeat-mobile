@@ -72,6 +72,7 @@ export class MetricRun {
  result:Prepared|null=null;method:Method='original'
  recommendation:Record<string,unknown>|null=null
  phase='idle'
+ private refreshTask:Promise<void>|null=null
  private activity:ActivitySession|null=null
  private sessionSequence=0;private cacheSequence=0
  private setCacheController:AbortController|null=null
@@ -115,6 +116,18 @@ export class MetricRun {
   if(!this.player){this.player=this.create(this.base,()=>this.update());this.player.setVolume(this.volume)}
   await initializeFromGesture(this.player)
   return this.player
+ }
+ /** Append published imports without replacing a playing source or its committed clock. */
+ refreshLibrary(){
+  if(this.refreshTask)return this.refreshTask
+  const task=(async()=>{
+   const fresh=readLibraryIndex(await this.read('/listen/library.json',this.base))
+   if(!this.alive)return
+   const ids=new Set(this.index.tracks.map(t=>t.id))
+   for(const entry of fresh.tracks)if(!ids.has(entry.id)){this.index.tracks.push(entry);ids.add(entry.id)}
+   this.update()
+  })().finally(()=>{if(this.refreshTask===task)this.refreshTask=null})
+  this.refreshTask=task;return task
  }
  async setSession(manifest:unknown,name:string){
   const sequence=++this.sessionSequence

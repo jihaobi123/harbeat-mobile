@@ -13,7 +13,7 @@ function setup(read?:any){
   setVolume:vi.fn(),dispose:vi.fn(),export:()=>({logs:[]})}
  const host:any={requestFocus:()=>true,saveSession:vi.fn(),prepareMetric:()=>JSON.stringify({ok:true,data:{id:job}})}
  const load=read??vi.fn(async(path:string)=>path===aid?{track:a}:path===bid?{track:b}:prepared())
- const run=new MetricRun(index,new URL('https://example.test/listen/'),()=>{},host,(_base,changed)=>{p.changed=changed;return p},load);runs.push(run)
+ const run=new MetricRun({...index,tracks:index.tracks.map((t:any)=>({...t}))},new URL('https://example.test/listen/'),()=>{},host,(_base,changed)=>{p.changed=changed;return p},load);runs.push(run)
  return {run,p,host}
 }
 afterEach(()=>{runs.splice(0).forEach(r=>r.dispose());vi.restoreAllMocks();vi.unstubAllGlobals();vi.useRealTimers()})
@@ -83,4 +83,12 @@ it('a slower session load cannot replace the latest reservation or restart after
  const old=new Promise<any>(resolve=>finish=resolve),session=(name:string)=>({packId:name,name,ids:new Set([aid,bid]),results:[],initialTrackId:aid})
  vi.spyOn(ActivitySession,'open').mockImplementationOnce(()=>old).mockResolvedValueOnce(session('new') as any)
  const first=run.setSession({},'old'),rejected=expect(first).rejects.toMatchObject({name:'AbortError'});await run.setSession({},'new');finish(session('old'));await rejected;expect(run.snapshot().activitySet?.packId).toBe('new')
+})
+it('refreshing after an import appends new tracks without replacing audio or an armed handoff',async()=>{
+ const cid='track-'+'f'.repeat(20),entry={...index.tracks[0],id:cid,title:'Imported',detailUrl:cid}
+ const {run,p}=setup(async(path:string)=>path===aid?{track:a}:path===bid?{track:b}:path==='/listen/library.json'?{...index,tracks:[{...index.tracks[0],title:'Changed'},index.tracks[1],entry]}:{track:{...a,id:cid}})
+ await run.start(aid);run.choose(bid);const transition=p.transition={marker:'committed'};await run.refreshLibrary()
+ expect(p.current).toBe(a);expect(p.start).toHaveBeenCalledTimes(1);expect(p.stop).not.toHaveBeenCalled();expect(p.transition).toBe(transition)
+ expect(run.index.tracks.find(t=>t.id===aid)?.title).toBe('A');expect(run.index.tracks.some(t=>t.id===cid)).toBe(true);expect(run.selected).toBe(bid)
+ await run.refreshLibrary();expect(run.index.tracks.filter(t=>t.id===cid)).toHaveLength(1)
 })

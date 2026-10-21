@@ -158,6 +158,7 @@ extension NetworkFlow on AppController {
     }
     cancelDirection();
     await audio.stop();
+    resetMusicWorkspaceState();
     remoteRepository?.onSessionChanged = null;
     remoteRepository?.close();
     repository = _connectedRepository(config);
@@ -193,6 +194,7 @@ extension NetworkFlow on AppController {
     if (audioBusy || applyingDirection || uploading) return;
     cancelDirection();
     await audio.stop();
+    resetMusicWorkspaceState();
     remoteRepository?.onSessionChanged = null;
     remoteRepository?.close();
     repository = MockHarBeatRepository();

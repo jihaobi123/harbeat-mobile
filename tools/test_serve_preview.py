@@ -71,6 +71,28 @@ class ProxyTest(unittest.TestCase):
             self.assertEqual(client.post(self.base+'/listen/set-api/workspaces',json={},headers={'Origin':'https://bad.test'}).status_code,403)
             self.assertEqual(request.call_count,1)
 
+    def test_music_search_query_is_bounded_and_only_private_music_api_gets_bearer(self):
+        upstream=MagicMock(status_code=200,content=b'{"results":[]}',headers={})
+        with patch('serve_preview.requests.request',return_value=upstream) as call:
+            client=requests.Session()
+            self.assertEqual(client.get(self.base+'/listen/set-api/music/search',params={'q':'95 bpm hiphop','scope':'library'},headers={'Authorization':'Bearer '+'a'*43}).status_code,200)
+            self.assertIn('q=95+bpm+hiphop',call.call_args.args[1])
+            for extra in ['q=x&url=http://private','q=x&q=y','q=x&scope=admin']:
+                self.assertEqual(client.get(self.base+'/listen/set-api/music/search?'+extra).status_code,404)
+            self.assertEqual(call.call_count,1)
+
+    def test_music_upload_forwards_only_bounded_multipart_not_an_admin_route(self):
+        upstream=MagicMock(status_code=200,content=b'{"status":"queued"}',headers={})
+        with patch('serve_preview.requests.request',return_value=upstream) as call:
+            def inspect(*args,**kwargs):
+                self.assertIn('multipart/form-data',kwargs['headers']['Content-Type'])
+                self.assertIn(b'small audio',kwargs['data'].read())
+                return upstream
+            call.side_effect=inspect
+            response=requests.Session().post(self.base+'/listen/set-api/music/upload',files={'audio':('clip.mp3',b'small audio')},headers={'Origin':self.base,'Authorization':'Bearer '+'a'*43})
+            self.assertEqual(response.status_code,200)
+            self.assertEqual(call.call_count,1)
+
     def test_bad_media_hash_and_private_paths_are_not_forwarded(self):
         with patch('serve_preview.requests.get') as get:
             client = requests.Session()
@@ -78,6 +100,19 @@ class ProxyTest(unittest.TestCase):
                          '/listen/media/a.flac?sha256=' + 'a' * 64 + '&url=https://untrusted.test']:
                 self.assertEqual(client.get(self.base + path).status_code, 404)
             get.assert_not_called()
+
+    def test_dart_multipart_boundary_with_plus_and_dot_is_forwarded(self):
+        boundary='dart-http-boundary-abc+DEF.123_-'
+        body=('--'+boundary+'\r\nContent-Disposition: form-data; name="audio"; filename="clip.mp3"\r\n\r\nsmall audio\r\n--'+boundary+'--\r\n').encode()
+        upstream=MagicMock(status_code=200,content=b'{"status":"queued"}',headers={})
+        with patch('serve_preview.requests.request',return_value=upstream) as call:
+            def inspect(*args,**kwargs):
+                self.assertEqual(kwargs['data'].read(),body)
+                return upstream
+            call.side_effect=inspect
+            response=requests.Session().post(self.base+'/listen/set-api/music/upload',data=body,headers={'Origin':self.base,'Authorization':'Bearer '+'a'*43,'Content-Type':'multipart/form-data; boundary='+boundary})
+            self.assertEqual(response.status_code,200)
+            self.assertEqual(call.call_count,1)
 
 
 if __name__ == '__main__':

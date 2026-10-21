@@ -11,6 +11,18 @@ import requests
 ROOT = Path(__file__).resolve().parents[1] / "build" / "web"
 
 
+class BoundedUpload:
+    def __init__(self, source, size):
+        self.source, self.size, self.remaining = source, size, size
+    def __len__(self): return self.size
+    def read(self, size=-1):
+        if not self.remaining: return b''
+        chunk=self.source.read(min(self.remaining, self.remaining if size < 0 else size))
+        if not chunk: raise ValueError('incomplete upload')
+        self.remaining-=len(chunk)
+        return chunk
+
+
 class PreviewHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
@@ -25,13 +37,18 @@ class PreviewHandler(SimpleHTTPRequestHandler):
 
     def activity_api(self):
         parsed=urlsplit(self.path)
-        if parsed.query or not re.fullmatch(r'/listen/set-api/(?:health|workspaces|reservations(?:/[a-f0-9]{32}(?:/(?:reuse|prepare))?)?|packs/[a-f0-9]{32}/manifest)',parsed.path):
+        if not re.fullmatch(r'/listen/set-api/(?:health|workspaces|reservations(?:/[a-f0-9]{32}(?:/(?:reuse|prepare))?)?|packs/[a-f0-9]{32}/manifest|music/(?:search|matches|download|playlist|upload|covers|jobs(?:/[a-f0-9]{32}/retry)?))',parsed.path):
             return self.send_error(404)
+        if parsed.query:
+            try: query=parse_qs(parsed.query,keep_blank_values=True,strict_parsing=True)
+            except ValueError:return self.send_error(404)
+            if parsed.path!='/listen/set-api/music/search' or set(query)-{'q','scope','provider'} or any(len(v)!=1 for v in query.values()) or not 1<=len(query.get('q',[''])[0])<=300 or query.get('scope',['library'])[0] not in ('library','discover') or query.get('provider',['all'])[0] not in ('all','netease','qq'):
+                return self.send_error(404)
         if self.headers.get('Host') not in self.allowed_hosts() or self.headers.get('Origin') not in (None, *(f'http://{h}' for h in self.allowed_hosts())):
             return self.send_error(403)
         if self.command=='POST' and self.headers.get('Origin') not in tuple(f'http://{h}' for h in self.allowed_hosts()):return self.send_error(403)
-        is_get=parsed.path.endswith('/health') or parsed.path.endswith('/manifest') or re.fullmatch(r'/listen/set-api/reservations(?:/[a-f0-9]{32})?',parsed.path)
-        is_post=parsed.path.endswith('/workspaces') or parsed.path.endswith('/reuse') or parsed.path.endswith('/prepare') or parsed.path=='/listen/set-api/reservations'
+        is_get=parsed.path in ('/listen/set-api/music/search','/listen/set-api/music/jobs','/listen/set-api/music/covers') or parsed.path.endswith('/health') or parsed.path.endswith('/manifest') or re.fullmatch(r'/listen/set-api/reservations(?:/[a-f0-9]{32})?',parsed.path)
+        is_post=bool(re.fullmatch(r'/listen/set-api/music/(?:matches|download|playlist|upload|jobs/[a-f0-9]{32}/retry)',parsed.path)) or parsed.path.endswith('/workspaces') or parsed.path.endswith('/reuse') or parsed.path.endswith('/prepare') or parsed.path=='/listen/set-api/reservations'
         if not (self.command=='GET' and is_get or self.command=='POST' and is_post):return self.send_error(404)
         headers={'Origin':'https://8.136.120.255','Content-Type':'application/json','Accept':'application/json'}
         bearer=self.headers.get('Authorization','')
@@ -40,10 +57,17 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             headers['Authorization']=bearer
         try:
             size=int(self.headers.get('Content-Length','0'))
-            if size<0 or size>8192:return self.send_error(413)
-            body=self.rfile.read(size) if self.command=='POST' else None
-            if body:json.loads(body)
-            response=requests.request(self.command,'https://8.136.120.255'+parsed.path,headers=headers,data=body,timeout=(12,35),allow_redirects=False)
+            upload=parsed.path=='/listen/set-api/music/upload' and self.command=='POST'
+            if size<0 or size>(101*1024*1024 if upload else 8192):return self.send_error(413)
+            if upload:
+                content_type=self.headers.get('Content-Type','')
+                if not re.fullmatch(r'multipart/form-data; boundary=[A-Za-z0-9_+.\-]{1,100}',content_type):return self.send_error(415)
+                headers['Content-Type']=content_type
+                body=BoundedUpload(self.rfile,size)
+            else:
+                body=self.rfile.read(size) if self.command=='POST' else None
+                if body:json.loads(body)
+            response=requests.request(self.command,'https://8.136.120.255'+self.path,headers=headers,data=body,timeout=(12,180 if upload else 75 if '/music/' in parsed.path else 35),allow_redirects=False)
             self.send_response(response.status_code)
             self.send_header('Content-Type','application/json; charset=utf-8')
             self.end_headers();self.wfile.write(response.content)
@@ -60,7 +84,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             return self.send_error(403)
         parsed = urlsplit(self.path)
         original = re.fullmatch(r'(?:/api/analysis-lab/(reports(?:/[a-f0-9]{64})?|media/[a-f0-9]{64})|/analysis-lab-static/mobile-artwork-v1/(?:catalog\.json|[a-f0-9]{64}\.jpg))', parsed.path)
-        listen = re.fullmatch(r'/listen/(?:library\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?details/[A-Za-z0-9_-]{1,160}\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?media/[A-Za-z0-9_.-]+\.(?:flac|wav)|smart-api/(?:health|rules|jobs/[a-f0-9]{64})|set-media/[a-f0-9]{32}/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav|smart-media/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav)', parsed.path)
+        listen = re.fullmatch(r'/listen/(?:music-covers/[a-f0-9]{64}\.jpg|library\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?details/[A-Za-z0-9_-]{1,160}\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?media/[A-Za-z0-9_.-]+\.(?:flac|wav)|smart-api/(?:health|rules|jobs/[a-f0-9]{64})|set-media/[a-f0-9]{32}/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav|smart-media/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav)', parsed.path)
         query = parse_qs(parsed.query, keep_blank_values=True)
         if not (original or listen) or (parsed.query and (not listen or not re.search(r'/media/|/smart-media/|/set-media/', parsed.path) or set(query) != {'sha256'} or len(query['sha256']) != 1 or not re.fullmatch('[a-f0-9]{64}',query['sha256'][0]))):
             return self.send_error(404)

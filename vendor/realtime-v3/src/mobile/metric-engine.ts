@@ -26,6 +26,7 @@ window.HarBeatEngine={async dispatch({id,method,args}){try{
    case 'setSession':await run.setSession(args.manifest,String(args.name??''));break
    case 'clearSet':run.clearSet();break
    case 'cacheSet':void run.cacheSet(args.manifest).catch(e=>{if((e as Error).name!=='AbortError')error=(e as Error).message;publish()});break
+   case 'refreshLibrary':await run.refreshLibrary();break
    case 'start':await run.start(String(args.trackId));break
    case 'select':run.choose(String(args.trackId));break
    case 'metricPrepare':await run.prepare();break
@@ -46,7 +47,7 @@ window.HarBeatEngine={async dispatch({id,method,args}){try{
    default:throw Error('智能分轨不支持此操作')
   }
  }
- publish();window.HarBeatEngineHost.reply(id,JSON.stringify({ok:true,state:snapshot(),...(method==='prepare'?{tracks:run!.index.tracks.map(info)}:{})}))
+ publish();window.HarBeatEngineHost.reply(id,JSON.stringify({ok:true,state:snapshot(),...(['prepare','refreshLibrary'].includes(method)?{tracks:run!.index.tracks.map(info)}:{})}))
  }catch(e){error=(e as Error).message;publish();window.HarBeatEngineHost.reply(id,JSON.stringify({ok:false,error}))}}}
 if(webHost)window.addEventListener('message',event=>{if(event.source!==parent||event.origin!==origin||typeof event.data!=='string')return;let data;try{data=JSON.parse(event.data)}catch{return}if(data?.token!==token)return;if(data?.harbeat==='metric-command'&&Number.isInteger(data.id)&&typeof data.method==='string')void window.HarBeatEngine.dispatch({id:data.id,method:data.method,args:data.args??{}});else if(data?.harbeat==='metric-lifecycle'&&!data.active)run?.pauseForHost()})
 setInterval(()=>{run?.tick();publish()},250)

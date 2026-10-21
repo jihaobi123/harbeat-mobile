@@ -109,7 +109,9 @@ class ActivityRepository {
   }
 
   Future<Map<String, dynamic>> _request(String method, String path,
-      {Map<String, dynamic>? body, bool authenticated = true}) async {
+      {Map<String, dynamic>? body,
+      bool authenticated = true,
+      Duration timeout = const Duration(seconds: 30)}) async {
     final token = authenticated ? await _workspace() : null;
     final request = http.Request(method, baseUri.resolve('$api$path'))
       ..followRedirects = false;
@@ -124,7 +126,7 @@ class ActivityRepository {
       final response = await _client
           .send(request)
           .then(http.Response.fromStream)
-          .timeout(const Duration(seconds: 30));
+          .timeout(timeout);
       if (response.statusCode == 401) {
         throw const ActivityException('预约访问凭据失效，请恢复预约备份；原预约不会被删除。');
       }
@@ -143,6 +145,62 @@ class ActivityRepository {
       rethrow;
     } catch (_) {
       throw const ActivityException('预约服务未能连接，已保存的预约仍会保留。');
+    }
+  }
+
+  /// Music imports share the same private workspace as reservations.
+  Future<Map<String, dynamic>> musicRequest(String method, String path,
+      {Map<String, dynamic>? body}) {
+    final uri = Uri.parse(path);
+    if (!const ['GET', 'POST'].contains(method) ||
+        uri.hasScheme ||
+        uri.hasAuthority ||
+        !uri.path.startsWith('/music/') ||
+        uri.path.contains('..')) {
+      throw const ActivityException('音乐请求地址无效。');
+    }
+    return _request(method, path,
+        body: body, timeout: const Duration(seconds: 90));
+  }
+
+  Future<Map<String, dynamic>> uploadMusic(Uint8List bytes,
+      {required String filename,
+      required String title,
+      required String style}) async {
+    if (bytes.isEmpty || bytes.length > 64 * 1024 * 1024) {
+      throw const ActivityException('请选择 64 MB 以内的有效音频文件。');
+    }
+    final request =
+        http.MultipartRequest('POST', baseUri.resolve('$api/music/upload'))
+          ..followRedirects = false
+          ..headers.addAll({
+            'Authorization': 'Bearer ${await _workspace()}',
+            'X-Harbeat-Set': '1'
+          })
+          ..fields.addAll({'title': title, 'style': style})
+          ..files.add(
+              http.MultipartFile.fromBytes('audio', bytes, filename: filename));
+    try {
+      final response = await _client
+          .send(request)
+          .then(http.Response.fromStream)
+          .timeout(const Duration(minutes: 3));
+      if (response.bodyBytes.length > 8 * 1024 * 1024) {
+        throw const ActivityException('音乐服务响应过大。');
+      }
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      if (response.statusCode < 200 ||
+          response.statusCode >= 300 ||
+          data is! Map) {
+        throw ActivityException(data is Map && data['detail'] is String
+            ? data['detail']
+            : '音频上传未完成，请重试。');
+      }
+      return Map<String, dynamic>.from(data);
+    } on ActivityException {
+      rethrow;
+    } catch (_) {
+      throw const ActivityException('音频上传连接中断，请检查任务列表后重试。');
     }
   }
 

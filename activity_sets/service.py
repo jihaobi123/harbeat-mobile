@@ -222,7 +222,7 @@ class Store:
         return {**reservation,'pack':{'id':reservation['packId'],**progress}}
 
 
-def create_app(settings: Settings | None = None, *, run_worker=True):
+def create_app(settings: Settings | None = None, *, run_worker=True, music_queue=None, music_upstream=None):
     settings=settings or Settings.from_env()
     store=Store(settings)
 
@@ -233,7 +233,13 @@ def create_app(settings: Settings | None = None, *, run_worker=True):
             worker=Worker(settings,store)
             thread=threading.Thread(target=worker.run_forever,name='activity-set-worker',daemon=True)
             thread.start()
+        if run_worker:
+            music_thread=threading.Thread(target=app.state.music.run_forever,name='music-outbox-monitor',daemon=True)
+            music_thread.start()
         yield
+        if run_worker:
+            app.state.music.stop.set()
+            music_thread.join(timeout=12)
         if run_worker:
             worker.stop.set()
             thread.join(timeout=40)
@@ -244,7 +250,28 @@ def create_app(settings: Settings | None = None, *, run_worker=True):
     @app.middleware('http')
     async def bounded_body(request, call_next):
         # Bound all mutable endpoints before Pydantic parses untrusted JSON.
-        if request.method=='POST':
+        if request.method=='POST' and request.url.path=='/music/upload':
+            # Authenticate before multipart parsing can spool bytes, then bound the ASGI stream.
+            auth=request.headers.get('authorization','')
+            if not store.authenticate(auth[7:] if auth.startswith('Bearer ') else ''):
+                from fastapi.responses import JSONResponse
+                return JSONResponse({'detail':'Workspace credential required'},status_code=401)
+            limit=100*1024**2+65536
+            try: declared=int(request.headers.get('content-length','0'))
+            except ValueError: declared=limit+1
+            if declared>limit:
+                from fastapi.responses import JSONResponse
+                return JSONResponse({'detail':'每个音乐文件最大 100 MB。'},status_code=413)
+            receive=request._receive
+            received=0
+            async def bounded_receive():
+                nonlocal received
+                message=await receive()
+                received+=len(message.get('body',b''))
+                if received>limit:raise HTTPException(413,'每个音乐文件最大 100 MB。')
+                return message
+            request._receive=bounded_receive
+        if request.method=='POST' and request.url.path!='/music/upload':
             raw=b''
             async for chunk in request.stream():
                 raw+=chunk
@@ -318,4 +345,6 @@ def create_app(settings: Settings | None = None, *, run_worker=True):
     def manifest(pack_id: str,ws=Depends(workspace)):
         return store.public_manifest(ws,pack_id)
 
+    from .music import install_music
+    install_music(app,store,workspace,music_queue,music_upstream)
     return app

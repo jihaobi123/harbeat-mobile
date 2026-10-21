@@ -220,6 +220,7 @@ extension ActivityFlow on AppController {
     if (activityRestoring || _disposed) return;
     final generation = ++_activityGeneration;
     activityRestoring = true;
+    resetMusicWorkspaceState();
     activitiesLoading = false;
     activityError = null;
     _changed();

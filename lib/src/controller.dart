@@ -20,6 +20,7 @@ import 'realtime_engine.dart';
 import 'realtime_factory.dart';
 import 'dance_repository.dart';
 import 'activity_repository.dart';
+import 'music_search_repository.dart';
 
 part 'phone_controller.dart';
 part 'network_controller.dart';
@@ -28,6 +29,7 @@ part 'realtime_controller.dart';
 part 'dance_controller.dart';
 part 'smart_controller.dart';
 part 'activity_controller.dart';
+part 'music_search_controller.dart';
 
 class AppController extends ChangeNotifier {
   AppController(this.repository,
@@ -40,6 +42,7 @@ class AppController extends ChangeNotifier {
       RealtimeEngine? realtimeEngine,
       DanceRepository? danceRepository,
       ActivityRepository? activityRepository,
+      MusicSearchRepository? musicSearchRepository,
       RemoteHarBeatRepository Function(BackendConfig)? backendFactory})
       : localStore = localStore ?? SharedPreferencesLocalStore(),
         audio = audio ?? createAudioService(),
@@ -49,7 +52,10 @@ class AppController extends ChangeNotifier {
         mediaStorage = mediaStorage ?? createMediaStorage(),
         realtimeEngine = realtimeEngine ?? createRealtimeEngine(),
         danceRepository = danceRepository ?? DanceRepository(),
-        activityRepository = activityRepository ?? ActivityRepository();
+        activityRepository = activityRepository ?? ActivityRepository() {
+    this.musicSearchRepository =
+        musicSearchRepository ?? MusicSearchRepository(this.activityRepository);
+  }
 
   HarBeatRepository repository;
   final LocalStore localStore;
@@ -61,6 +67,20 @@ class AppController extends ChangeNotifier {
   final RealtimeEngine realtimeEngine;
   final DanceRepository danceRepository;
   final ActivityRepository activityRepository;
+  late final MusicSearchRepository musicSearchRepository;
+  String musicSearchScope = 'library', musicSearchQuery = '';
+  bool musicSearching = false,
+      musicJobsLoading = false,
+      musicImportBusy = false;
+  String? musicSearchError, musicJobsError, musicImportError;
+  MusicSearchResult? musicSearchResult;
+  List<MusicImportJob> musicImportJobs = [];
+  int _musicSearchEpoch = 0, _musicWorkspaceEpoch = 0;
+  bool _musicSharedWorkspaceUsed = false;
+  RemoteHarBeatRepository? _musicRemoteOwner;
+  Timer? _musicSearchTimer;
+  final Set<String> _musicSyncedJobs = {};
+
   List<ActivityReservation> activities = [];
   bool activitiesLoading = false,
       activityBusy = false,
@@ -1001,6 +1021,8 @@ class AppController extends ChangeNotifier {
     ble.removeListener(_bleChanged);
     ble.dispose();
     _searchTimer?.cancel();
+    _musicSearchTimer?.cancel();
+    _musicSearchEpoch++;
     remoteRepository?.close();
     nasRepository?.close();
     danceRepository.close();

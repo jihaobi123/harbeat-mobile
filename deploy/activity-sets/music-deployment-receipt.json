@@ -1,0 +1,51 @@
+{
+  "backup": "/srv/harbeat-listen/activity-sets/deploy/music-bridge-20261021T064943Z",
+  "pythonTests": 36,
+  "healthStatus": 200,
+  "semantic": {
+    "mode": "semantic",
+    "coverage": {
+      "indexed": 159,
+      "total": 159
+    },
+    "resultCount": 100
+  },
+  "libraryTracks": 159,
+  "ownedReuse": {
+    "id": "6af00b1a75444c8380e6ec469d18e44b",
+    "status": "ready",
+    "title": "Ayy Macarena",
+    "message": "已加入实时曲库，可以选择播放。",
+    "trackId": "track-279ccdf918bb538eedf1",
+    "created": 1792565532.6138942,
+    "updated": 1792560806.8647723,
+    "coverUrl": "/listen/music-covers/8f2aeeda33893f3cfef83caa6984118eb193435eb6c773e0591fe41f701383ef.jpg"
+  },
+  "cover": {
+    "url": "/listen/music-covers/8f2aeeda33893f3cfef83caa6984118eb193435eb6c773e0591fe41f701383ef.jpg",
+    "masterSha256": "279ccdf918bb538eedf1a90d206e48460c00676ec84ba588e1910e6c47c73a93",
+    "status": 200,
+    "contentType": "image/jpeg",
+    "bytes": 346476,
+    "sha256": "8f2aeeda33893f3cfef83caa6984118eb193435eb6c773e0591fe41f701383ef",
+    "source": "netease:1403134808",
+    "confirmedAudio": "fangpi:4886072"
+  },
+  "isolation": {
+    "anonymousJobs": 401,
+    "anonymousSearch": 401,
+    "anonymousCovers": 401,
+    "foreignCandidate": 404,
+    "foreignRetry": 404,
+    "invalidAudioUpload": 422
+  },
+  "publishedInputCheckpointMatches": 13,
+  "importsPid": "215335",
+  "activityStatus": "active",
+  "importsWorkerUnchanged": true,
+  "limitations": [
+    "QQ discovery provider currently unavailable; NetEase discovery works",
+    "Legacy playlist parser omits source IDs, rows use confirmed title/artist matching; artwork may remain placeholder",
+    "New audio analysis remains asynchronous; this verification reused existing published audio"
+  ]
+}

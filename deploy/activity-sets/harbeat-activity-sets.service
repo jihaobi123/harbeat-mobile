@@ -13,9 +13,11 @@ Environment=ACTIVITY_GATEWAY_MEDIA=/srv/harbeat-listen/metric-mix/media
 Environment=ACTIVITY_SET_PLANNER=/srv/harbeat-listen/activity-sets/code/set-plan.cjs
 Environment=ACTIVITY_NODE=/usr/bin/node
 Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONPATH=/srv/harbeat-listen/import-service/code
+Environment=LISTEN_IMPORT_ROOT=/srv/harbeat-listen/imports
 Restart=on-failure
 RestartSec=5
-TimeoutStopSec=45
+TimeoutStopSec=60
 CPUQuota=75%
 MemoryMax=800M
 UMask=0077
@@ -23,7 +25,7 @@ NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
 PrivateTmp=true
-ReadWritePaths=/srv/harbeat-listen/activity-sets
+ReadWritePaths=/srv/harbeat-listen/activity-sets /srv/harbeat-listen/imports
 
 [Install]
 WantedBy=multi-user.target
