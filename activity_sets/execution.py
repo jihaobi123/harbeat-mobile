@@ -8,6 +8,93 @@ import time
 from .worker import HASH, IDENTIFIER, PreparationError, confined, finite, media_valid
 
 STEMS=('drums','bass','other','vocals')
+MAX_EDGES=288
+MAX_EDGES_PER_TRACK=24
+REGIONS_PER_TRACK=8
+TARGETS_PER_REGION=3
+
+
+def unavailable_execution_ids(settings):
+    """Exclude known publisher failures, retaining not-yet-published sources.
+
+    A manifest can appear before the next index write. Let its normal identity
+    and media validation decide readiness rather than a stale excluded entry.
+    """
+    root=settings.execution_root
+    if root is None:return set()
+    index=root/'index.json'
+    if not index.is_file():return set()
+    if index.stat().st_size>8*1024*1024:raise PreparationError('invalid_execution_index')
+    value=json.loads(index.read_bytes())
+    excluded=value.get('excluded',[])
+    if value.get('schema')!='harbeat.execution-library.v1' or not isinstance(excluded,list) or len(excluded)>5000:raise PreparationError('invalid_execution_index')
+    ids=set()
+    for row in excluded:
+        if not isinstance(row,dict) or not IDENTIFIER.fullmatch(str(row.get('trackId',''))):raise PreparationError('invalid_execution_index')
+        if not (root/'tracks'/(row['trackId']+'.json')).is_file():ids.add(row['trackId'])
+    return ids
+
+
+def source_identity(source):
+    return {'reportId':source.get('reportId'),**{key:source.get('provenance',{}).get(key) for key in ('runId','masterSha256','reportSha256','vocalSha256')}}
+
+
+def validate_candidate_edges(edges, sources, coverage, tracks=None, *, allow_empty=False):
+    """Check the bounded source-bound v2 wire protocol, never infer musical gates.
+
+    The trusted bundled TS planner supplies beat/vocal decisions; the device
+    reconstructs them again from its current catalog before using a saved edge.
+    """
+    by_id={source['id']:source for source in sources}
+    if not isinstance(edges,list) or len(edges)>MAX_EDGES or not edges and not allow_empty:raise PreparationError('invalid_candidate_edges')
+    signatures=set();outgoing={};regions={};targets={}
+    for edge in edges:
+        if not isinstance(edge,dict):raise PreparationError('invalid_candidate_edge')
+        a,b=by_id.get(edge.get('from')),by_id.get(edge.get('to'))
+        if (a is None or b is None or a['id']==b['id'] or edge.get('version')!='activity-candidate-v2'
+            or not isinstance(edge.get('id'),str) or not 1<=len(edge['id'])<=512
+            or not IDENTIFIER.fullmatch(str(edge.get('windowId','')))
+            or edge.get('kind') not in ('automatic','nearby')
+            or not all(finite(edge.get(key)) for key in ('start','end','duration','rate','bStart','bEnd','score'))):raise PreparationError('invalid_candidate_edge')
+        if (not 0<=edge['start']<edge['end']<=a['duration']+.002 or not 1<=edge['duration']<=32
+            or abs(edge['end']-edge['start']-edge['duration'])>.002 or not .95<=edge['rate']<=1.05
+            or not 0<=edge['bStart']<edge['bEnd']<=b['duration']-16+.002
+            or abs((edge['bEnd']-edge['bStart'])/edge['rate']-edge['duration'])>.002):raise PreparationError('invalid_candidate_geometry')
+        if edge.get('source')!={'a':source_identity(a),'b':source_identity(b)}:raise PreparationError('candidate_source_mismatch')
+        if any(not isinstance(source_identity(s)[k],str) or not 1<=len(source_identity(s)[k])<=512 for s in (a,b) for k in ('reportId','runId')):raise PreparationError('candidate_source_mismatch')
+        if any(not HASH.fullmatch(str(source_identity(s)[k] or '')) for s in (a,b) for k in ('masterSha256','reportSha256','vocalSha256')):raise PreparationError('candidate_source_mismatch')
+        region=min(REGIONS_PER_TRACK-1,int(edge['start']/a['duration']*REGIONS_PER_TRACK))
+        if type(edge.get('region')) is not int or edge['region']!=region:raise PreparationError('invalid_candidate_region')
+        signature=(a['id'],b['id'],edge['windowId'],edge['start'])
+        if signature in signatures:raise PreparationError('duplicate_planner_edge')
+        signatures.add(signature)
+        outgoing[a['id']]=outgoing.get(a['id'],0)+1
+        bucket=(a['id'],region);regions[bucket]=regions.get(bucket,0)+1
+        if b['id'] in targets.setdefault(bucket,set()):raise PreparationError('candidate_target_duplicate')
+        targets[bucket].add(b['id'])
+        if outgoing[a['id']]>MAX_EDGES_PER_TRACK or regions[bucket]>TARGETS_PER_REGION:raise PreparationError('planner_edge_limit')
+        if tracks is not None:
+            target=next(t for t in tracks if t['id']==b['id'])
+            window=next((w for w in target['windows'] if w.get('id')==edge['windowId']),None)
+            asset=window.get('variants',{}).get(a['id']) if window else None
+            if (not asset or any(not finite(window.get(k)) for k in ('start','end'))
+                or abs(window['start']-edge['bStart'])>.002 or abs(window['end']-edge['bEnd'])>.002
+                or not finite(asset.get('rate')) or abs(asset['rate']-edge['rate'])>.00001
+                or not finite(asset.get('duration')) or abs(asset['duration']-edge['duration'])>.002):raise PreparationError('candidate_window_mismatch')
+    if (not isinstance(coverage,dict) or coverage.get('schema')!='harbeat.activity-coverage.v1'
+        or coverage.get('maxEdgesPerTrack')!=MAX_EDGES_PER_TRACK or coverage.get('maxTargetsPerRegion')!=TARGETS_PER_REGION
+        or coverage.get('regionsPerTrack')!=REGIONS_PER_TRACK or not isinstance(coverage.get('tracks'),list)
+        or len(coverage['tracks'])!=len(by_id) or {row.get('trackId') for row in coverage['tracks']}!=set(by_id)):raise PreparationError('invalid_candidate_coverage')
+    for row in coverage['tracks']:
+        source=by_id[row['trackId']];buckets=row.get('regions')
+        if not isinstance(buckets,list) or len(buckets)!=REGIONS_PER_TRACK:raise PreparationError('invalid_candidate_coverage')
+        for index,bucket in enumerate(buckets):
+            if (not isinstance(bucket,dict) or bucket.get('index')!=index or not finite(bucket.get('start')) or not finite(bucket.get('end'))
+                or abs(bucket['start']-index*source['duration']/REGIONS_PER_TRACK)>.002
+                or abs(bucket['end']-(index+1)*source['duration']/REGIONS_PER_TRACK)>.002
+                or type(bucket.get('candidates')) is not int or bucket['candidates']!=regions.get((source['id'],index),0)):raise PreparationError('invalid_candidate_coverage')
+        if type(row.get('complete')) is not bool or row['complete']!=all(bucket['candidates']>0 for bucket in buckets):raise PreparationError('invalid_candidate_coverage')
+    return True
 
 
 def read_execution_track(settings, source):
@@ -15,10 +102,7 @@ def read_execution_track(settings, source):
     if root is None:raise PreparationError('execution_not_configured')
     path=confined(root,'tracks/'+source['id']+'.json')
     if not path.is_file() or path.stat().st_size>4*1024*1024:
-        index=root/'index.json'
-        if index.is_file() and index.stat().st_size<=8*1024*1024:
-            excluded=json.loads(index.read_bytes()).get('excluded',[])
-            if any(x.get('trackId')==source['id'] for x in excluded):raise PreparationError('execution_source_unavailable')
+        if source['id'] in unavailable_execution_ids(settings):raise PreparationError('execution_source_unavailable')
         raise PreparationError('execution_assets_pending')
     value=json.loads(path.read_bytes())
     provenance=source['provenance']
@@ -79,9 +163,14 @@ def read_execution_track(settings, source):
 def validate_execution_pack(settings, pack):
     try:
         execution=pack['execution']
-        if execution.get('schema')!='harbeat.activity-execution.v1':return False
+        if execution.get('schema') not in ('harbeat.activity-execution.v1','harbeat.activity-execution.v2'):return False
+        if not isinstance(execution.get('tracks'),list) or not 1<=len(execution['tracks'])<=12:return False
         saved={t['trackId']:t for t in execution['tracks']}
         sources=pack['sourceFingerprints']
+        if len(saved)!=len(execution['tracks']) or len(sources)!=len(saved) or {s['id'] for s in sources}!=set(saved):return False
+        if execution['schema']=='harbeat.activity-execution.v2':
+            if type(execution.get('energy')) is not int or not 1<=execution['energy']<=5:return False
+            validate_candidate_edges(execution.get('edges'),sources,execution.get('coverage'))
         return set(saved)==set(pack['trackIds']) and all(read_execution_track(settings,s)==saved[s['id']] for s in sources)
     except (KeyError,TypeError,ValueError,OSError):return False
 

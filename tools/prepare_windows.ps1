@@ -64,6 +64,7 @@ Run-Checked $flutter @('pub', 'get', '--enforce-lockfile')
 # --download uses npm ci (package-lock.json), verifies every legacy asset SHA,
 # and copies the complete local executor/worklet bundle into Android assets.
 Run-Checked $python @('tools/build_realtime.py', '--download')
+Run-Checked $python @('tools/build_activity_planner.py')
 Run-Checked $python @('tools/verify_android_bundle.py')
 Run-Checked $python @('-m', 'unittest', 'discover', '-s', 'tools', '-p', 'test_engine_build.py')
 Run-Checked $flutter @('analyze', '--no-pub')

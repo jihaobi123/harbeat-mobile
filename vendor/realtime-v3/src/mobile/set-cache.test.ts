@@ -10,3 +10,8 @@ it('does not count corrupt or quota-rejected downloads as locally ready',async()
 it('bounds reservation cache usage and disallows arbitrary origins',async()=>{const r=await cacheActivityAssets([{...asset,bytes:300*1024*1024}],new URL('https://a.test/listen/'),new AbortController().signal,()=>{},deps());expect(r.completed).toBe(0);await expect(cacheActivityAssets([{...asset,url:'https://evil.test/a'}],new URL('https://a.test/listen/'),new AbortController().signal,()=>{},deps())).rejects.toThrow()})
 
 it('repairs corrupt bytes even when cache writes never overwrite existing keys',async()=>{const d=deps(),key='https://a.test/listen/media/a.flac?sha256='+sha;d.saved.set(key,new Uint8Array([9]).buffer);const write=d.write;d.write=async(k,b)=>{if(!d.saved.has(k))await write(k,b)};const r=await cacheActivityAssets([asset],new URL('https://a.test/listen/'),new AbortController().signal,()=>{},d);expect(r.state).toBe('ready')})
+
+it('reports partial rather than ready when the device available-space budget cannot hold the requested set',async()=>{
+ const d={...deps(),limit:async()=>3},r=await cacheActivityAssets([asset,{...asset,url:'/listen/media/b.flac'}],new URL('https://a.test/listen/'),new AbortController().signal,()=>{},d)
+ expect(r.state).toBe('partial');expect(r.completed).toBe(1);expect(r.total).toBe(2)
+})

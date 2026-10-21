@@ -236,6 +236,7 @@ class Store:
     def view(self, workspace, reservation):
         manifest=self.public_manifest(workspace,reservation['packId'])
         progress={k:manifest[k] for k in ('state','prepared','total','failed','warnings','error','trackIds','initialTrackId')}
+        if manifest.get('candidateVersion'):progress['candidateVersion']=manifest['candidateVersion']
         return {**reservation,'pack':{'id':reservation['packId'],**progress}}
 
 
@@ -338,7 +339,7 @@ def create_app(settings: Settings | None = None, *, run_worker=True, music_queue
 
     @app.post('/reservations/{reservation_id}/prepare')
     def prepare(reservation_id: str,ws=Depends(workspace)):
-        from .worker import valid_pinned_result
+        from .worker import valid_pinned_result,current_sources_match
         from .execution import validate_execution_pack
         reservation=store.reservation(ws,reservation_id)
         # Serialize reset against worker checkpoints; active packs already continue.
@@ -347,13 +348,21 @@ def create_app(settings: Settings | None = None, *, run_worker=True, music_queue
             row=db.execute('SELECT data FROM packs WHERE id=? AND workspace=?',(reservation['packId'],ws)).fetchone()
             pack=json.loads(row['data'])
             corrupted=(not validate_execution_pack(settings,pack)) if pack.get('execution') else any(task.get('state')=='ready' and not valid_pinned_result(settings,pack['packId'],task['result']) for task in pack['tasks'])
-            if pack['state'] not in ('queued','preparing') and (pack['state']!='ready' or corrupted):
+            upgrade=settings.execution_root is not None and pack.get('planned') and pack.get('candidateVersion')!='activity-candidate-v2'
+            changed=pack.get('planned') and not current_sources_match(settings,pack['sourceFingerprints'])
+            if pack['state'] not in ('queued','preparing') and (pack['state']!='ready' or corrupted or upgrade or changed):
                 active=db.execute("SELECT count(*) FROM packs WHERE workspace=? AND state IN ('queued','preparing')",(ws,)).fetchone()[0]
                 global_active=db.execute("SELECT count(*) FROM packs WHERE state IN ('queued','preparing')").fetchone()[0]
                 if active>=settings.max_active or global_active>=20: raise HTTPException(429,'Preparation queue full')
-                for task in pack['tasks']:
-                    if pack.get('execution') or task.get('state')!='ready' or not valid_pinned_result(settings,pack['packId'],task['result']):
-                        task.update(state='pending');task.pop('result',None);task.pop('error',None);task.pop('jobId',None)
+                if upgrade or changed:
+                    # Explicit prepare requests migrate old sets. Reading/reusing
+                    # an existing ready set never mutates its preparation.
+                    pack.update(replanTrackIds=list(pack['trackIds']),replanInitialTrackId=pack.get('initialTrackId'),planned=False,tasks=[],total=0)
+                    for key in ('execution','candidateVersion','coverage','executionRetryAt'):pack.pop(key,None)
+                else:
+                    for task in pack['tasks']:
+                        if pack.get('execution') or task.get('state')!='ready' or not valid_pinned_result(settings,pack['packId'],task['result']):
+                            task.update(state='pending');task.pop('result',None);task.pop('error',None);task.pop('jobId',None)
                 pack.update(state='queued',error=None,prepared=sum(t['state']=='ready' for t in pack['tasks']),failed=0)
                 pack['warnings']=[w for w in pack['warnings'] if w!='some_edges_failed']
                 db.execute('UPDATE packs SET state=?,data=? WHERE id=?',('queued',json.dumps(pack,separators=(',',':')),pack['packId']))

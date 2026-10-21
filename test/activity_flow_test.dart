@@ -9,7 +9,8 @@ import 'package:harbeat/src/local_store.dart';
 import 'package:harbeat/src/repository.dart';
 import 'metric_player_test.dart' show MetricEngine;
 
-ActivityReservation reservation() => ActivityReservation.fromJson({
+ActivityReservation reservation({bool multiCue = true}) =>
+    ActivityReservation.fromJson({
       'id': 'a' * 32,
       'packId': 'b' * 32,
       'name': '周末练习',
@@ -19,6 +20,7 @@ ActivityReservation reservation() => ActivityReservation.fromJson({
       'energy': 3,
       'trackLimit': 8,
       'pack': {
+        if (multiCue) 'candidateVersion': 'activity-candidate-v2',
         'state': 'ready',
         'prepared': 2,
         'total': 2,
@@ -78,8 +80,92 @@ class SwitchingActivities extends FakeActivities {
   }
 }
 
+class LegacyActivities extends FakeActivities {
+  @override
+  Future<ActivityReservation> get(String id) async =>
+      reservation(multiCue: false);
+}
+
+class ReplacementActivities extends FakeActivities {
+  ReplacementActivities({required this.replaced});
+  final bool replaced;
+  ActivityReservation get value => ActivityReservation.fromJson({
+        ...reservation().json,
+        'pack': {
+          ...reservation().pack,
+          'warnings': [
+            'retained_track_unavailable:original-song',
+            if (replaced) 'retained_track_replacement:new-song'
+          ]
+        }
+      });
+  @override
+  Future<ActivityReservation> get(String id) async => value;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  for (final replaced in [true, false]) {
+    testWidgets(
+        'saved set replan clearly reports unavailable and replacement songs ($replaced)',
+        (tester) async {
+      final repo = ReplacementActivities(replaced: replaced);
+      final c = AppController(MockHarBeatRepository(),
+          activityRepository: repo,
+          localStore: MemoryLocalStore(),
+          audio: MemoryAudioService());
+      addTearDown(c.dispose);
+      c.activities = [repo.value];
+      await tester.pumpWidget(
+          MaterialApp(home: ActivityDetailScreen(c, repo.value.id)));
+      expect(find.textContaining('1 首原曲暂不可用'), findsOneWidget);
+      expect(find.textContaining(replaced ? '已补入 1 首替代曲' : '尚未找到替代曲'),
+          findsOneWidget);
+      expect(find.textContaining('retained_track_'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    });
+  }
+  testWidgets(
+      'an old ready reservation offers explicit preparation of more cues',
+      (tester) async {
+    final c = AppController(MockHarBeatRepository(),
+        activityRepository: LegacyActivities(),
+        localStore: MemoryLocalStore(),
+        audio: MemoryAudioService());
+    addTearDown(c.dispose);
+    c.activities = [reservation(multiCue: false)];
+    await tester.pumpWidget(
+        MaterialApp(home: ActivityDetailScreen(c, reservation().id)));
+    expect(find.textContaining('云端旧版已就绪'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('准备更多接点'), 200);
+    final upgrade =
+        tester.widget<TextButton>(find.widgetWithText(TextButton, '准备更多接点'));
+    expect(upgrade.onPressed, isNotNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets(
+      'downloaded set assets do not claim decoded nearby cues are ready',
+      (tester) async {
+    final c = AppController(MockHarBeatRepository(),
+        activityRepository: FakeActivities(),
+        localStore: MemoryLocalStore(),
+        audio: MemoryAudioService());
+    addTearDown(c.dispose);
+    c.activities = [reservation()];
+    c.activityCaches[reservation().packId] = {
+      'state': 'ready',
+      'completed': 4,
+      'total': 4
+    };
+    await tester.pumpWidget(
+        MaterialApp(home: ActivityDetailScreen(c, reservation().id)));
+    expect(find.textContaining('云端已备齐'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('素材已下载 · 4 / 4 个片段'), 200);
+    expect(find.text('素材已下载 · 4 / 4 个片段'), findsOneWidget);
+    expect(find.textContaining('附近接点已就绪'), findsNothing);
+    expect(find.textContaining('解码和变速'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
   test(
       'reservation playback binds its prepared set before starting the selected first song',
       () async {

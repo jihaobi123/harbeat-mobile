@@ -1,0 +1,162 @@
+{
+  "schema": "harbeat.reservation-prewarm-acceptance.v1",
+  "version": "0.2.1+16",
+  "candidateSample": {
+    "tracks": 6,
+    "edges": 104,
+    "cloudPlanningSeconds": 2.596,
+    "cloudPeakRssKiB": 141048,
+    "openIncludingTrackFetchMs": 8194,
+    "regionsWithGaps": [
+      "Attention: region 0"
+    ]
+  },
+  "manual": {
+    "events": [
+      {
+        "kind": "device_plan_scheduled",
+        "at": 40.96879818594104,
+        "context": 39.613242630385486,
+        "method": "filter",
+        "plan": {
+          "from": "track-d2d58531421de0eb9690",
+          "to": "track-831997216a86a4914ef9",
+          "windowId": "w0-2",
+          "start": 40.83718820861678,
+          "end": 45.34,
+          "duration": 4.50281179138322,
+          "rate": 1.0038166666666666,
+          "bStart": 9.26,
+          "bEnd": 13.78,
+          "beatErrorMs": 37.18820861678296
+        },
+        "end": 45.47160997732426,
+        "preparation": "device-shared-source-wsola-v1",
+        "tempoAfterTakeover": "native",
+        "renderRequested": false,
+        "metrics": {
+          "bassOverlap": 0.2636234611608993,
+          "otherOverlap": 0.34042577338576907,
+          "bassDifference": 0.44876027354650216,
+          "otherDifference": 0.5606534217737322,
+          "vocalSafe": false,
+          "vocalBenefit": 0,
+          "definitions": {
+            "overlap": "125ms digital RMS and original gain balance; not a clash probability",
+            "difference": "Observed-window 32768-sample Hann FFT chroma cosine, matching metric_mix/features.py; not chord truth",
+            "renderStats": "Not generated: real-time headroom protection and audio observation required"
+          }
+        }
+      },
+      {
+        "kind": "nearby_armed",
+        "at": "2026-10-21T10:01:43.140Z",
+        "sourcePosition": 39.481632653061226,
+        "start": 40.83718820861678,
+        "method": "filter"
+      },
+      {
+        "kind": "handoff_complete",
+        "at": "2026-10-21T10:01:49.058Z",
+        "context": 45.537233560090705,
+        "track": "track-831997216a86a4914ef9",
+        "sourceOffset": 13.845623582766441,
+        "method": "filter"
+      }
+    ],
+    "reusedAtSourcePosition": 39.481632653061226,
+    "cloudRenderRequests": 0
+  },
+  "automatic": {
+    "events": [
+      {
+        "kind": "device_plan_scheduled",
+        "at": 194.9575283446712,
+        "context": 184.98467120181405,
+        "method": "bass_filter",
+        "plan": {
+          "from": "track-831997216a86a4914ef9",
+          "to": "track-642bd1ac0da727a3b53b",
+          "windowId": "w16-4",
+          "start": 163.26591836734693,
+          "end": 172.28,
+          "duration": 9.014081632653062,
+          "rate": 1.0136359375,
+          "bStart": 64.47,
+          "bEnd": 73.607,
+          "beatErrorMs": 48.60942228992826
+        },
+        "end": 203.97160997732428,
+        "preparation": "device-shared-source-wsola-v1",
+        "tempoAfterTakeover": "native",
+        "renderRequested": false,
+        "metrics": {
+          "bassOverlap": 0.3233164272852013,
+          "otherOverlap": 0.46042562327543557,
+          "bassDifference": 0.7327070608475331,
+          "otherDifference": 0.44562409324043417,
+          "vocalSafe": false,
+          "vocalBenefit": 0,
+          "definitions": {
+            "overlap": "125ms digital RMS and original gain balance; not a clash probability",
+            "difference": "Observed-window 32768-sample Hann FFT chroma cosine, matching metric_mix/features.py; not chord truth",
+            "renderStats": "Not generated: real-time headroom protection and audio observation required"
+          }
+        }
+      },
+      {
+        "kind": "handoff_complete",
+        "at": "2026-10-21T10:04:36.338Z",
+        "context": 203.9785941043084,
+        "track": "track-642bd1ac0da727a3b53b",
+        "sourceOffset": 73.61398412698412,
+        "method": "bass_filter"
+      }
+    ],
+    "cloudRenderRequests": 0
+  },
+  "checks": {
+    "typescriptPassed": 301,
+    "typescriptSkipped": 3,
+    "flutterPassed": 156,
+    "pythonPassed": 57,
+    "engineBuildPassed": 6,
+    "androidGeneratedFiles": 260,
+    "androidSourceInputs": 143,
+    "apkBuilt": false
+  },
+  "limits": {
+    "mixedPcmBytes": 100663296,
+    "sourcePcmBytes": 33554432,
+    "encodedReservationBytes": 1073741824,
+    "encodedReservationFiles": 2048
+  },
+  "limitations": [
+    "Browser real-song checks do not establish Android device or Bluetooth performance",
+    "Sparse cloud regions do not promise a qualified cue after every possible click",
+    "A cold or expired stem cue retains same-cue original mixing fallback; cached availability cannot move the selected cue"
+  ],
+  "liveReservation": {
+    "state": "ready",
+    "tracks": 4,
+    "candidateCount": 72,
+    "failed": 0,
+    "warnings": [],
+    "activitySessionAccepted": {
+      "accepted": true,
+      "packId": "0f1c2ff846d146d8b74b683f2eed11d3",
+      "trackCount": 4,
+      "prepared": 72,
+      "renderedResults": 0,
+      "assetCount": 282,
+      "initialTrackId": "track-6bcba4d577699a35104c"
+    }
+  },
+  "deployedWeb": {
+    "version": "0.2.1+16",
+    "release": "reservation-prewarm-mobile-20261021",
+    "staticChecks": "index/JS/engine and all WASM 200 with expected MIME",
+    "productUI": "Existing retained set opened, nearby ready status displayed, Next completed a handoff, playback paused after verification",
+    "directory": "reservation-prewarm-final-20261021T101602Z"
+  }
+}

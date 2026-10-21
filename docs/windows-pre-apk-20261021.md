@@ -2,7 +2,11 @@
 
 Mac 和 Windows 都能编译 Android APK。本轮按约定准备源码、预处理接口、App 音频执行器和构建素材，不生成新 APK。Windows 上仍需完成 Gradle 构建和手机试听；网页测试不能代替 Android WebView 的真实音频性能测试。
 
-本轮在 Mac 上已执行 `python tools/build_realtime.py`：原有 218 个音频文件共 282,540,060 字节逐个校验通过，TypeScript 和两个 Vite 引擎构建通过。`python tools/verify_android_bundle.py` 核对了 260 个生成文件及 136 个源码输入；新特征工作线程、变速工作线程和 MPL 许可都进入 Android 素材目录。构建工具的 6 项测试通过。尚未运行 Windows PowerShell 脚本、Android Gradle 编译或手机验收。
+当前版本为 **0.2.1+16**，包含预约多接点、端侧滚动预热和独立预约音频缓存。Windows 脚本会重新生成预约 planner 与音频引擎；请使用本分支最新源码，避免只更新 Flutter 页面而留下旧执行器。
+
+0.2.0+15 在 Mac 上已执行 `python tools/build_realtime.py`：原有 218 个音频文件共 282,540,060 字节逐个校验通过，TypeScript 和两个 Vite 引擎构建通过。该轮 `python tools/verify_android_bundle.py` 核对了 260 个生成文件及 136 个源码输入；特征工作线程、变速工作线程和 MPL 许可进入 Android 素材目录。具体数量属于当时记录，新版以重新生成后的验证结果为准。尚未运行 Windows PowerShell 脚本、Android Gradle 编译或手机验收。
+
+0.2.1+16 已重新构建并核对 260 个生成文件、143 个源码输入；构建工具 6 项测试通过，未编译 APK。
 
 ## 环境
 

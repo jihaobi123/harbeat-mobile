@@ -100,8 +100,59 @@ void main() {
       'pack': {'state': 'ready', 'prepared': 4, 'total': 4}
     });
     expect(r.ended, true);
-    expect(r.preparationLabel, contains('已准备'));
+    expect(r.preparationLabel, contains('云端旧版已就绪'));
+    expect(r.hasMultipleCueCandidates, false);
+    r.json['pack']['candidateVersion'] = 'activity-candidate-v2';
+    expect(r.hasMultipleCueCandidates, true);
+    expect(r.preparationLabel, contains('云端已备齐'));
     expect(r.packId, 'b' * 32);
+  });
+  test('encoded cache completion and live nearby readiness stay separate', () {
+    expect(
+        ActivityCacheStatus({'state': 'ready', 'completed': 4, 'total': 4})
+            .label,
+        '素材已下载 · 4 / 4 个片段');
+    expect(
+        ActivityCacheStatus({'state': 'partial', 'completed': 2, 'total': 4})
+            .label,
+        '已下载部分素材 · 2 / 4 个片段');
+    final warm = NearbyCueStatus({
+      'sourcePosition': 30,
+      'limit': 3,
+      'preparing': 1,
+      'ready': [
+        {'from': 'a', 'start': 20},
+        {'from': 'a', 'start': 30.2},
+        {'from': 'a', 'start': 40},
+        {'from': 'b', 'start': 50},
+      ]
+    }, currentTrackId: 'a');
+    expect(warm.label, '附近接点已就绪 1 个');
+    expect(warm.preparing, true);
+    expect(
+        NearbyCueStatus({
+          'sourcePosition': 30,
+          'limit': 1,
+          'ready': [
+            {'from': 'a', 'start': 40},
+            {'from': 'a', 'start': 50}
+          ]
+        }, currentTrackId: 'a')
+            .readyCount,
+        1);
+    expect(NearbyCueStatus({}, currentTrackId: 'a').label, '播放后准备附近接点');
+    expect(
+        NearbyCueStatus({'preparing': 1, 'ready': []}, currentTrackId: 'a')
+            .label,
+        '正在准备附近接点');
+    expect(
+        NearbyCueStatus({
+          'state': 'preparing',
+          'preparing': {'from': 'a', 'start': 40},
+          'ready': []
+        }, currentTrackId: 'a')
+            .label,
+        '正在准备附近接点');
   });
   test('authentication failure never silently replaces the saved workspace',
       () async {

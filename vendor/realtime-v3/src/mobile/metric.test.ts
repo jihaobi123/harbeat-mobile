@@ -1,6 +1,7 @@
 import {afterEach,expect,it,vi} from 'vitest'
 import {MetricRun,validatePrepared,nativeMetricJob} from './metric'
 import * as devicePreparation from './device-prepare'
+import * as selection from './smart-selection'
 vi.mock('../metric-upstream/continuous/beatAlignment',()=>({planContinuous:()=>({best:{start:30,window:{id:'w1'},rate:1}})}))
 const aid='track-'+'a'.repeat(20),bid='track-'+'b'.repeat(20),job='c'.repeat(64)
 const a:any={id:aid,title:'A',duration:120,bpm:100,native:{url:'/listen/media/a.flac'},windows:[],bars:[]}
@@ -29,6 +30,56 @@ it('the device executor prepares locally without submitting a rendered transitio
  host.prepareMetric=vi.fn(()=>{throw Error('per-pair rendering forbidden')})
  await run.start(aid);run.choose(bid);await run.prepare()
  expect(local).toHaveBeenCalledTimes(1);expect(host.prepareMetric).not.toHaveBeenCalled();expect(run.result?.schema).toBe('harbeat.device-execution-plan.v1');expect(run.snapshot().result?.available).toContain('original')
+})
+it('automatic and manual device preparation reuse the exact source-bound result',async()=>{
+ const {run,p,host}=setup(),result=prepared(),plan:any={id:'same',start:30,end:34,rate:1,window:{id:'w1',start:2,end:6}}
+ p.localExecution=true;p.logs=[];p.ctx.sampleRate=44100
+ const local=vi.spyOn(devicePreparation,'prepareDevice').mockResolvedValue(result)
+ host.prepareMetric=vi.fn(()=>{throw Error('per-pair cloud render forbidden')})
+ await run.start(aid)
+ expect(await (run as any).automaticResult(p,a,b,plan,new AbortController().signal)).toBe(result)
+ expect(await (run as any).livePreparation(p,a,b)(plan,new AbortController().signal)).toBe(result)
+ expect(local).toHaveBeenCalledTimes(1);expect(host.prepareMetric).not.toHaveBeenCalled()
+ const changed={...a,provenance:{masterSha256:'new'}}
+ await (run as any).automaticResult(p,changed,b,plan,new AbortController().signal)
+ expect(local).toHaveBeenCalledTimes(2)
+})
+it('reservation warming prepares nearby qualified plans, expires them on seek, and never schedules audio itself',async()=>{
+ const {run,p}=setup(),result=prepared(),plan:any={id:'same',from:aid,to:bid,score:1,start:30,end:34,rate:1,window:{id:'w1',start:2,end:6}}
+ p.localExecution=true;p.logs=[];p.ctx.sampleRate=44100;p.arm=vi.fn();p.seek=vi.fn(async(position:number)=>{p.position=position})
+ const local=vi.spyOn(devicePreparation,'prepareDevice').mockResolvedValue(result)
+ vi.spyOn(selection,'choiceForPlan').mockImplementation((_a,_b,plan)=>({plan,track:b,score:1}) as any)
+ await run.start(aid);p.playing=true
+ ;(run as any).activity={ids:new Set([aid,bid]),packId:'set',name:'test',results:[],candidates:()=>[{track:b,plan}]}
+ ;(run as any).warmNearby()
+ await vi.waitFor(()=>expect(run.snapshot().warm.ready).toHaveLength(1))
+ expect(local).toHaveBeenCalledTimes(1);expect(p.arm).not.toHaveBeenCalled();expect(run.snapshot().warm.ready[0].start).toBe(30)
+ p.position=40;expect(run.snapshot().warm.ready).toHaveLength(0)
+ await run.seek(5);expect(run.snapshot().warm.ready).toHaveLength(0)
+})
+it('a foreground request attaches to a matching warm job before cancelling background work',async()=>{
+ const {run,p}=setup(),result=prepared(),plan:any={id:'same',from:aid,to:bid,score:1,start:30,end:34,rate:1,window:{id:'w1',start:2,end:6}}
+ p.localExecution=true;p.logs=[];p.ctx.sampleRate=44100
+ let finish!:(r:any)=>void,signal!:AbortSignal
+ const local=vi.spyOn(devicePreparation,'prepareDevice').mockImplementation(async(_p,_a,_b,_plan,_base,s)=>{signal=s;return await new Promise(r=>finish=r)})
+ await run.start(aid)
+ const warm=new AbortController();(run as any).warmController=warm;(run as any).warmRunning=true
+ const first=(run as any).deviceResult(p,a,b,plan,warm.signal,true),cancelled=expect(first).rejects.toMatchObject({name:'AbortError'})
+ await vi.waitFor(()=>expect(finish).toBeTypeOf('function'))
+ const second=(run as any).automaticResult(p,a,b,plan,new AbortController().signal)
+ await cancelled;expect(signal.aborted).toBe(false);finish(result);expect(await second).toBe(result);expect(local).toHaveBeenCalledTimes(1)
+})
+it('an unrelated foreground request cancels a cold warm job rather than queuing behind its full DSP',async()=>{
+ const {run,p}=setup(),result=prepared(),plan:any={id:'warm',from:aid,to:bid,start:30,end:34,rate:1,window:{id:'w1',start:2,end:6}}
+ p.localExecution=true;p.logs=[];p.ctx.sampleRate=44100
+ let inner!:AbortSignal
+ const local=vi.spyOn(devicePreparation,'prepareDevice').mockImplementation(async(_p,_a,_b,cue,_base,s)=>cue.id==='warm'?await new Promise((_resolve,reject)=>{inner=s;s.addEventListener('abort',()=>reject(s.reason),{once:true})}):result)
+ await run.start(aid)
+ const warm=new AbortController();(run as any).warmController=warm;(run as any).warmRunning=true
+ const first=(run as any).deviceResult(p,a,b,plan,warm.signal,true),cancelled=expect(first).rejects.toMatchObject({name:'AbortError'})
+ await vi.waitFor(()=>expect(inner).toBeTruthy())
+ expect(await (run as any).automaticResult(p,a,b,{...plan,id:'foreground',start:32},new AbortController().signal)).toBe(result)
+ await cancelled;expect(inner.aborted).toBe(true);expect(local).toHaveBeenCalledTimes(2)
 })
 it('cancel ignores a late cloud result without stopping the current song',async()=>{
  let done!:(x:any)=>void,entered!:(x?:any)=>void;const waiting=new Promise(r=>entered=r)

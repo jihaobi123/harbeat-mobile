@@ -42,6 +42,37 @@ class MetricEngine extends FakeRealtime {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  testWidgets(
+      'nearby cue readiness follows current playback rather than cloud preparation',
+      (tester) async {
+    final engine = MetricEngine();
+    late AppController c;
+    await tester.runAsync(() async {
+      c = await setup(engine, ProbeAudio());
+      await c.enableV3(mode: 'metric');
+      await c.togglePlayback();
+    });
+    c.v3State['metric'] = {
+      ...c.metricState,
+      'warm': {
+        'sourcePosition': 10,
+        'limit': 3,
+        'preparing': 1,
+        'ready': [
+          {'from': c.v3State['current']['id'], 'start': 20},
+          {'from': c.v3State['current']['id'], 'start': 5},
+        ]
+      }
+    };
+    await tester.pumpWidget(
+        MaterialApp(theme: HB.theme, home: Scaffold(body: PhoneMixScreen(c))));
+    await tester.scrollUntilVisible(find.text('附近接点已就绪 1 个'), 300);
+    expect(find.text('附近接点已就绪 1 个'), findsOneWidget);
+    expect(find.textContaining('点击切歌后，也会等到'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    c.dispose();
+  });
   test(
       'metric mode owns playback, selection does not restart it, current changes stop first',
       () async {

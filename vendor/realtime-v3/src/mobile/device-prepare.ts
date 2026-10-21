@@ -7,14 +7,24 @@ import type {MetricTransport} from './device-transport'
 
 export type DevicePCM={a:Record<string,AudioBuffer>;b:Record<string,AudioBuffer>}
 const pcm=new Map<string,DevicePCM>()
+const pcmPins=new Map<string,number>()
+const pcmBindings=new Map<string,[string,string]>()
+const executionIdentities=new Map<string,string>()
+export const executionTrackIdentity=(id:string)=>executionIdentities.get(id)??''
+const identityFor=(value:ExecutionTrack)=>JSON.stringify([value.manifestSha256,value.profile.sha256,Object.entries(value.stems).map(([stem,entry])=>[stem,entry?.sourceSha256])])
+const dropPCM=(id:string)=>{pcm.delete(id);pcmBindings.delete(id)}
 const sourceCache=new Map<string,Record<string,AudioBuffer>>()
 const byteSize=(value:Record<string,AudioBuffer>)=>Object.values(value).reduce((sum,b)=>sum+b.length*b.numberOfChannels*4,0)
 function keepPCM(result:Prepared,value:DevicePCM){
  const bytes=byteSize(value.a)+byteSize(value.b),limit=96*1024*1024
  if(bytes>limit)throw Error('本次声部窗口超过设备缓冲预算，请选择较短接点')
- while([...pcm.values()].reduce((sum,v)=>sum+byteSize(v.a)+byteSize(v.b),0)+bytes>limit&&pcm.size)pcm.delete(pcm.keys().next().value!)
+ while([...pcm].reduce((sum,[id,v])=>sum+(id===result.id?0:byteSize(v.a)+byteSize(v.b)),0)+bytes>limit||pcm.size>=3&&!pcm.has(result.id)){const victim=[...pcm.keys()].find(id=>id!==result.id&&!pcmPins.has(id));if(!victim)throw Error('当前交接占用设备缓冲，稍后继续预热');dropPCM(victim)}
  pcm.set(result.id,value)
 }
+export const hasDevicePCM=(result:Prepared)=>{if(!isDevicePrepared(result))return true;const binding=pcmBindings.get(result.id);return pcm.has(result.id)&&(!binding||binding[0]===executionTrackIdentity(result.plan.from)&&binding[1]===executionTrackIdentity(result.plan.to))}
+export function releaseDevicePCM(result:Prepared){if(!pcmPins.has(result.id))dropPCM(result.id)}
+export function pinDevicePCM(result:Prepared){if(!isDevicePrepared(result))return()=>{};getDevicePCM(result);pcmPins.set(result.id,(pcmPins.get(result.id)??0)+1);let released=false;return()=>{if(released)return;released=true;const count=(pcmPins.get(result.id)??1)-1;if(count)pcmPins.set(result.id,count);else pcmPins.delete(result.id)}}
+export function deviceBufferUsage(){return{pcmBytes:[...pcm.values()].reduce((sum,v)=>sum+byteSize(v.a)+byteSize(v.b),0),pcmLimit:96*1024*1024,sourceBytes:[...sourceCache.values()].reduce((sum,v)=>sum+byteSize(v),0),sourceLimit:32*1024*1024}}
 const manifests=new Map<string,ExecutionTrack>()
 const profiles=new Set<string>()
 export async function verifyExecutionProfile(manifest:ExecutionTrack,base:URL,signal:AbortSignal){
@@ -29,13 +39,13 @@ export async function verifyExecutionProfile(manifest:ExecutionTrack,base:URL,si
  signal.throwIfAborted();profiles.add(entry.sha256)
  if(!cached&&cache)try{await cache.put(url.href,new Response(bytes,{headers:{'Content-Type':'application/json'}}))}catch{}
 }
-export function rememberExecutionTrack(value:ExecutionTrack,t:Track){const v=validateExecutionTrack(value,t);manifests.set(t.id+':'+v.sourceSha256+':'+v.reportSha256,v)}
-export function getDevicePCM(result:Prepared){const value=pcm.get(result.id);if(!value)throw Error('本机分轨缓冲已释放，请重新准备当前接点');return value}
+export function rememberExecutionTrack(value:ExecutionTrack,t:Track){const v=validateExecutionTrack(value,t);manifests.set(t.id+':'+v.sourceSha256+':'+v.reportSha256,v);executionIdentities.set(t.id,identityFor(v))}
+export function getDevicePCM(result:Prepared){const value=pcm.get(result.id);if(!value||!hasDevicePCM(result))throw Error('本机分轨缓冲已释放或分析版本已变化，请重新准备当前接点');pcm.delete(result.id);pcm.set(result.id,value);return value}
 export async function loadPrepared(p:MetricTransport,result:Prepared,b:Track,signal:AbortSignal){if(isDevicePrepared(result)){getDevicePCM(result);await p.cache.load(nativeSegment(b,result.plan.bEnd).asset,signal);return}await Promise.all([p.cache.load(result.assets[result.decision.recommended]!,signal),p.cache.load(nativeSegment(b,result.plan.bEnd).asset,signal)])}
 async function manifest(t:Track,base:URL,signal:AbortSignal){
  const key=t.id+':'+t.provenance?.masterSha256+':'+t.provenance?.reportSha256,hit=manifests.get(key);if(hit)return hit
  const controller=new AbortController(),cancel=()=>controller.abort(signal.reason);signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel();const timer=setTimeout(()=>controller.abort(),8000)
- try{const response=await fetch(new URL('/listen/execution/tracks/'+t.id+'.json',base),{signal:controller.signal});if(!response.ok)throw Error('分轨目录尚未发布 '+response.status);const value=validateExecutionTrack(await response.json(),t);manifests.set(key,value);return value}finally{clearTimeout(timer);signal.removeEventListener('abort',cancel)}
+ try{const response=await fetch(new URL('/listen/execution/tracks/'+t.id+'.json',base),{signal:controller.signal});if(!response.ok)throw Error('分轨目录尚未发布 '+response.status);const value=validateExecutionTrack(await response.json(),t);rememberExecutionTrack(value,t);return value}finally{clearTimeout(timer);signal.removeEventListener('abort',cancel)}
 }
 async function slice(p:MetricTransport,segments:Segment[],start:number,duration:number,signal:AbortSignal){
  const end=start+duration,selected=segments.filter(s=>s.end>start&&s.start<end),sr=p.ctx.sampleRate,n=Math.round(duration*sr),out=p.ctx.createBuffer(2,n,sr)
@@ -95,7 +105,7 @@ export async function prepareDevice(p:MetricTransport,a:Track,b:Track,plan:Plan,
  // B's extra 350 ms is source padding for WSOLA only, not an altered cue.
  const extra=Math.abs(plan.rate-1)>1e-10?.35:0,sourceDuration=(plan.duration+.008)*plan.rate+extra
  const buffers:DevicePCM={a:{master:await slice(p,nativeSegments(a),plan.start,plan.duration,signal)},b:{master:await slice(p,nativeSegments(b),plan.window.start,sourceDuration,signal)}}
- let available=true
+ let available=true,bindings:[string,string]|undefined
  const stemLoad=new AbortController(),cancelStems=()=>stemLoad.abort(signal.reason)
  signal.addEventListener('abort',cancelStems,{once:true});if(signal.aborted)cancelStems()
  // A nearest-cue action never waits for cold stems past its source deadline.
@@ -105,12 +115,13 @@ export async function prepareDevice(p:MetricTransport,a:Track,b:Track,plan:Plan,
  try{
   const [am,bm]=await Promise.all([manifest(a,base,stemLoad.signal),manifest(b,base,stemLoad.signal)])
   await Promise.all([verifyExecutionProfile(am,base,stemLoad.signal),verifyExecutionProfile(bm,base,stemLoad.signal)])
+  bindings=[identityFor(am),identityFor(bm)]
   for(const stem of ['bass','other','vocals'] as const)if(am.stems[stem]&&bm.stems[stem]){
    buffers.a[stem]=await slice(p,am.stems[stem]!.segments,plan.start,plan.duration,stemLoad.signal);buffers.b[stem]=await slice(p,bm.stems[stem]!.segments,plan.window.start,sourceDuration,stemLoad.signal)
   }
- }catch(error){signal.throwIfAborted();available=false;p.logs.push({kind:'device_stems_unavailable',reason:(error as Error).message,from:a.id,to:b.id});buffers.a={master:buffers.a.master};buffers.b={master:buffers.b.master}}
+ }catch(error){signal.throwIfAborted();available=false;bindings=undefined;p.logs.push({kind:'device_stems_unavailable',reason:(error as Error).message,from:a.id,to:b.id});buffers.a={master:buffers.a.master};buffers.b={master:buffers.b.master}}
  finally{clearInterval(deadline);signal.removeEventListener('abort',cancelStems);stemLoad.abort()}
- const sourceKey=JSON.stringify([b.provenance,plan.window.start,sourceDuration,plan.rate,p.ctx.sampleRate,Object.keys(buffers.b)])
+ const sourceKey=JSON.stringify([b.provenance,bindings?.[1],plan.window.start,sourceDuration,plan.rate,p.ctx.sampleRate,Object.keys(buffers.b)])
  const hit=sourceCache.get(sourceKey)
  buffers.b=hit??await workerStretch(buffers.b,p,plan.rate,Math.round((plan.duration+.008)*p.ctx.sampleRate),signal);signal.throwIfAborted()
  if(!hit&&byteSize(buffers.b)<=32*1024*1024){sourceCache.clear();sourceCache.set(sourceKey,buffers.b)}
@@ -124,7 +135,8 @@ export async function prepareDevice(p:MetricTransport,a:Track,b:Track,plan:Plan,
  const methods={} as Prepared['decision']['methods'];const bass=(metrics.bassOverlap??0)>=.25&&metrics.bassDifference!==null,other=(metrics.otherOverlap??0)>=.25&&metrics.otherDifference!==null,bg=28*(metrics.bassOverlap??0)+12*(metrics.bassDifference??0),fg=24*(metrics.otherOverlap??0)+8*(metrics.otherDifference??0)
  for(const [method,eligible,benefit,cost] of [['original',true,0,0],['bass',bass,bg,6],['filter',other,fg,4],['yield',other&&(metrics.otherOverlap??0)>=.45&&(metrics.otherDifference??0)>=.65,30*(metrics.otherOverlap??0)+14*(metrics.otherDifference??0),11],['vocal',metrics.vocalSafe&&metrics.vocalBenefit>=.2,30*metrics.vocalBenefit,6],['bass_filter',bass&&other&&bg+fg-12-Math.max(bg-6,fg-4)>=6,bg+fg,12]] as [Method,boolean,number,number][]){methods[method]={name:names[method],eligible,score:eligible?50+benefit-cost:null,reason:method==='original'?'保留选点、EQ、人声检查的本机渐混参照':eligible?'本机同源分轨与窗口指标满足暂定门槛':'缺少已校验分轨或未达到暂定门槛',processingCost:cost,levelPenalty:0}}
  const sorted=(Object.keys(methods) as Method[]).filter(m=>methods[m].eligible).sort((a,b)=>methods[b].score!-methods[a].score!),best=sorted[0],recommended=best!=='original'&&methods[best].score!-50>=4?best:'original'
- const raw=new TextEncoder().encode(JSON.stringify({version:EXECUTION_VERSION,a:a.provenance,b:b.provenance,plan:plan.id,start:plan.start,controls,metrics})),id=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',raw))).map(x=>x.toString(16).padStart(2,'0')).join('')
+ if(bindings&&(bindings[0]!==executionTrackIdentity(a.id)||bindings[1]!==executionTrackIdentity(b.id)))throw Error('准备期间分轨分析版本已更新，请重新准备当前接点')
+ const raw=new TextEncoder().encode(JSON.stringify({version:EXECUTION_VERSION,a:a.provenance,b:b.provenance,bindings,plan:plan.id,start:plan.start,controls,metrics})),id=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',raw))).map(x=>x.toString(16).padStart(2,'0')).join('')
  const result:DevicePrepared={schema:'harbeat.device-execution-plan.v1',id,status:'ready',policyVersion:EXECUTION_VERSION,codeVersion:EXECUTION_VERSION,plan:{from:a.id,to:b.id,windowId:plan.window.id,start:plan.start,end:plan.end,duration:plan.duration,rate:plan.rate,bStart:plan.window.start,bEnd:plan.window.end,beatErrorMs:inputs.beatErrorMs},metrics,decision:{recommended,explanation:methods[recommended].reason,methods,policy:{version:EXECUTION_VERSION,maximumDuration:32,maximumRate:1.05,minimumRate:.95,renderedStats:false,localHeadroom:true},limitations:['同源共享 WSOLA 选择保持分轨同步；与 ffmpeg atempo 参考可能存在音色差异','本机指标与未渲染输出的排序需要试听校准；不代表已完成手机性能验收']},assets:{},sourceProof:{a:a.provenance,b:b.provenance,stemsAvailable:available},stats:{rendered:false},execution:{schema:'harbeat.device-execution-plan.v1',plan,controls,sourceFingerprints:{a:a.provenance,b:b.provenance},preservePitch:true,tempoAfterTakeover:'native',preparation:'device-shared-source-wsola-v1'}}
- keepPCM(result,buffers);await p.cache.load(inputs.body.asset,signal);p.logs.push({kind:'device_plan_ready',planId:id,method:recommended,renderRequested:false,preservePitch:true,sourceCacheHit:!!hit,bufferBytes:byteSize(buffers.a)+byteSize(buffers.b),at:new Date().toISOString()});return result
+ keepPCM(result,buffers);if(bindings)pcmBindings.set(result.id,bindings);await p.cache.load(inputs.body.asset,signal);p.logs.push({kind:'device_plan_ready',planId:id,method:recommended,renderRequested:false,preservePitch:true,sourceCacheHit:!!hit,bufferBytes:byteSize(buffers.a)+byteSize(buffers.b),at:new Date().toISOString()});return result
 }

@@ -2,7 +2,7 @@ import type {Prepared,Method} from '../metric-upstream/metric-mix/types'
 import type {Track} from '../metric-upstream/realtime/planner'
 const hash=/^[a-f0-9]{64}$/
 export const METHODS:Method[]=['original','bass','filter','yield','vocal','bass_filter']
-export const METRIC_RELEASE={id:'device-execution-mobile-20261021',sourceCommit:'978df49191450a602f1b473b31f630a687585a8d',policyVersion:'metric-mix-v1.0'}
+export const METRIC_RELEASE={id:'reservation-prewarm-mobile-20261021',sourceCommit:'978df49191450a602f1b473b31f630a687585a8d',policyVersion:'metric-mix-v1.0'}
 export function validatePrepared(value:Prepared,a:Track,b:Track,start:number,windowId:string,packId?:string):Prepared{
  if(value?.schema!=='harbeat.metric-mix-result.v1'||value.status!=='ready'||!hash.test(value.id)||value.policyVersion!==METRIC_RELEASE.policyVersion||!hash.test(value.codeVersion))throw Error('混音结果版本不匹配')
  const p=value.plan

@@ -156,7 +156,7 @@ def compact_track(track):
     return out
 
 
-def read_library(settings, styles):
+def read_library(settings, styles, retained_ids=()):
     release=settings.site.resolve()
     index=json.loads((release/'library.json').read_text())
     rows=index.get('tracks')
@@ -167,10 +167,16 @@ def read_library(settings, styles):
     def matches(labels,style):
         key=style_key(style)
         return any(style_key(label)==key or key=='hiphop' and style_key(label) in {'hiphop','boombap','trap','jazzhiphop','grime'} for label in labels)
-    eligible=[r for r in rows if r.get('playStatus')=='ready' and r.get('mixStatus')=='ready' and any(matches(r.get('styleLabels',[]),style) for style in styles)]
+    retained_set=set(retained_ids)
+    eligible=[r for r in rows if r.get('playStatus')=='ready' and r.get('mixStatus')=='ready' and (r['id'] in retained_set or any(matches(r.get('styleLabels',[]),style) for style in styles))]
+    if settings.execution_root is not None:
+        from .execution import unavailable_execution_ids
+        unavailable=unavailable_execution_ids(settings)
+        eligible=[row for row in eligible if row['id'] not in unavailable]
     # Stable bounded style pool; CLI chooses the connected subset without changing
     # upstream music thresholds. Nonmatching rows are never passed as substitutes.
-    eligible=sorted(eligible,key=lambda r:r['id'])[:64]
+    retained_order={tid:index for index,tid in enumerate(retained_ids)}
+    eligible=sorted(eligible,key=lambda r:(0,retained_order[r['id']]) if r['id'] in retained_order else (1,r['id']))[:64]
     tracks=[];sources=[]
     for row in eligible:
         tid=row['id'];detail=row.get('detailUrl','')
@@ -275,24 +281,43 @@ class Worker:
         return response.json()
 
     def plan_pack(self,pack):
-        tracks,sources,truncated=read_library(self.settings,pack['request']['styles'])
-        plan=self.planner({'tracks':tracks,'styles':pack['request']['styles'],'energy':pack['request']['energy'],'maxTracks':pack['request']['trackLimit']})
+        retained=pack.get('replanTrackIds')
+        if retained is not None and (not isinstance(retained,list) or not 1<=len(retained)<=pack['request']['trackLimit'] or len(set(retained))!=len(retained) or any(not isinstance(t,str) or not IDENTIFIER.fullmatch(t) for t in retained)):raise PreparationError('invalid_retained_tracks')
+        tracks,sources,truncated=read_library(self.settings,pack['request']['styles'],retained or ())
+        data={'tracks':tracks,'styles':pack['request']['styles'],'energy':pack['request']['energy'],'maxTracks':pack['request']['trackLimit']}
+        if retained:data['retainedTrackIds']=retained
+        plan=self.planner(data)
         selected=plan.get('trackIds');initial=plan.get('initialTrackId');edges=plan.get('edges');summaries=plan.get('tracks')
         source_ids={s['id'] for s in sources}
-        if not isinstance(selected,list) or not selected or len(selected)>pack['request']['trackLimit'] or any(not isinstance(t,str) for t in selected) or len(set(selected))!=len(selected) or not set(selected)<=source_ids or initial not in selected or not isinstance(edges,list) or len(edges)>24 or not isinstance(summaries,list) or {t.get('id') for t in summaries}!=set(selected): raise PreparationError('invalid_planner_output')
+        v2=plan.get('schema')=='harbeat.activity-candidates.v2'
+        # Source execution reuses per-song assets; only the legacy WAV worker is
+        # limited to two expensive renders per source. v2 edges are small data.
+        edge_limit=288 if v2 and self.settings.execution_root is not None else 24
+        if not isinstance(selected,list) or not selected or len(selected)>pack['request']['trackLimit'] or any(not isinstance(t,str) for t in selected) or len(set(selected))!=len(selected) or not set(selected)<=source_ids or initial not in selected or not isinstance(edges,list) or len(edges)>edge_limit or not isinstance(summaries,list) or {t.get('id') for t in summaries}!=set(selected): raise PreparationError('invalid_planner_output')
+        if retained and (not (set(retained)&source_ids)<=set(selected) or len(selected)>len(retained)):raise PreparationError('retained_tracks_changed')
+        if retained and pack.get('replanInitialTrackId') in selected:initial=pack['replanInitialTrackId']
+        if v2:
+            if self.settings.execution_root is None:raise PreparationError('candidate_execution_required')
+            from .execution import validate_candidate_edges
+            validate_candidate_edges(edges,[s for s in sources if s['id'] in selected],plan.get('coverage'),tracks,allow_empty=True)
         signatures=set();outgoing={}
         for edge in edges:
             if not isinstance(edge,dict) or edge.get('from') not in selected or edge.get('to') not in selected or edge['from']==edge['to'] or not IDENTIFIER.fullmatch(str(edge.get('windowId',''))) or not finite(edge.get('start')) or not 0<=edge['start']<=86400: raise PreparationError('invalid_planner_edge')
             signature=(edge['from'],edge['to'],edge['windowId'],edge['start'])
             if signature in signatures: raise PreparationError('duplicate_planner_edge')
             signatures.add(signature);outgoing[edge['from']]=outgoing.get(edge['from'],0)+1
-            if outgoing[edge['from']]>2:raise PreparationError('planner_edge_limit')
+            if outgoing[edge['from']]>(24 if v2 else 2):raise PreparationError('planner_edge_limit')
         warnings=plan.get('warnings',[])
-        if not isinstance(warnings,list) or any(not isinstance(w,str) or len(w)>300 for w in warnings) or len(warnings)>24:raise PreparationError('invalid_planner_warnings')
-        if len(selected)<pack['request']['trackLimit']:warnings.append('insufficient_candidates')
+        if not isinstance(warnings,list) or any(not isinstance(w,str) or len(w)>300 for w in warnings) or len(warnings)>48:raise PreparationError('invalid_planner_warnings')
+        if retained:
+            warnings=[*warnings,*('retained_track_unavailable:'+tid for tid in retained if tid not in selected),*('retained_track_replacement:'+tid for tid in selected if tid not in retained)]
+        if len(selected)<(len(retained) if retained else pack['request']['trackLimit']):warnings.append('insufficient_candidates')
         if any(t not in outgoing for t in selected):warnings.append('tracks_without_exit')
         if truncated:warnings.append('candidate_pool_bounded')
         pack.update(trackIds=selected,initialTrackId=initial,tracks=summaries,sourceFingerprints=[s for s in sources if s['id'] in selected],warnings=warnings,total=len(edges),tasks=[{'edge':e,'state':'pending'} for e in edges],planned=True)
+        if v2:pack.update(candidateVersion='activity-candidate-v2',coverage=plan['coverage'])
+        pack['warnings']=list(dict.fromkeys(pack['warnings']))
+        pack.pop('replanTrackIds',None);pack.pop('replanInitialTrackId',None)
         self.store.save_pack(pack)
 
     def run_once(self):
@@ -301,6 +326,14 @@ class Worker:
         pack.update(state='preparing',error=None)
         self.store.save_pack(pack)
         try:
+            if pack.get('planned') and self.settings.execution_root is not None:
+                from .execution import unavailable_execution_ids
+                if set(pack['trackIds'])&unavailable_execution_ids(self.settings):
+                    # A publisher exclusion may arrive after this pack selected
+                    # its songs. Only queued/preparing packs reach this worker;
+                    # ready reservations are retained until explicit prepare.
+                    pack.update(replanTrackIds=list(pack['trackIds']),replanInitialTrackId=pack.get('initialTrackId'),planned=False,tasks=[],total=0,prepared=0,failed=0)
+                    for key in ('execution','candidateVersion','coverage','executionRetryAt'):pack.pop(key,None)
             if not pack.get('planned'):self.plan_pack(pack)
             if not current_sources_match(self.settings,pack['sourceFingerprints']):raise PreparationError('source_revision_changed')
             if self.settings.execution_root is not None:
@@ -317,7 +350,9 @@ class Worker:
                     raise
                 if not current_sources_match(self.settings,pack['sourceFingerprints']):raise PreparationError('source_revision_changed')
                 if not pack['tasks']:raise PreparationError('no_qualified_edges')
-                pack['execution']={'schema':'harbeat.activity-execution.v1','tracks':execution_tracks,'edges':[t['edge'] for t in pack['tasks']]}
+                v2=pack.get('candidateVersion')=='activity-candidate-v2'
+                pack['execution']={'schema':'harbeat.activity-execution.v2' if v2 else 'harbeat.activity-execution.v1','tracks':execution_tracks,'edges':[t['edge'] for t in pack['tasks']]}
+                if v2:pack['execution'].update(coverage=pack['coverage'],energy=pack['request']['energy'])
                 for task in pack['tasks']:task.update(state='ready')
                 pack.update(state='ready',prepared=len(pack['tasks']),failed=0,error=None)
                 pack.pop('executionRetryAt',None)
