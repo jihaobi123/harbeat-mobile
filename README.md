@@ -54,7 +54,9 @@ python tools/serve_preview.py --port 8766
 
 ### Android 测试安装包
 
-历史安装包：`outputs/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk`，版本 0.1.12 (14)，对应旧执行方式。本次 0.2.0+15 只提交源码与构建前校验，不包含新 APK。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`；Windows 构建后仍需验证手机音频性能。
+历史安装包：[下载 Android ARM64 APK 0.1.12 (14)](https://github.com/jihaobi123/harbeat-mobile/releases/download/v0.1.12-preview-20261020/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk)，[预览版本发布页](https://github.com/jihaobi123/harbeat-mobile/releases/tag/v0.1.12-preview-20261020)提供安装包与 SHA-256 校验文件。该 APK 固定于源码 `406525a`，对应旧执行方式，不包含后续最近接点修复及本机分轨执行；历史构建结果见 [交付说明](docs/unified-playback-20261020.md)。
+
+本次 **0.2.0+15** 只提交源码与构建前校验，不包含新 APK。Windows 应从本分支最新源码重新构建并验证手机音频性能。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；安装时使用保留数据的安全安装器。旧 APK 作为 GitHub Release 附件发布，不存入 Git 历史。
 
 默认构建使用并存预览包名，只有显式 `-PharbeatPreview=false` 才使用原包名。此次修复了应用未启用 Kotlin 插件、audio_session 0.2.4 与关闭内置 Kotlin 的兼容问题，以及网络配置缺少 includeSubdomains 属性的发布检查错误。Gradle 限制为 1536MB 堆、1 个 worker 和 2 个可用处理器，避免本机原生内存不足。
 

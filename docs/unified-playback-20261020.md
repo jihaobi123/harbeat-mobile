@@ -89,7 +89,8 @@ python tools/serve_preview.py --port 8766
 - Flutter Web release、锁定引擎构建与 Android ARM64 release 构建通过。网络会话无页面脚本错误；已保存 390×844 浏览器实测截图，截图反映网页，并非手机截图。
 - 本地固定上游/Origin/请求大小/路径限制回归 4 项通过；风格目录请求同样不携带账号凭据，不跟随重定向。
 - 安装包：`outputs/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk`，**332,499,696 字节**，SHA-256 `7f3ca0551ff25dc90ac328f8d85f5b94cf33184a9c1e9195e10ebb32bb1bcb3f`。
-- 已核对预览包名、版本 `0.1.12 (14)`、最低 API 24、ARM64 Flutter 程序、内置最新引擎 `metric-engine-COwDPD2f.js` 和上游来源清单；`apksigner verify` 通过，使用原 Preview 调试签名。APK 保存在本机，不提交进 Git；没有连接或安装手机。
+- 已核对预览包名、版本 `0.1.12 (14)`、最低 API 24、ARM64 Flutter 程序、内置最新引擎 `metric-engine-COwDPD2f.js` 和上游来源清单；`apksigner verify` 通过，使用原 Preview 调试签名。APK 作为 GitHub Release 附件发布，不提交进 Git 历史；没有连接或安装手机。
+- [GitHub 预览版本发布页](https://github.com/jihaobi123/harbeat-mobile/releases/tag/v0.1.12-preview-20261020)：提供 [Android ARM64 APK](https://github.com/jihaobi123/harbeat-mobile/releases/download/v0.1.12-preview-20261020/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk) 和同名 `.sha256` 校验文件。发布标签 `v0.1.12-preview-20261020` 固定源码提交 `406525a74ee9ab37f8a912df2063e997081fccfc`；后续下载说明更新不改变该安装包。
 - [统一播放器截图](../outputs/UnifiedAuto-player-20261020.jpg)、[方向与下一首截图](../outputs/UnifiedAuto-direction-20261020.jpg)。测试结束已暂停播放。
 
 
