@@ -1,0 +1,363 @@
+{
+  "schema": "harbeat.android-deployment.v1",
+  "date": "2026-10-21",
+  "version": "0.2.1+16",
+  "source": {
+    "upstreamCommit": "3753c61",
+    "buildCommit": "0f510807abd3fb9474743910fb6891c4045d608b",
+    "androidBridgeFix": "b973928d5cb41eb27b014f1340729c2640ea64e3"
+  },
+  "apk": {
+    "package": "com.example.harbeat.preview",
+    "version": "0.2.1+16",
+    "bytes": 333256451,
+    "sha256": "b03baa8b0440efabc7fca84d96d1df7ad1a821de0bba8a54aa48fce950cbdb39",
+    "verifiedAssets": 260,
+    "sourceInputs": 143,
+    "bundleScripts": [
+      "assets/feature-worker-CkTivJv8.js",
+      "assets/metric-engine-DbUbEAg3.js",
+      "assets/stretch-worker-DS0kl2LE.js"
+    ],
+    "file": "HarBeat-Preview-0.2.1-20261021-LocalExecution-arm64.apk"
+  },
+  "installation": {
+    "result": "Success",
+    "method": "adb install -r",
+    "samePreviewSignatureVerified": true,
+    "previousApkBackedUp": true,
+    "deviceModel": "2106118C",
+    "androidVersion": "12",
+    "api": 31,
+    "abi": "arm64-v8a",
+    "webView": "141.0.7390.122"
+  },
+  "checks": {
+    "flutterTestsPassed": 156,
+    "flutterAnalyze": "No issues found",
+    "typescriptTestsPassed": 301,
+    "typescriptTestsSkipped": 3,
+    "engineBuildTestsPassed": 6,
+    "androidBridgeContractTestsPassed": 1,
+    "webBuild": "passed",
+    "androidArm64ReleaseBuild": "passed"
+  },
+  "session": {
+    "sha256": "c52eda6bfc0642a233c56fa64969781306d95d86cedcd31afe9f4f92cc6d68ee",
+    "bytes": 646693,
+    "rawExportStoredLocally": true,
+    "logEventCounts": {
+      "native_chunk": 17,
+      "track_start": 1,
+      "device_stems_unavailable": 38,
+      "device_plan_ready": 38,
+      "device_rolling_ready": 57,
+      "nearby_request": 1,
+      "nearby_inputs_loading": 1,
+      "nearby_candidate": 1,
+      "device_plan_scheduled": 3,
+      "nearby_armed": 1,
+      "audio_observation": 6,
+      "handoff_complete": 3,
+      "device_prepared_reused": 24,
+      "pause": 1
+    },
+    "direction": {
+      "style": "",
+      "energy": 3,
+      "automatic": true
+    },
+    "trackStartCount": 1,
+    "handoffCount": 3,
+    "handoffs": [
+      {
+        "kind": "handoff_complete",
+        "at": "2026-10-21T10:52:28.748Z",
+        "context": 82.76462585034014,
+        "track": "track-86141f55b6b1219e1c38",
+        "sourceOffset": 31.459365079365085,
+        "method": "original",
+        "trackTitle": "Straight (Battle Beat)"
+      },
+      {
+        "kind": "handoff_complete",
+        "at": "2026-10-21T10:54:29.870Z",
+        "context": 203.88281179138323,
+        "track": "track-49d4ac83da372eab5722",
+        "sourceOffset": 70.73755102040819,
+        "method": "original",
+        "trackTitle": "24K Magic (1)"
+      },
+      {
+        "kind": "handoff_complete",
+        "at": "2026-10-21T10:56:44.429Z",
+        "context": 338.4395464852608,
+        "track": "track-d2d58531421de0eb9690",
+        "sourceOffset": 18.174285714285734,
+        "method": "original",
+        "trackTitle": "HIPHOP"
+      }
+    ],
+    "scheduledPlans": [
+      {
+        "kind": "device_plan_scheduled",
+        "at": 78.21820861678005,
+        "context": 73.27637188208617,
+        "method": "original",
+        "plan": {
+          "from": "track-831997216a86a4914ef9",
+          "to": "track-86141f55b6b1219e1c38",
+          "windowId": "w0-2",
+          "start": 77.21294784580499,
+          "end": 81.72,
+          "duration": 4.507052154195011,
+          "rate": 0.9962187500000004,
+          "bStart": 26.93,
+          "bEnd": 31.42,
+          "beatErrorMs": 45.1113390136868
+        },
+        "end": 82.72526077097505,
+        "preparation": "device-shared-source-wsola-v1",
+        "tempoAfterTakeover": "native",
+        "renderRequested": false,
+        "metrics": {
+          "bassOverlap": null,
+          "otherOverlap": null,
+          "bassDifference": null,
+          "otherDifference": null,
+          "vocalSafe": false,
+          "vocalBenefit": 0,
+          "definitions": {
+            "overlap": "125ms digital RMS and original gain balance; not a clash probability",
+            "difference": "Observed-window 32768-sample Hann FFT chroma cosine, matching metric_mix/features.py; not chord truth",
+            "renderStats": "Not generated: real-time headroom protection and audio observation required"
+          }
+        },
+        "fromTitle": "Make It Right",
+        "toTitle": "Straight (Battle Beat)"
+      },
+      {
+        "kind": "device_plan_scheduled",
+        "at": 194.8732879818594,
+        "context": 184.98467120181405,
+        "method": "original",
+        "plan": {
+          "from": "track-86141f55b6b1219e1c38",
+          "to": "track-49d4ac83da372eab5722",
+          "windowId": "w16-4",
+          "start": 143.56802721088434,
+          "end": 152.54,
+          "duration": 8.971972789115647,
+          "rate": 0.9997812500000007,
+          "bStart": 61.73,
+          "bEnd": 70.7,
+          "beatErrorMs": 11.605208707436532
+        },
+        "end": 203.84526077097505,
+        "preparation": "device-shared-source-wsola-v1",
+        "tempoAfterTakeover": "native",
+        "renderRequested": false,
+        "metrics": {
+          "bassOverlap": null,
+          "otherOverlap": null,
+          "bassDifference": null,
+          "otherDifference": null,
+          "vocalSafe": false,
+          "vocalBenefit": 0,
+          "definitions": {
+            "overlap": "125ms digital RMS and original gain balance; not a clash probability",
+            "difference": "Observed-window 32768-sample Hann FFT chroma cosine, matching metric_mix/features.py; not chord truth",
+            "renderStats": "Not generated: real-time headroom protection and audio observation required"
+          }
+        },
+        "fromTitle": "Straight (Battle Beat)",
+        "toTitle": "24K Magic (1)"
+      },
+      {
+        "kind": "device_plan_scheduled",
+        "at": 329.45328798185943,
+        "context": 319.5385034013606,
+        "method": "original",
+        "plan": {
+          "from": "track-49d4ac83da372eab5722",
+          "to": "track-d2d58531421de0eb9690",
+          "windowId": "w0-4",
+          "start": 196.30802721088435,
+          "end": 205.28,
+          "duration": 8.971972789115647,
+          "rate": 1.0098125000000002,
+          "bStart": 9.1,
+          "bEnd": 18.16,
+          "beatErrorMs": 19.375153415950308
+        },
+        "end": 338.42526077097506,
+        "preparation": "device-shared-source-wsola-v1",
+        "tempoAfterTakeover": "native",
+        "renderRequested": false,
+        "metrics": {
+          "bassOverlap": null,
+          "otherOverlap": null,
+          "bassDifference": null,
+          "otherDifference": null,
+          "vocalSafe": false,
+          "vocalBenefit": 0,
+          "definitions": {
+            "overlap": "125ms digital RMS and original gain balance; not a clash probability",
+            "difference": "Observed-window 32768-sample Hann FFT chroma cosine, matching metric_mix/features.py; not chord truth",
+            "renderStats": "Not generated: real-time headroom protection and audio observation required"
+          }
+        },
+        "fromTitle": "24K Magic (1)",
+        "toTitle": "HIPHOP"
+      }
+    ],
+    "audioObservations": [
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-21T10:52:24.208Z",
+        "name": "本机声部交接开始",
+        "frame": 3449423,
+        "planId": "8d5ae51dc2ff243accbb229cf721fe6f00e15c0b47fdc980e265128d7c0a6f54",
+        "requestId": "original",
+        "observedFrame": 3449472,
+        "quantumStart": 3449344,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6000000238418579,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-21T10:52:28.736Z",
+        "name": "B正文接管",
+        "frame": 3648184,
+        "planId": "8d5ae51dc2ff243accbb229cf721fe6f00e15c0b47fdc980e265128d7c0a6f54",
+        "requestId": "original",
+        "observedFrame": 3648256,
+        "quantumStart": 3648128,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6000000238418579,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-21T10:54:20.864Z",
+        "name": "本机声部交接开始",
+        "frame": 8593912,
+        "planId": "6d4a53a5549f6bd01d62144da3fda5c1f62ad6020cf781ef40ee46b262f80685",
+        "requestId": "original",
+        "observedFrame": 8593920,
+        "quantumStart": 8593792,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6000000238418579,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-21T10:54:29.835Z",
+        "name": "B正文接管",
+        "frame": 8989576,
+        "planId": "6d4a53a5549f6bd01d62144da3fda5c1f62ad6020cf781ef40ee46b262f80685",
+        "requestId": "original",
+        "observedFrame": 8989696,
+        "quantumStart": 8989568,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6053380370140076,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-21T10:56:35.441Z",
+        "name": "本机声部交接开始",
+        "frame": 14528890,
+        "planId": "b9c9c69c8b4adec5cc24b21d31dee94f47b12ab9e5f452b980ad090a8ff5175e",
+        "requestId": "original",
+        "observedFrame": 14528896,
+        "quantumStart": 14528768,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6053380370140076,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-21T10:56:44.416Z",
+        "name": "B正文接管",
+        "frame": 14924554,
+        "planId": "b9c9c69c8b4adec5cc24b21d31dee94f47b12ab9e5f452b980ad090a8ff5175e",
+        "requestId": "original",
+        "observedFrame": 14924672,
+        "quantumStart": 14924544,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6053380370140076,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      }
+    ],
+    "rollingReadyEventCount": 57,
+    "distinctRollingPlanGeometries": 33,
+    "preparedReuseEventCount": 24,
+    "preparedReuseExamples": [
+      {
+        "kind": "device_prepared_reused",
+        "from": "track-86141f55b6b1219e1c38",
+        "to": "track-49d4ac83da372eab5722",
+        "start": 112.17401360544217,
+        "sourcePosition": 108.94725623582767
+      },
+      {
+        "kind": "device_prepared_reused",
+        "from": "track-86141f55b6b1219e1c38",
+        "to": "track-49d4ac83da372eab5722",
+        "start": 114.42401360544217,
+        "sourcePosition": 111.45210884353742
+      },
+      {
+        "kind": "device_prepared_reused",
+        "from": "track-86141f55b6b1219e1c38",
+        "to": "track-49d4ac83da372eab5722",
+        "start": 121.14401360544217,
+        "sourcePosition": 119.21628117913832
+      }
+    ],
+    "stemFallbackReasonEventCounts": {
+      "分轨尚未缓存，保留同接点本机原渐混": 2,
+      "分轨目录尚未发布 404": 34,
+      "接点提前量不足以装入冷分轨": 2
+    }
+  },
+  "memory": {
+    "observedTotalPssKiB": 312975,
+    "observedTotalRssKiB": 469240,
+    "scope": "one short session using original fallback"
+  },
+  "delivery": {
+    "paused": true,
+    "currentTrack": "HIPHOP",
+    "sourcePositionSeconds": 38,
+    "energyRestoredTo": 5,
+    "style": "unlimited",
+    "moreToolsCollapsed": true
+  },
+  "limits": [
+    "All three handoffs used local original fallback; this run is not an advanced-stem-method listening validation",
+    "Rolling-ready and reuse counts are events, not distinct completed transitions",
+    "No new reservation or analysis job was created; reservation persistent-cache/offline readiness was not tested on this phone",
+    "AudioWorklet frame observations do not measure acoustic or Bluetooth latency"
+  ]
+}

@@ -1,5 +1,7 @@
 # Android 0.2.0 构建与真机部署
 
+此文为本轮首次 0.2.0 部署的历史记录。随后 GitHub 更新至 0.2.1，已重新构建并安装；最终交付以 [0.2.1 部署记录](android-deployment-0.2.1-20261021.md) 为准。
+
 2026-10-21，已在 Windows 编译并保留数据更新连接的 Android 手机。对应 GitHub 手机分支 `codex/metric-mix-mobile-20261020`，拉取基线 `a3f7d5b887b7a6ed1811e444e4c856901d82f63e`，加上 Android 桥接兼容修复 `b973928d5cb41eb27b014f1340729c2640ea64e3`。
 
 ## 最新内容与安卓修复

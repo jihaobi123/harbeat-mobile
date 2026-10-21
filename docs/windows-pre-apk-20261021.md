@@ -1,6 +1,6 @@
 # Windows 上准备 Android 构建
 
-2026-10-21 更新：后续已在 Windows 完成准备检查、Android ARM64 编译、保留数据安装及实体手机本地混音，见 [安卓部署记录](android-deployment-20261021.md)。以下“不生成 APK”描述此前 Mac 交接阶段，以及准备脚本自身的职责；准备脚本仍不直接打包安装。
+2026-10-21 更新：后续已在 Windows 完成准备检查、Android ARM64 编译、保留数据安装及实体手机本地混音，最终版本为 0.2.1，见 [安卓部署记录](android-deployment-0.2.1-20261021.md)。以下“不生成 APK”描述此前 Mac 交接阶段，以及准备脚本自身的职责；准备脚本仍不直接打包安装。
 
 Mac 和 Windows 都能编译 Android APK。本轮按约定准备源码、预处理接口、App 音频执行器和构建素材，不生成新 APK。Windows 上仍需完成 Gradle 构建和手机试听；网页测试不能代替 Android WebView 的真实音频性能测试。
 
