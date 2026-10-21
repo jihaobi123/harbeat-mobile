@@ -1,7 +1,7 @@
-// ../../tools/activity_set_plan.ts
+// tools/activity_set_plan.ts
 var import_node_fs = require("fs");
 
-// src/metric-upstream/realtime/decision.ts
+// vendor/realtime-v3/src/metric-upstream/realtime/decision.ts
 var DECISION_POLICY = {
   version: "v3-live-rules-2.local-intents-1",
   minimumLeadSec: 0.25,
@@ -117,7 +117,7 @@ function explainPlan(a, b, p, position, intent, budget, boundary) {
   };
 }
 
-// src/metric-upstream/realtime/evidence.ts
+// vendor/realtime-v3/src/metric-upstream/realtime/evidence.ts
 var EVIDENCE_POLICY = { version: "local-intents-v1", calibrationId: "master-rms-common-digital-full-scale-v1", preSec: 4, blockSec: 4, sustainSec: 16, minimumDeltaDb: 1, maximumJumpDb: 6, minimumCoverage: 0.98 };
 var levelCache = /* @__PURE__ */ new WeakMap();
 function level(track, start, end) {
@@ -192,7 +192,7 @@ function evaluateEvidence(a, b, w, mixStart, intent) {
   return result(true, "local_evidence_pass", `${targetStyle ? `\u63A5\u7BA1\u7A97\u53E3\u6A21\u578B\u5019\u9009 ${targetStyle} \u7B26\u5408\u76EE\u6807\uFF1B` : ""}${direction !== "any" ? `\u63A5\u7BA1\u540E16\u79D2\u6301\u7EED${direction === "up" ? "\u5347" : "\u964D"}\u80FD\u91CF\uFF0C\u5DEE\u503C ${deltas.map((x) => x == null ? void 0 : x.toFixed(2)).join(" / ")} dB` : "\u672C\u6B21\u672A\u9650\u5236\u80FD\u91CF\u65B9\u5411"}${(local == null ? void 0 : local.entry.style.status) === "needs_review" ? "\uFF1B\u8FDB\u5165\u7247\u6BB5\u98CE\u683C\u5F85\u786E\u8BA4\uFF0C\u63A5\u7BA1\u7A97\u53E3\u5355\u72EC\u5224\u65AD" : ""}`);
 }
 
-// src/metric-upstream/realtime/planner.ts
+// vendor/realtime-v3/src/metric-upstream/realtime/planner.ts
 function vocalPresence(intervals, start, end) {
   const padded = intervals.map(([s, e]) => [Math.max(start, s - 0.3), Math.min(end, e + 0.3)]).filter(([s, e]) => e > s).sort((a, b) => a[0] - b[0]);
   let total = 0, last = -Infinity;
@@ -317,7 +317,45 @@ function planNext(a, tracks, position, intent, ready, budget = 18, requireReady 
   return { best: candidates[0] || null, candidates, rejected, exclusions };
 }
 
-// src/metric-upstream/v30/eq.ts
+// vendor/realtime-v3/src/metric-upstream/v30/planner.ts
+function sourceBound(t) {
+  var _a;
+  const s = (_a = t.alignment) == null ? void 0 : _a.source, p = t.provenance;
+  return !!s && !!p && ["masterSha256", "reportSha256", "vocalSha256"].every((k) => !!s[k] && s[k] === p[k]);
+}
+function assessExit(a, end) {
+  var _a, _b, _c, _d, _e, _f;
+  const bound = sourceBound(a), bar = bound ? (_a = a.alignment) == null ? void 0 : _a.bars.find((b) => Math.abs(b.end - end) < 0.065) : void 0;
+  const gridValid = !!(bar == null ? void 0 : bar.valid) && bar.beats.length === 4 && bar.lastBeat !== null && bar.lastBeat < end;
+  const phrase = bound ? (_b = a.alignment) == null ? void 0 : _b.phrases.find((p) => p.start < end && p.tailEnd > end) : void 0;
+  const conflicts = bound ? (((_c = a.alignment) == null ? void 0 : _c.conflicts) || []).filter((c) => Number.isFinite(c.start) && Number.isFinite(c.end) && c.start < end + 0.25 && c.end > end - 0.25) : [];
+  const distances = a.sections.map((s) => Math.abs(s.end - end)).filter(Number.isFinite);
+  return { sourceBound: bound, gridValid, lastBeat: (_d = bar == null ? void 0 : bar.lastBeat) != null ? _d : null, nextDownbeat: end, sectionDistance: distances.length ? Math.min(...distances) : null, activePhraseId: (_e = phrase == null ? void 0 : phrase.id) != null ? _e : null, tailRemaining: phrase ? phrase.tailEnd - end : 0, sourceRows: (_f = phrase == null ? void 0 : phrase.sourceRows) != null ? _f : null, conflicts, reason: !bound ? "\u9884\u5904\u7406\u6307\u7EB9\u7F3A\u5931\u6216\u4E0D\u4E00\u81F4\uFF1B\u4FDD\u6301 V3" : !gridValid ? "\u7F3A\u5C11\u5B8C\u6574\u5B9E\u6D4B\u5C0F\u8282\uFF1B\u4FDD\u6301 V3" : conflicts.length ? "\u9000\u51FA\u70B9\u9644\u8FD1\u7684\u58F0\u5B66\u8BC1\u636E\u6709\u5206\u6B67\uFF1B\u4FDD\u6301 V3" : phrase ? "\u9000\u51FA\u65F6\u4ECD\u6709\u58F0\u5B66\u4EBA\u58F0\u6D3B\u52A8" : "\u9000\u51FA\u70B9\u672A\u843D\u5728\u5DF2\u68C0\u51FA\u7684\u58F0\u5B66\u4EBA\u58F0\u6D3B\u52A8\u5185\uFF08\u8BED\u4E49\u53E5\u5C3E\u5F85\u786E\u8BA4\uFF09" };
+}
+function makeV30Planner(adjust, eq) {
+  return (a, tracks, pos, intent, ready, budget = 18, requireReady = true, timingGate) => {
+    var _a, _b;
+    const result = planNext(a, tracks, pos, intent, ready, budget, requireReady, timingGate), original = result.best;
+    if (!original) return result;
+    const before = assessExit(a, original.end), next = a.bars.find((t) => t > original.end + 0.065);
+    const possible = next === void 0 ? void 0 : result.candidates.find((c) => c.to === original.to && c.window.id === original.window.id && c.asset.sha256 === original.asset.sha256 && Math.abs(c.end - next) < 1e-3 && Math.abs(c.duration - original.duration) < 1e-6);
+    const afterNext = next === void 0 ? void 0 : assessExit(a, next);
+    const improves = !!afterNext && before.sourceBound && before.gridValid && afterNext.gridValid && !before.conflicts.length && !afterNext.conflicts.length && (!!before.activePhraseId && !afterNext.activePhraseId || !before.activePhraseId && !afterNext.activePhraseId && ((_a = before.sectionDistance) != null ? _a : 0) > 0.4 && ((_b = afterNext.sectionDistance) != null ? _b : Infinity) < 0.4);
+    let chosen = adjust && possible && improves ? possible : original;
+    const after = assessExit(a, chosen.end);
+    const reason = !adjust ? "\u539F V3 \u9009\u70B9\uFF1B\u4EC5\u5C55\u793A\u8FB9\u754C\u6838\u9A8C" : chosen !== original ? "\u6574\u4F53\u540E\u79FB\u5230\u76F8\u90BB\u5B9E\u6D4B\u5C0F\u8282\uFF0C\u964D\u4F4E\u53E5\u4E2D\u9000\u51FA\u6216\u6BB5\u843D\u9519\u4F4D\u98CE\u9669\uFF1B\u6DF7\u5408\u65F6\u957F\u4FDD\u6301\u4E0D\u53D8" : !before.sourceBound || !before.gridValid || before.conflicts.length ? before.reason : (afterNext == null ? void 0 : afterNext.conflicts.length) ? afterNext.reason : !possible ? "\u76F8\u90BB\u5C0F\u8282\u4E0D\u5728\u539F V3 \u53EF\u6267\u884C\u5019\u9009\u5185\uFF1B\u4FDD\u6301\u539F\u9009\u70B9" : "\u76F8\u90BB\u5C0F\u8282\u6CA1\u6709\u660E\u786E\u6539\u5584\uFF1B\u4FDD\u6301\u539F\u9009\u70B9";
+    const tune = { version: "v30-small-correction-v1", enabled: adjust, originalPlanId: original.id, originalStart: original.start, originalEnd: original.end, shiftSec: chosen.end - original.end, before, after, reason, considered: afterNext ? [{ end: next, eligible: !!possible, assessment: afterNext }] : [], preserved: { duration: original.duration, assetSha256: original.asset.sha256, windowId: original.window.id, rate: original.rate, gain: "V3 full-overlap linear", budget } };
+    chosen = { ...chosen, v30Tune: tune, reason: chosen.reason + " \xB7 " + reason };
+    if (eq === "dynamic") try {
+      chosen.v30Eq = buildV30Eq(a, tracks.find((t) => t.id === chosen.to), chosen);
+    } catch (e) {
+      return { ...result, best: null, exclusions: [...result.exclusions, { trackId: a.id, track: a.title, code: "v30_eq_unavailable", reason: "\u52A8\u6001 EQ \u8BC1\u636E\u4E0D\u53EF\u7528\uFF1A" + e.message, count: 1 }] };
+    }
+    return { ...result, best: chosen };
+  };
+}
+
+// vendor/realtime-v3/src/metric-upstream/v30/eq.ts
 var bands = ["low", "mid", "high"];
 var clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 function sample(t, start, end) {
@@ -378,48 +416,10 @@ function buildV30Eq(a, b, p) {
   return output;
 }
 
-// src/metric-upstream/v30/planner.ts
-function sourceBound(t) {
-  var _a;
-  const s = (_a = t.alignment) == null ? void 0 : _a.source, p = t.provenance;
-  return !!s && !!p && ["masterSha256", "reportSha256", "vocalSha256"].every((k) => !!s[k] && s[k] === p[k]);
-}
-function assessExit(a, end) {
-  var _a, _b, _c, _d, _e, _f;
-  const bound = sourceBound(a), bar = bound ? (_a = a.alignment) == null ? void 0 : _a.bars.find((b) => Math.abs(b.end - end) < 0.065) : void 0;
-  const gridValid = !!(bar == null ? void 0 : bar.valid) && bar.beats.length === 4 && bar.lastBeat !== null && bar.lastBeat < end;
-  const phrase = bound ? (_b = a.alignment) == null ? void 0 : _b.phrases.find((p) => p.start < end && p.tailEnd > end) : void 0;
-  const conflicts = bound ? (((_c = a.alignment) == null ? void 0 : _c.conflicts) || []).filter((c) => Number.isFinite(c.start) && Number.isFinite(c.end) && c.start < end + 0.25 && c.end > end - 0.25) : [];
-  const distances = a.sections.map((s) => Math.abs(s.end - end)).filter(Number.isFinite);
-  return { sourceBound: bound, gridValid, lastBeat: (_d = bar == null ? void 0 : bar.lastBeat) != null ? _d : null, nextDownbeat: end, sectionDistance: distances.length ? Math.min(...distances) : null, activePhraseId: (_e = phrase == null ? void 0 : phrase.id) != null ? _e : null, tailRemaining: phrase ? phrase.tailEnd - end : 0, sourceRows: (_f = phrase == null ? void 0 : phrase.sourceRows) != null ? _f : null, conflicts, reason: !bound ? "\u9884\u5904\u7406\u6307\u7EB9\u7F3A\u5931\u6216\u4E0D\u4E00\u81F4\uFF1B\u4FDD\u6301 V3" : !gridValid ? "\u7F3A\u5C11\u5B8C\u6574\u5B9E\u6D4B\u5C0F\u8282\uFF1B\u4FDD\u6301 V3" : conflicts.length ? "\u9000\u51FA\u70B9\u9644\u8FD1\u7684\u58F0\u5B66\u8BC1\u636E\u6709\u5206\u6B67\uFF1B\u4FDD\u6301 V3" : phrase ? "\u9000\u51FA\u65F6\u4ECD\u6709\u58F0\u5B66\u4EBA\u58F0\u6D3B\u52A8" : "\u9000\u51FA\u70B9\u672A\u843D\u5728\u5DF2\u68C0\u51FA\u7684\u58F0\u5B66\u4EBA\u58F0\u6D3B\u52A8\u5185\uFF08\u8BED\u4E49\u53E5\u5C3E\u5F85\u786E\u8BA4\uFF09" };
-}
-function makeV30Planner(adjust, eq) {
-  return (a, tracks, pos, intent, ready, budget = 18, requireReady = true, timingGate) => {
-    var _a, _b;
-    const result = planNext(a, tracks, pos, intent, ready, budget, requireReady, timingGate), original = result.best;
-    if (!original) return result;
-    const before = assessExit(a, original.end), next = a.bars.find((t) => t > original.end + 0.065);
-    const possible = next === void 0 ? void 0 : result.candidates.find((c) => c.to === original.to && c.window.id === original.window.id && c.asset.sha256 === original.asset.sha256 && Math.abs(c.end - next) < 1e-3 && Math.abs(c.duration - original.duration) < 1e-6);
-    const afterNext = next === void 0 ? void 0 : assessExit(a, next);
-    const improves = !!afterNext && before.sourceBound && before.gridValid && afterNext.gridValid && !before.conflicts.length && !afterNext.conflicts.length && (!!before.activePhraseId && !afterNext.activePhraseId || !before.activePhraseId && !afterNext.activePhraseId && ((_a = before.sectionDistance) != null ? _a : 0) > 0.4 && ((_b = afterNext.sectionDistance) != null ? _b : Infinity) < 0.4);
-    let chosen = adjust && possible && improves ? possible : original;
-    const after = assessExit(a, chosen.end);
-    const reason = !adjust ? "\u539F V3 \u9009\u70B9\uFF1B\u4EC5\u5C55\u793A\u8FB9\u754C\u6838\u9A8C" : chosen !== original ? "\u6574\u4F53\u540E\u79FB\u5230\u76F8\u90BB\u5B9E\u6D4B\u5C0F\u8282\uFF0C\u964D\u4F4E\u53E5\u4E2D\u9000\u51FA\u6216\u6BB5\u843D\u9519\u4F4D\u98CE\u9669\uFF1B\u6DF7\u5408\u65F6\u957F\u4FDD\u6301\u4E0D\u53D8" : !before.sourceBound || !before.gridValid || before.conflicts.length ? before.reason : (afterNext == null ? void 0 : afterNext.conflicts.length) ? afterNext.reason : !possible ? "\u76F8\u90BB\u5C0F\u8282\u4E0D\u5728\u539F V3 \u53EF\u6267\u884C\u5019\u9009\u5185\uFF1B\u4FDD\u6301\u539F\u9009\u70B9" : "\u76F8\u90BB\u5C0F\u8282\u6CA1\u6709\u660E\u786E\u6539\u5584\uFF1B\u4FDD\u6301\u539F\u9009\u70B9";
-    const tune = { version: "v30-small-correction-v1", enabled: adjust, originalPlanId: original.id, originalStart: original.start, originalEnd: original.end, shiftSec: chosen.end - original.end, before, after, reason, considered: afterNext ? [{ end: next, eligible: !!possible, assessment: afterNext }] : [], preserved: { duration: original.duration, assetSha256: original.asset.sha256, windowId: original.window.id, rate: original.rate, gain: "V3 full-overlap linear", budget } };
-    chosen = { ...chosen, v30Tune: tune, reason: chosen.reason + " \xB7 " + reason };
-    if (eq === "dynamic") try {
-      chosen.v30Eq = buildV30Eq(a, tracks.find((t) => t.id === chosen.to), chosen);
-    } catch (e) {
-      return { ...result, best: null, exclusions: [...result.exclusions, { trackId: a.id, track: a.title, code: "v30_eq_unavailable", reason: "\u52A8\u6001 EQ \u8BC1\u636E\u4E0D\u53EF\u7528\uFF1A" + e.message, count: 1 }] };
-    }
-    return { ...result, best: chosen };
-  };
-}
-
-// src/metric-upstream/v31-release/release.ts
+// vendor/realtime-v3/src/metric-upstream/v31-release/release.ts
 var planV31 = makeV30Planner(false, "dynamic");
 
-// src/metric-upstream/vocal-overlap/score.ts
+// vendor/realtime-v3/src/metric-upstream/vocal-overlap/score.ts
 function mappedIntervals(source, start, end, rate, duration) {
   if (!Array.isArray(source)) throw Error("\u7F3A\u5C11\u4EBA\u58F0\u6D3B\u52A8\u533A\u95F4");
   const rows = [], intervals = [];
@@ -472,7 +472,7 @@ function alignedVocalOverlap(a, b, mapping) {
   };
 }
 
-// src/metric-upstream/vocal-overlap/planner.ts
+// vendor/realtime-v3/src/metric-upstream/vocal-overlap/planner.ts
 var OVERLAP_POLICY_VERSION = "vocal-overlap-v1";
 function requireBoundVocals(t) {
   var _a, _b, _c, _d, _e, _f, _g;
@@ -562,7 +562,7 @@ var planVocalOverlap = (a, tracks, position, intent, ready, budget = 18, require
   }
 };
 
-// src/metric-upstream/continuous/beatAlignment.ts
+// vendor/realtime-v3/src/metric-upstream/continuous/beatAlignment.ts
 var TOLERANCE = 0.065;
 function localBeats(track, start, end, count) {
   var _a;
@@ -584,7 +584,7 @@ var localBeatGate = (a, b, cue2) => {
 };
 var planContinuous = (a, tracks, position, intent, ready, budget = 18, requireReady = true) => planVocalOverlap(a, tracks, position, intent, ready, budget, requireReady, localBeatGate);
 
-// src/metric-upstream/continuous/segments.ts
+// vendor/realtime-v3/src/metric-upstream/continuous/segments.ts
 var SAMPLE = 1 / 44100;
 function nativeSegments(track) {
   const segments = track.audioSegments;
@@ -603,7 +603,7 @@ function nativeSegment(track, position) {
   return segments.find((s) => s.end > position) || segments[segments.length - 1];
 }
 
-// src/metric-upstream/continuous/qualityPlan.ts
+// vendor/realtime-v3/src/metric-upstream/continuous/qualityPlan.ts
 var AUTOMATIC_POLICY = "continuous-auto-quality-v1";
 function level2(t, start, end) {
   let cursor = start, total = 0, rms = 0, low = 0;
@@ -699,13 +699,13 @@ var planAutomaticQuality = (a, tracks, position, intent, ready, requireReady = f
   return { ...raw, best: null, candidates: [], exclusions, planningPosition: position };
 };
 
-// src/mobile/original-quality.ts
+// vendor/realtime-v3/src/mobile/original-quality.ts
 function fullVocalCollision(a, b, p) {
   const m = alignedVocalOverlap(a.vocals, b.vocals, { aStart: p.start, bStart: p.window.start, bEnd: p.window.end, duration: p.duration, rate: p.rate });
   return m.simultaneousSec >= p.duration - 0.065;
 }
 
-// src/mobile/nearby.ts
+// vendor/realtime-v3/src/mobile/nearby.ts
 function nearbyPlan(a, b, position, excluded = /* @__PURE__ */ new Set(), acceptPlan = () => true, scorePlan, budget) {
   const windows = b.windows.filter((w) => {
     const v = w.variants[a.id];
@@ -733,7 +733,7 @@ function nearbyPlan(a, b, position, excluded = /* @__PURE__ */ new Set(), accept
   return null;
 }
 
-// src/mobile/smart-selection.ts
+// vendor/realtime-v3/src/mobile/smart-selection.ts
 var SMART_POLICY = "mobile-direction-quality-v3";
 var styleKey = (value) => value.toLocaleLowerCase().replace(/[\s_-]/g, "");
 var hipHopFamily = /* @__PURE__ */ new Set(["hiphop", "boombap", "trap", "jazzhiphop", "grime"]);
@@ -810,31 +810,86 @@ function rankNearbyChoices(a, tracks, position, energy) {
   return { best: (_a = choices[0]) != null ? _a : null, choices, rejected, policy: NEARBY_DIRECTION_POLICY };
 }
 
-// src/mobile/activity-plan.ts
+// vendor/realtime-v3/src/mobile/activity-plan.ts
+var ACTIVITY_CANDIDATE_VERSION = "activity-candidate-v2";
+var ACTIVITY_MAX_EDGES_PER_TRACK = 24;
+var ACTIVITY_REGIONS = 8;
+var ACTIVITY_TARGETS_PER_REGION = 3;
+var activitySourceIdentity = (t) => {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i;
+  return { reportId: (_a = t.reportId) != null ? _a : "", runId: String((_c = (_b = t.provenance) == null ? void 0 : _b.runId) != null ? _c : ""), masterSha256: String((_e = (_d = t.provenance) == null ? void 0 : _d.masterSha256) != null ? _e : ""), reportSha256: String((_g = (_f = t.provenance) == null ? void 0 : _f.reportSha256) != null ? _g : ""), vocalSha256: String((_i = (_h = t.provenance) == null ? void 0 : _h.vocalSha256) != null ? _i : "") };
+};
 function planActivitySet(o) {
-  var _a, _b, _c, _d;
-  if (!Array.isArray(o.tracks) || o.tracks.length > 64 || !Array.isArray(o.styles) || !o.styles.length || o.styles.length > 8 || !Number.isInteger(o.energy) || o.energy < 1 || o.energy > 5 || !Number.isInteger(o.maxTracks) || o.maxTracks < 4 || o.maxTracks > 12) throw Error("\u9884\u7EA6\u53C2\u6570\u8D85\u51FA\u51C6\u5907\u8303\u56F4");
-  const eligible = o.tracks.filter((t) => t.mixStatus !== "unavailable" && t.playStatus !== "unavailable" && o.styles.some((s) => styleMatches(t.styleLabels, s)));
+  var _a, _b, _c, _d, _e;
+  if (!Array.isArray(o.tracks) || o.tracks.length > 64 || !Array.isArray(o.styles) || !o.styles.length || o.styles.length > 8 || !Number.isInteger(o.energy) || o.energy < 1 || o.energy > 5 || !Number.isInteger(o.maxTracks) || o.maxTracks < 4 || o.maxTracks > 12) throw Error("Invalid activity preparation bounds");
+  if (o.retainedTrackIds !== void 0 && (!Array.isArray(o.retainedTrackIds) || !o.retainedTrackIds.length || o.retainedTrackIds.length > o.maxTracks || new Set(o.retainedTrackIds).size !== o.retainedTrackIds.length || o.retainedTrackIds.some((id) => typeof id !== "string" || !/^[A-Za-z0-9_-]{1,160}$/.test(id)))) throw Error("Invalid retained activity tracks");
+  const retained = new Set((_a = o.retainedTrackIds) != null ? _a : []);
+  const eligible = o.tracks.filter((t) => t.mixStatus !== "unavailable" && t.playStatus !== "unavailable" && (retained.has(t.id) || o.styles.some((s) => styleMatches(t.styleLabels, s))));
   const connectivity = (a) => eligible.filter((b) => a.id !== b.id && a.bpm / b.bpm >= 0.95 && a.bpm / b.bpm <= 1.05).length;
-  const tracks = [...eligible].sort((a, b) => connectivity(b) - connectivity(a) || a.id.localeCompare(b.id)).slice(0, o.maxTracks);
-  const edges = [];
-  const warnings = [];
+  const ranked = [...eligible].sort((a, b) => connectivity(b) - connectivity(a) || a.id.localeCompare(b.id));
+  const tracks = o.retainedTrackIds ? [...o.retainedTrackIds.flatMap((id) => {
+    const t = eligible.find((t2) => t2.id === id);
+    return t ? [t] : [];
+  }), ...ranked.filter((t) => !retained.has(t.id))].slice(0, o.retainedTrackIds.length) : ranked.slice(0, o.maxTracks);
+  const edges = [], warnings = [];
+  const coverage = { schema: "harbeat.activity-coverage.v1", maxEdgesPerTrack: ACTIVITY_MAX_EDGES_PER_TRACK, maxTargetsPerRegion: ACTIVITY_TARGETS_PER_REGION, regionsPerTrack: ACTIVITY_REGIONS, tracks: [] };
   for (const a of tracks) {
-    const options = tracks.filter((b) => b.id !== a.id), auto = rankChoices(a, options, 35, o.energy, /* @__PURE__ */ new Set()).best;
-    const near2 = rankNearbyChoices(a, auto ? [auto.track] : options, Math.min(30, a.duration * 0.15), o.energy).best;
-    for (const [choice, kind] of [[auto, "automatic"], [near2, "nearby"]]) {
-      if (!choice) continue;
+    const options = tracks.filter((b) => b.id !== a.id), buckets = Array.from({ length: ACTIVITY_REGIONS }, () => []);
+    const add = (choice, kind) => {
       const p = choice.plan;
-      if (edges.some((e) => e.from === p.from && e.to === p.to && e.windowId === p.window.id && Math.abs(e.start - p.start) < 2e-3)) continue;
-      edges.push({ from: p.from, to: p.to, windowId: p.window.id, start: p.start, end: p.end, duration: p.duration, rate: p.rate, bStart: p.window.start, bEnd: p.window.end, score: choice.score, kind });
+      try {
+        buildV30Eq(a, choice.track, p);
+      } catch {
+        return;
+      }
+      const region = Math.min(ACTIVITY_REGIONS - 1, Math.floor(p.start / a.duration * ACTIVITY_REGIONS));
+      const bucket = buckets[region];
+      const existing = bucket.find((e) => e.from === p.from && e.to === p.to && e.windowId === p.window.id && Math.abs(e.start - p.start) < 2e-3);
+      if (existing) {
+        if (kind === "automatic") existing.kind = kind;
+        return;
+      }
+      bucket.push({ id: p.id, version: ACTIVITY_CANDIDATE_VERSION, from: p.from, to: p.to, windowId: p.window.id, start: p.start, end: p.end, duration: p.duration, rate: p.rate, bStart: p.window.start, bEnd: p.window.end, score: choice.score, kind, region, source: { a: activitySourceIdentity(a), b: activitySourceIdentity(choice.track) } });
+    };
+    const auto = rankChoices(a, options, 0, o.energy, /* @__PURE__ */ new Set());
+    const automaticTargets = /* @__PURE__ */ new Set();
+    for (const choice of auto.choices) {
+      if (automaticTargets.has(choice.track.id)) continue;
+      add(choice, "automatic");
+      automaticTargets.add(choice.track.id);
+      if (automaticTargets.size >= ACTIVITY_TARGETS_PER_REGION) break;
     }
-    if (!auto) warnings.push(a.title + " \u6682\u65E0\u901A\u8FC7\u539F\u81EA\u52A8\u89C4\u5219\u7684\u51FA\u53E3");
+    for (let region = 0; region < ACTIVITY_REGIONS; region++) {
+      const position = region * a.duration / ACTIVITY_REGIONS;
+      const near2 = rankNearbyChoices(a, options, position, o.energy);
+      for (const choice of near2.choices.slice(0, ACTIVITY_TARGETS_PER_REGION)) add(choice, "nearby");
+    }
+    const regions = buckets.map((bucket, index) => {
+      bucket.sort((a2, b) => Number(b.kind === "automatic") - Number(a2.kind === "automatic") || b.score - a2.score || a2.start - b.start || a2.id.localeCompare(b.id));
+      const selected = [], targets = /* @__PURE__ */ new Set();
+      for (const e of bucket) {
+        if (targets.has(e.to)) continue;
+        targets.add(e.to);
+        selected.push(e);
+        if (selected.length === ACTIVITY_TARGETS_PER_REGION) break;
+      }
+      edges.push(...selected);
+      return { index, start: index * a.duration / ACTIVITY_REGIONS, end: (index + 1) * a.duration / ACTIVITY_REGIONS, candidates: selected.length };
+    });
+    const complete = regions.every((r) => r.candidates > 0);
+    coverage.tracks.push({ trackId: a.id, regions, complete });
+    if (!auto.best) warnings.push("automatic_exit_unavailable:" + a.id);
+    if (!complete) warnings.push("candidate_coverage_gaps:" + a.id);
   }
-  const initialTrackId = (_d = (_c = (_a = edges.filter((e) => e.kind === "automatic").sort((a, b) => b.score - a.score || a.from.localeCompare(b.from))[0]) == null ? void 0 : _a.from) != null ? _c : (_b = tracks[0]) == null ? void 0 : _b.id) != null ? _d : "";
-  return { trackIds: tracks.map((t) => t.id), initialTrackId, edges, tracks: tracks.map((t) => ({ id: t.id, title: t.title, bpm: t.bpm, duration: t.duration, styleLabels: t.styleLabels })), warnings };
+  const initialTrackId = (_e = (_d = (_b = edges.filter((e) => e.kind === "automatic").sort((a, b) => b.score - a.score || a.from.localeCompare(b.from))[0]) == null ? void 0 : _b.from) != null ? _d : (_c = tracks[0]) == null ? void 0 : _c.id) != null ? _e : "";
+  if (o.retainedTrackIds) {
+    for (const id of o.retainedTrackIds) if (!tracks.some((t) => t.id === id)) warnings.push("retained_track_unavailable:" + id);
+    for (const t of tracks) if (!retained.has(t.id)) warnings.push("retained_track_replacement:" + t.id);
+  }
+  return { schema: "harbeat.activity-candidates.v2", trackIds: tracks.map((t) => t.id), initialTrackId, edges, coverage, tracks: tracks.map((t) => ({ id: t.id, title: t.title, bpm: t.bpm, duration: t.duration, styleLabels: t.styleLabels })), warnings };
 }
 
-// ../../tools/activity_set_plan.ts
+// tools/activity_set_plan.ts
 if (!Array.prototype.at) Object.defineProperty(Array.prototype, "at", { value: function(n) {
   const i = n < 0 ? this.length + n : n;
   return this[i];

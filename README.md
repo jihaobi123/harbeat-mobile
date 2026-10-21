@@ -2,7 +2,7 @@
 
 手机先完成选歌、播放与方向控制，饰品作为可选快捷控制。界面采用浅色背景、青绿与杏黄、细描边圆角卡片；播放、音乐、我的三个主入口保持不变。
 
-当前源码版本为 **Android Preview 0.2.0+15**：主播放器在设备上执行渐混和分轨增益、EQ、滤波，使用同一音频时钟。Jetson 提前分析并导出同源素材；手机先准备保调变速片段，再执行交接，不再等待按曲对生成的成品转场 WAV。保留选点、人声冲突、点击后就近接歌和自动接歌规则。已在 Windows 编译并安装到安卓手机，实际完成 HIPHOP → Make It Right 的本地贝斯交接＋旋律滤波，见 [真机部署记录](docs/android-deployment-20261021.md)。构建步骤见 [打包前准备](docs/windows-pre-apk-20261021.md)；旧版界面与算法说明见 [统一播放与网络验证](docs/unified-playback-20261020.md)、[封面接入说明](docs/nas-cover-integration-20261016.md)。
+当前源码版本为 **Android Preview 0.2.1+16**：主播放器在设备上执行渐混和分轨增益、EQ、滤波，使用同一音频时钟。Jetson 提前分析并导出同源素材；预约预先规划多个接点和候选歌曲，手机按播放进度滚动预热。自动与手动接歌共用端侧准备结果，点击后仍等待合格拍点、人声句尾或段落边界。此次未生成 APK，Windows 构建步骤见 [打包前准备](docs/windows-pre-apk-20261021.md)，准备状态见 [预约与本机接歌](docs/reservation-device-readiness-20261021.md)。旧版界面与算法说明见 [统一播放与网络验证](docs/unified-playback-20261020.md)、[封面接入说明](docs/nas-cover-integration-20261016.md)。
 
 ## 运行
 
@@ -31,7 +31,7 @@ python tools/serve_preview.py --port 8766
 
 `app.dart` 与 `phone_screens.dart` 负责页面，`AppController` 和 `phone_controller.dart` 共用播放与饰品动作状态，`AudioService` 负责音频，`LocalStore` 负责持久化。
 
-`smart_controller.dart` 按歌曲是否具备发布分析资料选择内部播放引擎，用户无需切换模式。自动选曲、窗口排序、本地素材准备与分轨执行位于 `vendor/realtime-v3/src/mobile/`；原本的单曲播放仍负责未具备混音资料的音频。
+`smart_controller.dart` 按歌曲是否具备发布分析资料选择内部播放引擎，用户无需切换模式。自动选曲、窗口排序、本机分轨执行和预热位于 `vendor/realtime-v3/src/mobile/`；原本的单曲播放仍负责未具备混音资料的音频。
 
 ## 音乐服务接入（更新于 2026-09-20）
 
@@ -56,7 +56,7 @@ python tools/serve_preview.py --port 8766
 
 历史安装包：[下载 Android ARM64 APK 0.1.12 (14)](https://github.com/jihaobi123/harbeat-mobile/releases/download/v0.1.12-preview-20261020/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk)，[预览版本发布页](https://github.com/jihaobi123/harbeat-mobile/releases/tag/v0.1.12-preview-20261020)提供安装包与 SHA-256 校验文件。该 APK 固定于源码 `406525a`，对应旧执行方式，不包含后续最近接点修复及本机分轨执行；历史构建结果见 [交付说明](docs/unified-playback-20261020.md)。
 
-本次 **0.2.0+15** 已构建为本机 `outputs/HarBeat-Preview-0.2.0-20261021-LocalExecution-arm64.apk`，并保留数据安装至安卓手机；校验值、安卓兼容修复和实际本地混音证据见 [部署说明](docs/android-deployment-20261021.md)。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；安装时使用保留数据的安全安装器。新 APK 不存入 Git；上面的旧版本 Release 附件不包含此次更新。
+本次 **0.2.1+16** 只提交源码与构建前校验，不包含新 APK。Windows 应从本分支最新源码重新构建并验证手机音频性能。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；安装时使用保留数据的安全安装器。旧 APK 作为 GitHub Release 附件发布，不存入 Git 历史。
 
 默认构建使用并存预览包名，只有显式 `-PharbeatPreview=false` 才使用原包名。此次修复了应用未启用 Kotlin 插件、audio_session 0.2.4 与关闭内置 Kotlin 的兼容问题，以及网络配置缺少 includeSubdomains 属性的发布检查错误。Gradle 限制为 1536MB 堆、1 个 worker 和 2 个可用处理器，避免本机原生内存不足。
 
@@ -83,8 +83,8 @@ flutter build apk --release --target-platform android-arm64
 ## 实现边界
 
 - 推荐页接入 NAS 曲库并按目录歌曲 ID 合并分析版本；快照含 391 首，其中 172 首有真实封面，启动后后台刷新在线目录与封面。个人上传曲库与 NAS 曲库分别保留。六首 Hip-Hop 精选及完整 V3 混音见 [接入与算法说明](docs/nas-hiphop-v3-20260920.md)。旧演示目录仍共用 `assets/audio/preview.wav`，不会用于 NAS 播放。
-- “播放 V3 混音”保留原完整离线试听；原连续策略和舞程在更多工具中，详见 [自动舞程接入与验证](docs/dance-set-20260921.md)。主播放器读取 `/listen/` 的同源分析与分轨素材，在设备上准备、执行交接；旧云端成品接口保留历史兼容。iOS 原生宿主尚未接入这一引擎。
-- Android 与网页的智能分轨共用本机 Web Audio 执行和正文源位置映射。缺少发布分析资料的音频继续原有单曲播放，原生 SoLoud 双路渐混保留；旧 4 秒调度仅留在显式单元测试替身中。
+- “播放 V3 混音”保留原完整离线试听；原连续策略和舞程在更多工具中，详见 [自动舞程接入与验证](docs/dance-set-20260921.md)。主播放器从 `/listen/` 读取同源原曲、分轨和特征，在端侧完成混音，不依赖临时云端曲对渲染；iOS 原生宿主尚未接入这一引擎。
+- 标准播放在 Android/iOS 使用 SoLoud 共享音频时钟执行双路原曲交叉淡化；“下一首 / 混入”支持当前队列，方向请求使用已分析风格/能量候选。网页标准播放仍为单曲；智能分轨在浏览器和 Android WebView 共用 Web Audio 执行器。旧成品转场保留兼容，旧 4 秒调度仅留在显式单元测试替身中。
 - 16 拍预览按示例 BPM 截取音频开头并循环，最多到音频末尾，未做真实下拍对齐；未分析的本地文件不开放此功能。
 - 饰品页面扫描真实广播、由用户选择设备、发现 GATT 通知特征。按固件协议配置三个完整十六进制按键包；未知包不执行动作。蓝牙连接不跨重启恢复，断开不停止手机播放。未配置固件时不自动猜测 UUID 或按键值。
 - 链接入口解析真实歌单，先显示前 24 首，再逐首核对音源并确认下载；平台可用性和新歌分析进度如实显示，见 [搜索下载说明](docs/music-search-download-20261021.md)。
@@ -124,6 +124,8 @@ Android 构建不传本机地址参数，默认直接访问阿里云 HTTPS。网
 
 ## 活动预约与保留 set
 
-手机网页：[HarBeat](https://8.136.120.255/listen/app/)。在“我的 → 我的预约”选择风格、能量和时间，服务器提前准备；详情可进入播放、准备本机音频，结束后继续保留并再次预约。换设备请导出并恢复私人预约备份。
+手机网页：[HarBeat](https://8.136.120.255/listen/app/)。在“我的 → 我的预约”选择风格、能量和时间，服务器提前规划多个接点和候选；详情可下载本机音频、进入播放，结束后继续保留并再次预约。旧预约可点“准备更多接点”升级。换设备请导出并恢复私人预约备份。
 
-使用与验收记录见 [预约说明](docs/activity-reservations-20261021.md)；独立后端及 Nginx 部署见 [部署文档](deploy/activity-sets/README.md)。预约复用既有正式选点和分轨规则，未准备的临时接点继续采用现有回退。
+预约编码缓存与普通播放缓存分开，最多 1 GiB、2048 个片段，并按设备剩余空间收紧。播放时最多保留近期三个就绪候选，当前已采用方案受保护；96 MiB 混音窗口与 32 MiB 变速源缓冲分别限额。界面分开显示云端已备齐、素材已下载、附近接点已就绪；缓存完整不等于整套音频已解码。
+
+使用与验收记录见 [预约说明](docs/activity-reservations-20261021.md)、[设备准备状态](docs/reservation-device-readiness-20261021.md)；候选协议见 [多接点策略](docs/reservation-candidates-v2.md)，独立后端及 Nginx 部署见 [部署文档](deploy/activity-sets/README.md)。候选覆盖有空缺时继续使用现有合格接点检查与回退，不保证每次点击都能立即切歌。

@@ -55,11 +55,17 @@ class ActivityReservation {
   int get prepared => (pack['prepared'] as num?)?.toInt() ?? 0;
   int get total => (pack['total'] as num?)?.toInt() ?? 0;
   int get failed => (pack['failed'] as num?)?.toInt() ?? 0;
+  bool get hasMultipleCueCandidates =>
+      pack['candidateVersion'] == 'activity-candidate-v2';
   bool get playable =>
       prepared > 0 && const ['ready', 'partial'].contains(state);
   String get preparationLabel => switch (state) {
-        'ready' => '已准备 $prepared 个交接',
-        'partial' => '部分就绪 · $prepared / $total 个交接',
+        'ready' => hasMultipleCueCandidates
+            ? '云端已备齐 · $prepared 个候选交接'
+            : '云端旧版已就绪 · $prepared 个交接',
+        'partial' => hasMultipleCueCandidates
+            ? '云端部分就绪 · $prepared / $total 个候选交接'
+            : '云端旧版部分就绪 · $prepared / $total 个交接',
         'stale' => '分析版本已更新，请重新准备',
         'failed' => '准备未完成，可重试',
         'planning' => '正在选曲和检查分析',
@@ -79,6 +85,54 @@ class ActivityReservation {
     }
     return ActivityReservation(Map<String, dynamic>.from(value));
   }
+}
+
+class ActivityCacheStatus {
+  ActivityCacheStatus(this.cache);
+  final Map<String, dynamic> cache;
+  int get completed => (cache['completed'] as num?)?.toInt() ?? 0;
+  int get total => (cache['total'] as num?)?.toInt() ?? 0;
+  String get label {
+    if (total <= 0) return '尚未检查此设备的音频缓存';
+    if (completed >= total &&
+        const ['ready', 'complete'].contains(cache['state'])) {
+      return '素材已下载 · $completed / $total 个片段';
+    }
+    return '${cache['state'] == 'downloading' ? '正在下载素材' : '已下载部分素材'} · $completed / $total 个片段';
+  }
+}
+
+class NearbyCueStatus {
+  NearbyCueStatus(this.warm, {required this.currentTrackId});
+  final Map<String, dynamic> warm;
+  final String? currentTrackId;
+  bool get preparing =>
+      warm['state'] == 'preparing' ||
+      warm['preparing'] is Map ||
+      warm['preparing'] == true ||
+      (warm['preparing'] is num && (warm['preparing'] as num) > 0);
+  int get readyCount {
+    if (currentTrackId == null || warm['ready'] is! List) return 0;
+    final position = (warm['sourcePosition'] as num?)?.toDouble() ?? 0;
+    final limit = (warm['limit'] as num?)?.toInt() ?? 3;
+    if (limit <= 0) return 0;
+    return (warm['ready'] as List)
+        .whereType<Map>()
+        .where((cue) =>
+            cue['from'] == currentTrackId &&
+            cue['start'] is num &&
+            (cue['start'] as num) >= position + 0.5)
+        .take(limit)
+        .length;
+  }
+
+  String get label => readyCount > 0
+      ? '附近接点已就绪 $readyCount 个'
+      : preparing
+          ? '正在准备附近接点'
+          : warm.isEmpty
+              ? '播放后准备附近接点'
+              : '暂无已就绪的附近接点';
 }
 
 class ActivityRepository {

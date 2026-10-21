@@ -392,12 +392,18 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
               appBar: AppBar(title: const Text('预约详情')),
               body: Center(child: Text(c.activityError ?? '正在读取预约…')));
         }
-        final cache = c.activityCache(a.packId),
-            completed = cache['completed'] ?? 0,
-            total = cache['total'] ?? 0;
+        final cache = c.activityCache(a.packId);
         final downloading = cache['state'] == 'downloading';
         final warnings =
             (a.pack['warnings'] as List? ?? []).whereType<String>().toList();
+        final unavailable = warnings
+            .where((w) => w.startsWith('retained_track_unavailable:'))
+            .toSet()
+            .length;
+        final replacements = warnings
+            .where((w) => w.startsWith('retained_track_replacement:'))
+            .toSet()
+            .length;
         return Scaffold(
             appBar: AppBar(title: const Text('预约详情')),
             body: PageFrame(label: 'PREPARED SET', title: a.name, children: [
@@ -412,7 +418,7 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('云端素材',
+                        const Text('云端候选与素材',
                             style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Text(a.preparationLabel),
@@ -423,10 +429,18 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                   value: (a.prepared / a.total).clamp(0, 1))),
                         if (a.failed > 0) Text('${a.failed} 个交接暂未准备成功'),
                         const SizedBox(height: 8),
-                        const Text('关闭网页后，云端仍会继续准备。活动结束不会删除已准备的 set。',
-                            style: TextStyle(fontSize: 14))
+                        Text(
+                            a.hasMultipleCueCandidates
+                                ? '云端提前准备多个接点和候选。关闭网页后仍会继续，活动结束后 set 继续保留。'
+                                : '已有旧版素材。准备更多接点后，可提前覆盖更多切歌时刻。活动结束后 set 继续保留。',
+                            style: const TextStyle(fontSize: 14))
                       ])),
-              if (warnings.isNotEmpty) ...[
+              if (unavailable > 0 || replacements > 0) ...[
+                const SizedBox(height: 12),
+                Text('重新准备时，$unavailable 首原曲暂不可用。'
+                    '${replacements > 0 ? '已补入 $replacements 首替代曲，其余原曲保留。' : '尚未找到替代曲，当前保留其余可用原曲。'}')
+              ],
+              if (warnings.any((w) => !w.startsWith('retained_track_'))) ...[
                 const SizedBox(height: 12),
                 const Text('部分歌曲可能缺少合适的交接，播放时会沿用现有安全检查。')
               ],
@@ -449,12 +463,11 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                     const Text('本机素材',
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    Text(total == 0
-                        ? '尚未检查此设备的音频缓存'
-                        : '已缓存 $completed / $total 个片段'),
+                    Text(ActivityCacheStatus(cache).label),
                     if (cache['message'] is String) Text(cache['message']),
                     const SizedBox(height: 8),
-                    const Text('在本页下载并验证素材。缓存可能被浏览器清理；云端已就绪不代表手机已下载。',
+                    const Text(
+                        '下载并校验音频后，进入播放会继续完成附近候选的解码和变速。设备只预热接下来需要的接点；缓存可能被系统清理。',
                         style: TextStyle(fontSize: 14, color: HB.muted)),
                     TextButton(
                         onPressed: !a.playable ||
@@ -464,12 +477,17 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                             ? null
                             : () => c.cacheActivity(a),
                         child: Text(downloading
-                            ? '正在准备本机素材…'
+                            ? '正在下载本机素材…'
                             : c.activityBusy
                                 ? '处理中…'
-                                : '准备本机素材'))
+                                : '下载本机素材'))
                   ])),
               const SizedBox(height: 12),
+              if (a.state == 'ready' && !a.hasMultipleCueCandidates)
+                TextButton(
+                    onPressed:
+                        c.activityBusy ? null : () => c.retryActivity(a.id),
+                    child: const Text('准备更多接点')),
               if (c.activityError != null)
                 Padding(
                     padding: const EdgeInsets.only(bottom: 12),

@@ -17,7 +17,8 @@ import {METHODS,METRIC_RELEASE,validatePrepared} from './prepared'
 export {METHODS,METRIC_RELEASE,validatePrepared} from './prepared'
 import {ActivitySession} from './activity-session'
 import {cacheActivityAssets,type SetCacheProgress} from './set-cache'
-import {prepareDevice,preloadDevice,loadPrepared} from './device-prepare'
+import {prepareDevice,preloadDevice,loadPrepared,hasDevicePCM,pinDevicePCM,releaseDevicePCM,deviceBufferUsage} from './device-prepare'
+import {PreparedPool} from './prepared-pool'
 import {hasMethod} from './device-execution'
 let nativeSequence=0
 export function nativeMetricJob(host:Host,payload:object,signal:AbortSignal){return new Promise<any>((resolve,reject)=>{
@@ -85,6 +86,9 @@ export class MetricRun {
  private explicit:string|null=null;private recent:string[]=[];private excludedPlans=new Set<string>()
  private excludedTracks=new Set<string>()
  private warmController:AbortController|null=null;private warmKey='';private warmRunning=false;private warmAt=0
+ private preparedPool=new PreparedPool<Prepared>(2,hasDevicePCM,releaseDevicePCM)
+ private resultPin:(()=>void)|null=null
+ private warmPreparing:{from:string;to:string;start:number;end:number}|null=null
  private userIntent:{kind:'user-next'|'user-direction';preferred:string|null}|null=null
  private nearbyTask:Promise<void>|null=null
  private retryAt=0;private autoTask:Promise<void>|null=null;private lastResult:Prepared|null=null
@@ -98,6 +102,8 @@ export class MetricRun {
   const current=this.player?.current
   if(current&&current.id!==this.lastCurrent){
    if(this.lastCurrent){
+    this.resetWarm(true)
+    this.resultPin?.();this.resultPin=null
     this.revision++;this.request?.abort();this.request=null;this.working=false
     this.userIntent=null;this.lastResult=this.result;this.result=null;this.pair=null;this.recommendation=null;this.phase='idle'
     this.selection=null;this.selected=null;this.explicit=null;this.notice='已进入 '+current.title+'，继续按你的方向推荐'
@@ -110,8 +116,26 @@ export class MetricRun {
  }
  private invalidate(clear=true){
   this.revision++;this.request?.abort();this.request=null;this.working=false;this.error=''
+  // A manual request can still adopt its previously prepared cue. Keep that
+  // PCM pinned until a replacement is adopted or a hard playback reset occurs.
   if(clear){this.result=null;this.pair=null;this.recommendation=null;this.selection=null;this.phase='idle'}
   this.update()
+ }
+ private resetWarm(clear=false){this.warmController?.abort();this.warmController=null;this.warmKey='';this.warmRunning=false;this.warmPreparing=null;this.warmAt=0;if(clear){this.resultPin?.();this.resultPin=null;this.preparedPool.clear()}}
+ private deviceResult(p:MetricTransport,a:Track,b:Track,plan:Plan,signal:AbortSignal,background=false){
+  // Profiles are validated by hasDevicePCM, including profiles first fetched
+  // during this operation. Keep the lookup stable across that initial fetch.
+  const w=plan.window,asset=plan.asset
+  // A reservation trims variants belonging to unrelated sets. Their presence
+  // cannot change the identity of this exact A/B source interval.
+  const key=JSON.stringify([a.id,a.provenance,b.id,b.provenance,plan.id,plan.start,plan.end,plan.duration,[w.id,w.start,w.end,w.bars],asset?[asset.url,asset.sha256,asset.bytes,asset.duration,asset.rate]:null,plan.rate,plan.v30Eq,p.ctx.sampleRate])
+  const hit=this.preparedPool.entries().some(e=>e.key===key)
+  if(hit)p.logs?.push({kind:'device_prepared_reused',from:a.id,to:b.id,start:plan.start,sourcePosition:p.position})
+  // Subscribe before releasing background work: an exact shared preparation
+  // survives, while an unrelated cold job yields its CPU/network budget.
+  const operation=this.preparedPool.get(key,inner=>prepareDevice(p,a,b,plan,this.base,inner),signal)
+  if(!background&&this.warmRunning)this.resetWarm()
+  return operation
  }
  private async ensure(wake=true){
   if(this.host&&!this.host.requestFocus())throw Error('请回到前台后再播放')
@@ -139,7 +163,7 @@ export class MetricRun {
   if(this.player?.transition)throw Error('请先完成交接或停止，再进入预约')
   this.stop();this.library.trim(new Set([activity.initialTrackId]),4);this.activity=activity;this.selected=this.explicit=null;this.recent=[];this.error='';this.notice='预约 set 已载入，可以开始播放';this.update()
  }
- clearSet(){this.sessionSequence++;if(this.player?.transition)throw Error('交接完成后可退出预约');this.invalidate();this.activity=null;this.notice='已回到完整曲库';this.update()}
+ clearSet(){this.sessionSequence++;if(this.player?.transition)throw Error('交接完成后可退出预约');this.resetWarm(true);this.invalidate();this.activity=null;this.notice='已回到完整曲库';this.update()}
  async cacheSet(manifest:unknown){
   const sequence=++this.cacheSequence;this.setCacheController?.abort();const controller=this.setCacheController=new AbortController()
   if(this.setCache?.state==='downloading'){this.setCache={...this.setCache,state:'partial',message:'上一次下载已暂停'};this.update()}
@@ -152,7 +176,7 @@ export class MetricRun {
  }
  async start(id:string){
   if(this.activity&&!this.activity.ids.has(id))throw Error('这首歌不在预约 set 中，请先退出预约')
-  this.userIntent=null
+  this.resetWarm(true);this.userIntent=null
   if(this.player?.transition)throw Error('请先完成交接或停止，再更换当前歌曲')
   this.invalidate();const token=this.revision;this.working=true;this.update()
   try{
@@ -169,7 +193,7 @@ export class MetricRun {
   if(this.player?.transition)throw Error('正在交接；完成后可以选择下一首')
   if(!this.index.tracks.some(t=>t.id===id&&t.playStatus==='ready'&&t.mixStatus==='ready'))throw Error('这首歌尚未具备智能混音条件')
   if(id===this.player?.current?.id)throw Error('请选择不同的下一首')
-  this.invalidate();this.selected=this.explicit=id;this.retryAt=0;this.excludedPlans.clear();this.excludedTracks.clear()
+  this.resetWarm(true);this.invalidate();this.selected=this.explicit=id;this.retryAt=0;this.excludedPlans.clear();this.excludedTracks.clear()
   this.notice='已指定下一首，系统会自动寻找合适接点';this.update()
  }
  direction(value:{style?:string;energy?:number;automatic?:boolean}){
@@ -184,14 +208,14 @@ export class MetricRun {
   if(this.player?.transition){this.notice='当前交接完成后采用新的音乐方向';this.update();return}
   const enabled=this.automatic
   this.invalidate(value.automatic===false?false:true)
-  if(changed){this.explicit=null;this.selected=null;this.userIntent=this.player?.current?{kind:'user-direction',preferred:null}:null}
+  if(changed){this.resetWarm(true);this.explicit=null;this.selected=null;this.userIntent=this.player?.current?{kind:'user-direction',preferred:null}:null}
   else if(value.automatic===false)this.userIntent=null
   this.retryAt=0;this.excludedPlans.clear();this.excludedTracks.clear()
   this.notice=enabled?'方向已更新，正在自动寻找下一首':'自动接歌已关闭，当前歌曲继续播放'
   this.update()
  }
  private async cloud(a:Track,b:Track,plan:Plan,signal:AbortSignal,pollMs=2000){
-  if(this.player?.localExecution)return prepareDevice(this.player,a,b,plan,this.base,signal)
+  if(this.player?.localExecution)return this.deviceResult(this.player,a,b,plan,signal)
   const payload={from:a.id,to:b.id,windowId:plan.window.id,start:plan.start}
   const started=Date.now(),event=(kind:string,data:Record<string,unknown>)=>this.player?.logs?.push({kind,at:new Date().toISOString(),...payload,elapsedMs:Date.now()-started,...data})
   event('metric_cloud_requested',{})
@@ -221,7 +245,7 @@ export class MetricRun {
  /** One bounded cloud attempt per explicit action. Retries retain the same
   * local fallback and cannot fill the remote queue with expired cues. */
  private livePreparation(p:MetricTransport,a:Track,b:Track,budget={attempted:false}){
-  if(p.localExecution)return (plan:Plan,signal:AbortSignal)=>prepareDevice(p,a,b,plan,this.base,signal)
+  if(p.localExecution)return (plan:Plan,signal:AbortSignal)=>this.deviceResult(p,a,b,plan,signal)
   return (plan:Plan,signal:AbortSignal)=>{
    const saved=this.activity?.find(a,b,plan)
    if(saved)return nearbyResult({plan,position:()=>p.position,signal,cloud:async()=>saved,original:local=>this.renderOriginal(p,a,b,plan,local),load:(r,remote)=>Promise.all([p.cache.load(r.assets[r.decision.recommended]!,remote),p.cache.load(nativeSegment(b,r.plan.bEnd).asset,remote)]),event:(kind,data)=>p.logs.push({kind,at:new Date().toISOString(),packId:this.activity?.packId,...data})})
@@ -234,7 +258,7 @@ export class MetricRun {
  }
  /** Reserve local preparation time at an already selected automatic cue. */
  private async automaticResult(p:MetricTransport,a:Track,b:Track,plan:Plan,signal:AbortSignal){
-  if(p.localExecution)return prepareDevice(p,a,b,plan,this.base,signal)
+  if(p.localExecution)return this.deviceResult(p,a,b,plan,signal)
   const saved=this.activity?.find(a,b,plan);if(saved){p.logs.push({kind:'activity_prepared_reused',packId:this.activity?.packId,jobId:saved.id,at:new Date().toISOString()});return saved}
   const cloud=new AbortController(),cancel=()=>cloud.abort(signal.reason)
   let budgetExpired=false
@@ -253,6 +277,7 @@ export class MetricRun {
   }finally{clearInterval(timer);signal.removeEventListener('abort',cancel);cloud.abort()}
  }
  private adopt(result:Prepared,a:Track,b:Track,origin='manual'){
+  this.resultPin?.();this.resultPin=hasDevicePCM(result)?pinDevicePCM(result):null
   this.result=result;this.pair={a,b};this.method=result.decision.recommended
   this.history.push({at:new Date().toISOString(),kind:'prepared',origin,policy:SMART_POLICY,style:this.targetStyle,energy:this.energyLevel,recommendation:this.recommendation,result})
   this.history=this.history.slice(-12)
@@ -380,20 +405,46 @@ export class MetricRun {
   }catch(e){if(valid()&&(e as Error).name!=='AbortError'){this.phase='no_match';this.error=(e as Error).message;this.recommendation=null;this.selected=null;this.retryAt=Date.now()+(isExpiredCue(e)?1000:30000)}}
   finally{this.library.trim(new Set([p.current?.id??'',this.selected??'']),10);if(token===this.revision){this.working=false;this.update()}}
  }
- /** Called by the host's existing timer. All actual source scheduling remains
-  * in the pinned AudioContext transport, never in this polling timer. */
+ /** Roll a small device-ready horizon. This timer only prepares immutable
+  * plans; the common audio clock still schedules every accepted handoff. */
  private warmNearby(){
-  const p=this.player,a=p?.current,id=this.selected
-  const key=this.alive&&p?.playing&&!p.paused&&!p.busy&&!p.transition&&a&&id&&id!==a.id?a.id+':'+id:''
-  if(key!==this.warmKey){this.warmController?.abort();this.warmKey=key;this.warmRunning=false;this.warmAt=0}
-  if(!key||!p||!a||!id||this.warmRunning||Date.now()<this.warmAt)return
+  const p=this.player,a=p?.current
+  const key=this.alive&&p?.playing&&!p.paused&&!p.busy&&!p.transition&&a?[a.id,this.targetStyle,this.energyLevel,this.explicit??'',this.activity?.packId??''].join(':'):''
+  if(key!==this.warmKey){this.resetWarm();this.warmKey=key}
+  if(!key||!p||!a||this.working||this.warmRunning||Date.now()<this.warmAt)return
+  this.preparedPool.prune(r=>r.plan.from===a.id&&canArm(r.plan,a.id,p.position))
   const controller=this.warmController=new AbortController();this.warmRunning=true
-  void this.library.load(id).then(async b=>{
-   controller.signal.throwIfAborted()
-   const plan=nearbyPlan(a,b,p.position)
-   if(plan)await (p.localExecution?preloadDevice(p,a,b,plan,controller.signal):preloadOriginal(p,a,b,plan,controller.signal))
-  }).catch(e=>{if(!controller.signal.aborted)p.logs.push({kind:'nearby_preload_failed',reason:(e as Error).message})})
-   .finally(()=>{if(this.warmController===controller){this.warmRunning=false;this.warmAt=Date.now()+2000}})
+  void (async()=>{
+   if(!p.localExecution){const id=this.selected;if(!id)return;const b=await abortable(this.library.load(id),controller.signal),plan=nearbyPlan(a,b,p.position);if(plan)await preloadOriginal(p,a,b,plan,controller.signal);return}
+   const entry=this.index.tracks.find(t=>t.id===a.id);if(!entry)return
+   const search=candidateStages(this.activity?this.index.tracks.filter(t=>this.activity!.ids.has(t.id)):this.index.tracks,entry,this.targetStyle,this.recent,this.excludedTracks,this.explicit,this.selected)
+   const allowed=new Set(search.stages.flatMap(s=>s.entries.map(t=>t.id)))
+   const session=this.activity as (ActivitySession&{candidates?:(a:Track,position:number,energy:number)=>{track:Track;plan:Plan}[]})|null
+   const tracks:Track[]=[]
+   // Use every retained reservation track when selecting the live nearest
+   // material. Sparse cloud coverage is useful backup evidence, but cannot
+   // substitute its sampled point for the point a click would choose now.
+   const retained=session?.tracks?.filter(t=>allowed.has(t.id)&&Array.isArray(t.windows))??[]
+   if(retained.length)tracks.push(...retained)
+   else for(const id of [...allowed].slice(0,8)){controller.signal.throwIfAborted();try{tracks.push(await abortable(this.library.load(id),controller.signal))}catch(error){controller.signal.throwIfAborted()}}
+   let primary:{track:Track;plan:Plan}[]=[]
+   for(const stage of search.stages){const ids=new Set(stage.entries.map(t=>t.id)),ranked=rankNearbyChoices(a,tracks.filter(t=>ids.has(t.id)),p.position,this.energyLevel);primary=ranked.choices.filter(c=>!this.excludedPlans.has(c.plan.id));if(primary.length)break}
+   // A tap is delivered after preparation has begun, often after the first
+   // cue has passed. Reserve the second slot for that same target's next
+   // formal live choice, using the unchanged selector at a future position.
+   // Cache availability never changes the actual click-time selection.
+   const first=primary[0],successor=first?rankNearbyChoices(a,[first.track],first.plan.start+.001,this.energyLevel).best:null
+   const next=successor&&!this.excludedPlans.has(successor.plan.id)?[successor]:[]
+   const backups=session?.candidates?.(a,p.position,this.energyLevel).filter(c=>allowed.has(c.track.id)&&!this.excludedPlans.has(c.plan.id))??[]
+   const candidates=[...new Map([...(first?[first]:[]),...next,...primary.slice(1),...backups].filter(c=>c.plan.start>p.position+1.5&&!!choiceForPlan(a,c.track,c.plan,this.energyLevel)).map(c=>[c.plan.id,c])).values()].slice(0,2)
+   for(const {track:b,plan} of candidates){
+    controller.signal.throwIfAborted();if(p.current?.id!==a.id||!canArm(plan,a.id,p.position))continue
+    this.warmPreparing={from:a.id,to:b.id,start:plan.start,end:plan.end};this.update()
+    try{const result=await this.deviceResult(p,a,b,plan,controller.signal,true);if(canArm(result.plan,a.id,p.position))p.logs.push({kind:'device_rolling_ready',from:a.id,to:b.id,start:plan.start,method:result.decision.recommended,sourcePosition:p.position,renderRequested:false})}
+    catch(error){controller.signal.throwIfAborted();p.logs.push({kind:'device_rolling_unavailable',to:b.id,start:plan.start,reason:(error as Error).message})}
+   }
+  })().catch(e=>{if(!controller.signal.aborted)p.logs.push({kind:'nearby_preload_failed',reason:(e as Error).message})})
+   .finally(()=>{if(this.warmController===controller){this.warmRunning=false;this.warmPreparing=null;this.warmAt=Date.now()+2000;this.update()}})
  }
  tick(){
   this.warmNearby()
@@ -458,19 +509,20 @@ export class MetricRun {
    if(p.transition?.result.id===result.id){this.history.push({kind:'handoff_requested',origin,jobId:result.id,method,sourcePosition:p.position,at:new Date().toISOString()});this.history=this.history.slice(-12)}
   }finally{if(token===this.revision){this.working=false;this.update()}}
  }
- pause(){this.userIntent=null;this.invalidate(false);this.player?.pause();this.phase=this.result?'ready':'idle';this.notice='已暂停，继续播放后按你的方向自动推荐';this.save();this.update()}
+ pause(){this.resetWarm();this.userIntent=null;this.invalidate(false);this.player?.pause();this.phase=this.result?'ready':'idle';this.notice='已暂停，继续播放后按你的方向自动推荐';this.save();this.update()}
  async resume(){const p=await this.ensure();await p.resume();this.retryAt=0}
- async seek(position:number){this.userIntent=null;if(this.player?.transition)throw Error('请先完成交接或停止，再调整位置');this.invalidate();this.excludedPlans.clear();this.retryAt=0;const paused=this.player?.paused;await this.player?.seek(position);if(paused)this.player?.pause()}
+ async seek(position:number){this.userIntent=null;if(this.player?.transition)throw Error('请先完成交接或停止，再调整位置');this.resetWarm(true);this.invalidate();this.excludedPlans.clear();this.retryAt=0;const paused=this.player?.paused;await this.player?.seek(position);if(paused)this.player?.pause()}
  cancel(){this.userIntent=null;if(this.player?.transition)throw Error('已安排交接，暂停可暂停时间轴，停止可取消');this.invalidate();this.retryAt=Date.now()+30000;this.notice='已取消这次准备，当前歌曲继续播放';this.update()}
- stop(){this.sessionSequence++;this.userIntent=null;this.invalidate();this.player?.stop();this.lastCurrent=null;this.retryAt=0;this.notice='已停止';this.save();this.update()}
- pauseForHost(){this.sessionSequence++;this.cacheSequence++;this.setCacheController?.abort();this.userIntent=null;this.invalidate(false);if(this.player?.busy){this.player.stop();this.notice='已暂停准备，回到前台后重新开始'}else this.player?.pause();this.save()}
+ stop(){this.resetWarm(true);this.sessionSequence++;this.userIntent=null;this.invalidate();this.player?.stop();this.lastCurrent=null;this.retryAt=0;this.notice='已停止';this.save();this.update()}
+ pauseForHost(){this.resetWarm();this.sessionSequence++;this.cacheSequence++;this.setCacheController?.abort();this.userIntent=null;this.invalidate(false);if(this.player?.busy){this.player.stop();this.notice='已暂停准备，回到前台后重新开始'}else this.player?.pause();this.save()}
  setVolume(value:number){if(!Number.isFinite(value))throw Error('音量无效');this.volume=Math.max(0,Math.min(1,value));this.player?.setVolume(this.volume);this.update()}
  filters(value:{label?:string;query?:string}){this.label=value.label??this.label;this.query=value.query??this.query;this.update()}
  export(){return {...this.player?.export(),schema:'harbeat.metric-mix-session.v1',release:METRIC_RELEASE,automaticPolicy:SMART_POLICY,direction:{style:this.targetStyle,energy:this.energyLevel,automatic:this.automatic},history:this.history,selectedResult:this.result??this.lastResult,selectedMethod:this.method,selection:this.selection,exportedAt:new Date().toISOString()}}
  save(){if(this.player)this.host?.saveSession(JSON.stringify(this.export()))}
- dispose(){this.setCacheController?.abort();this.warmController?.abort();this.alive=false;this.invalidate();this.save();this.player?.dispose()}
- snapshot(){const p=this.player,r=this.result;return {activitySet:this.activity?{packId:this.activity.packId,name:this.activity.name,trackCount:this.activity.ids.size,prepared:this.activity.results.length,cache:this.cachePackId===this.activity.packId?this.setCache:null}:null,cache:this.setCache?{packId:this.cachePackId,...this.setCache}:null,release:METRIC_RELEASE,selected:this.selected,label:this.label,query:this.query,volume:this.volume,working:this.working,notice:this.error||this.notice,canArm:!!r&&canArm(r.plan,p?.current?.id??null,p?.position??0)&&!p?.transition,
+ dispose(){this.setCacheController?.abort();this.resetWarm(true);this.alive=false;this.invalidate();this.save();this.player?.dispose()}
+ snapshot(){const p=this.player,r=this.result,ready=[...new Map([...this.preparedPool.entries().map(e=>e.value),...(r?[r]:[])].filter(value=>hasDevicePCM(value)&&value.plan.from===p?.current?.id&&canArm(value.plan,p.current!.id,p.position)).map(value=>[value.id,value])).values()];return {activitySet:this.activity?{packId:this.activity.packId,name:this.activity.name,trackCount:this.activity.ids.size,prepared:this.activity.candidateCount??this.activity.results.length,cloudCoverage:this.activity.cloudCoverage,cache:this.cachePackId===this.activity.packId?this.setCache:null}:null,cache:this.setCache?{packId:this.cachePackId,...this.setCache}:null,release:METRIC_RELEASE,selected:this.selected,label:this.label,query:this.query,volume:this.volume,working:this.working,notice:this.error||this.notice,canArm:!!r&&hasDevicePCM(r)&&canArm(r.plan,p?.current?.id??null,p?.position??0)&&!p?.transition,
   automatic:this.automatic,energyLevel:this.energyLevel,targetStyle:this.targetStyle,phase:this.phase,nearbyWorking:!!this.nearbyTask,recommendation:this.recommendation,selection:this.selection,
+  warm:{state:this.warmRunning?'preparing':ready.length?'ready':'idle',preparing:this.warmPreparing,ready:ready.map(value=>({from:value.plan.from,to:value.plan.to,start:value.plan.start,end:value.plan.end,method:value.decision.recommended})),sourcePosition:p?.position??0,limit:3,...deviceBufferUsage()},
   result:r?{id:r.id,policyVersion:r.policyVersion,plan:r.plan,metrics:r.metrics,decision:r.decision,available:METHODS.filter(m=>hasMethod(r,m))}:null,method:this.method}}
 }
 export async function loadMetricIndex(base:URL){return readLibraryIndex(await readMetricJson('/listen/library.json',base))}

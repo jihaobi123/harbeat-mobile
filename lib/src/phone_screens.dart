@@ -321,12 +321,26 @@ class _NextRecommendation extends StatelessWidget {
     final start = (cue['start'] as num?)?.toDouble();
     final remaining =
         start == null ? null : start - c.position.inMilliseconds / 1000;
+    final nearby = NearbyCueStatus(
+        Map<String, dynamic>.from(state['warm'] as Map? ?? {}),
+        currentTrackId: c.v3State['current']?['id']?.toString());
     return _PaperSleeve(
         color: HB.apricot,
         padding: const EdgeInsets.all(16),
         child:
             Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           const _SectionTitle('接下来听', action: '为你衔接'),
+          const SizedBox(height: 10),
+          Semantics(
+              liveRegion: true,
+              child: Text(nearby.label,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 14))),
+          if (nearby.readyCount > 0 && nearby.preparing)
+            const Text('继续准备后续接点', style: TextStyle(fontSize: 14)),
+          const SizedBox(height: 6),
+          const Text('点击切歌后，也会等到附近合适的拍点、人声句尾或段落边界再衔接。',
+              style: TextStyle(fontSize: 14)),
           const SizedBox(height: 16),
           AnimatedSwitcher(
               duration: Duration(

@@ -1,4 +1,4 @@
-import {AudioCache} from '../metric-upstream/realtime/cache'
+import {ReservationAudioCache as AudioCache} from './reservation-cache'
 import {nativeSegment,nativeSegments,SegmentScheduler} from '../metric-upstream/continuous/segments'
 import type {Track} from '../metric-upstream/realtime/planner'
 import type {Prepared,Method,PlayingTransition} from '../metric-upstream/metric-mix/types'
