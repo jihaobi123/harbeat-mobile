@@ -45,6 +45,24 @@ class ProxyTest(unittest.TestCase):
             self.assertEqual(post.call_args.kwargs['headers'], {'Origin': 'https://8.136.120.255'})
             self.assertFalse(post.call_args.kwargs['allow_redirects'])
 
+    def test_jetson_data_plans_use_their_own_bounded_endpoint(self):
+        payload = {'from': 'track-a', 'to': 'track-b', 'windowId': 'w1-4', 'start': 30.5}
+        upstream = MagicMock(status_code=202, content=b'{"id":"test","status":"queued"}')
+        with patch('serve_preview.requests.post', return_value=upstream) as post:
+            response = requests.Session().post(self.base + '/listen/smart-api/plans',
+                json=payload, headers={'Origin': self.base, 'Cookie': 'private=ignore'})
+            self.assertEqual(response.status_code, 202)
+            self.assertEqual(post.call_args.args[0], 'https://8.136.120.255/listen/smart-api/plans')
+            self.assertEqual(post.call_args.kwargs['json'], payload)
+            self.assertEqual(post.call_args.kwargs['headers'], {'Origin': 'https://8.136.120.255'})
+        upstream = MagicMock(status_code=200, headers={'Content-Type': 'application/json'})
+        upstream.__enter__.return_value = upstream
+        upstream.iter_content.return_value = [b'{"status":"working"}']
+        with patch('serve_preview.requests.get', return_value=upstream) as get:
+            path = '/listen/smart-api/plans/' + 'a' * 64
+            self.assertEqual(requests.Session().get(self.base + path).status_code, 200)
+            self.assertEqual(get.call_args.args[0], 'https://8.136.120.255' + path)
+
     def test_bad_origin_extra_paths_and_oversized_body_are_not_forwarded(self):
         with patch('serve_preview.requests.post') as post:
             client = requests.Session()

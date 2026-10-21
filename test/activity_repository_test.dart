@@ -104,7 +104,12 @@ void main() {
     expect(r.hasMultipleCueCandidates, false);
     r.json['pack']['candidateVersion'] = 'activity-candidate-v2';
     expect(r.hasMultipleCueCandidates, true);
+    expect(r.hasJetsonStrategies, false);
+    expect(r.preparationLabel, contains('待准备 Jetson 编排'));
+    r.json['pack']['strategyVersion'] = 'jetson-decision-v1';
+    expect(r.hasJetsonStrategies, true);
     expect(r.preparationLabel, contains('云端已备齐'));
+    expect(r.preparationLabel, contains('Jetson 批准接点'));
     expect(r.packId, 'b' * 32);
   });
   test('encoded cache completion and live nearby readiness stay separate', () {

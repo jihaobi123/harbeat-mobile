@@ -1,0 +1,31 @@
+{
+  "scope": "Same HIPHOP→Make It Right source and frozen cue; previous device reference vs Jetson Node shared definitions",
+  "reference": {
+    "bassOverlap": 0.2636234611608993,
+    "otherOverlap": 0.34042577338576907,
+    "bassDifference": 0.44876027354650216,
+    "otherDifference": 0.5606534217737322
+  },
+  "jetson": {
+    "bassOverlap": 0.2636234611608993,
+    "otherOverlap": 0.34042577338576907,
+    "bassDifference": 0.44876027354650216,
+    "otherDifference": 0.560653421773732
+  },
+  "maximumMetricError": 2.220446049250313e-16,
+  "referenceMethod": "filter",
+  "jetsonMethod": "filter",
+  "intentionalBoundaryRepair": "Observed first bar leads source cue by 37.188 ms; duckStart clipped to 0; main cue unchanged",
+  "beatErrorMs": 37.18820861678296,
+  "browserReplayRepair": {
+    "engineNumericDifference": 3.3306690738754696e-16,
+    "maximumAcceptedEQNumericDifference": 1e-09,
+    "exactChecks": [
+      "source fingerprints",
+      "geometry boundaries",
+      "JSON field structure",
+      "string metadata",
+      "canonical analysis fingerprint"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 import {LiveTransport} from '../realtime/transport'
 import type {Track} from '../realtime/planner'
-export type Host={requestFocus:()=>boolean;saveSession:(text:string)=>void;exportLog:(text:string,format:string)=>void;close:()=>void;prepareMetric?:(text:string)=>string;requestMetric?:(id:number,text:string)=>void}
+export type Host={requestFocus:()=>boolean;saveSession:(text:string)=>void;exportLog:(text:string,format:string)=>void;close:()=>void;prepareMetric?:(text:string)=>string;requestMetric?:(id:number,text:string)=>void;requestPlan?:(id:number,text:string)=>void}
 declare global {interface Window {HarBeatHost?:Host}}
 /** Host lifecycle is outside the pinned V3 planner/DSP. Never resume on focus gain. */
 export class MobileSession {

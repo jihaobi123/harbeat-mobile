@@ -1,0 +1,72 @@
+{
+  "attempted": 9,
+  "approved": 2,
+  "target": 6,
+  "targetMet": false,
+  "algorithmSha256": "1de11515269f6368d9e66ca85adc1c197df3f1fc949df481a94808eb617ca0c3",
+  "cases": [
+    {
+      "id": "curated-01",
+      "title": "Attention → HIPHOP",
+      "singleMethod": "filter",
+      "status": "skip",
+      "reason": "当前主接点的响度／人声校验未通过，保持接点并跳过"
+    },
+    {
+      "id": "curated-02",
+      "title": "Nevada → SOMETHING AIN'T RIGHT",
+      "singleMethod": "filter",
+      "status": "skip",
+      "reason": "冻结的历史单项未指定或当前接点不合格"
+    },
+    {
+      "id": "curated-03",
+      "title": "Meant To Be → HIPHOP",
+      "singleMethod": "filter",
+      "status": "skip",
+      "reason": "当前主接点的响度／人声校验未通过，保持接点并跳过"
+    },
+    {
+      "id": "curated-04",
+      "title": "All Falls Down → GRILLZ (feat. Ilir808)",
+      "singleMethod": "yield",
+      "status": "skip",
+      "reason": "冻结的历史单项未指定或当前接点不合格"
+    },
+    {
+      "id": "curated-05",
+      "title": "Doin' It → Talgo",
+      "singleMethod": "vocal",
+      "status": "approved",
+      "reason": null
+    },
+    {
+      "id": "curated-06",
+      "title": "GOOD BOY → Snake Gang",
+      "singleMethod": "vocal",
+      "status": "approved",
+      "reason": null
+    },
+    {
+      "id": "curated-07",
+      "title": "Love Note (Original Instrumental) → Feather",
+      "singleMethod": "bass",
+      "status": "skip",
+      "reason": "前置必须为完整连续的一加二小节"
+    },
+    {
+      "id": "curated-08",
+      "title": "If I Saw You Again → Hamba Nobani",
+      "singleMethod": "bass",
+      "status": "skip",
+      "reason": "当前主接点的响度／人声校验未通过，保持接点并跳过"
+    },
+    {
+      "id": "curated-09",
+      "title": "Ampersand → Prayer Vox feat. Vivian Chen ~infused by Caccini 「Ave Maria」~",
+      "singleMethod": "bass",
+      "status": "skip",
+      "reason": "前置必须为完整连续的一加二小节"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HarBeat · B 鼓提前叠放试听</title>
+<style>
+:root{color-scheme:light;font-family:system-ui,sans-serif;color:#193329;background:#f7f8f2}body{max-width:850px;margin:auto;padding:24px 18px 80px;line-height:1.65}h1{font-size:28px;line-height:1.3}h2{font-size:20px}section{margin:24px 0;padding:18px;background:#fff;border:1px solid #b5c7bc;border-radius:16px}button{font:inherit;padding:10px 17px;border-radius:10px;border:1px solid #385c49;background:#e3efdf;color:inherit;cursor:pointer}button:hover,button[aria-pressed=true]{background:#fac47b}.controls,.players{display:flex;gap:10px;flex-wrap:wrap}.controls{position:sticky;top:0;padding:12px 0;background:#f7f8f2;z-index:1}fieldset{border:0;padding:10px 0;margin:0}legend{font-weight:650}label{display:inline-flex;align-items:center;gap:6px;margin:6px 16px 6px 0}input{width:19px;height:19px;accent-color:#326449}.saved,#status{font-size:14px;color:#526953}#status{min-height:2.2em}.note{font-size:14px}a{color:#1d6452}@media(max-width:420px){h1{font-size:24px}section{padding:14px}button{padding:10px 12px}}
+</style>
+<h1>B 鼓声部提前叠放</h1>
+<p>每组比较原渐混、此前较好的单项，以及只增加 B 自然鼓提前进入的版本。主交接点、速度、其他声部曲线、EQ 和人声规则固定。</p>
+<p class="note">B 鼓用一小节轻轻进入，保持两小节，再接入原主窗口。三版编号在每组内打乱；可随时换版本、记录选择，不需要听完整段。资料不足的曲对会跳过。</p>
+<p class="note" id="round-note"></p>
+<div class="controls"><button id="pause" type="button">暂停 / 继续</button><button id="stop" type="button">停止</button><button id="export" type="button">导出我的记录</button></div>
+<p id="status" role="status" aria-live="polite">正在读取试听清单…</p>
+<div id="groups"></div>
+<script type="module" src="/src/mobile/drum-prelude-audition.ts"></script>
+</html>

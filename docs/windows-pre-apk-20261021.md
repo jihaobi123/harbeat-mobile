@@ -2,11 +2,11 @@
 
 Mac 和 Windows 都能编译 Android APK。本轮按约定准备源码、预处理接口、App 音频执行器和构建素材，不生成新 APK。Windows 上仍需完成 Gradle 构建和手机试听；网页测试不能代替 Android WebView 的真实音频性能测试。
 
-当前版本为 **0.2.1+16**，包含预约多接点、端侧滚动预热和独立预约音频缓存。Windows 脚本会重新生成预约 planner 与音频引擎；请使用本分支最新源码，避免只更新 Flutter 页面而留下旧执行器。
+当前版本为 **0.3.0+17**，包含预约多接点、端侧滚动预热和独立预约音频缓存。Windows 脚本会重新生成预约 planner 与音频引擎；请使用本分支最新源码，避免只更新 Flutter 页面而留下旧执行器。
 
 0.2.0+15 在 Mac 上已执行 `python tools/build_realtime.py`：原有 218 个音频文件共 282,540,060 字节逐个校验通过，TypeScript 和两个 Vite 引擎构建通过。该轮 `python tools/verify_android_bundle.py` 核对了 260 个生成文件及 136 个源码输入；特征工作线程、变速工作线程和 MPL 许可进入 Android 素材目录。具体数量属于当时记录，新版以重新生成后的验证结果为准。尚未运行 Windows PowerShell 脚本、Android Gradle 编译或手机验收。
 
-0.2.1+16 已重新构建并核对 260 个生成文件、143 个源码输入；构建工具 6 项测试通过，未编译 APK。
+0.3.0+17 已重新构建并核对 260 个生成文件、143 个源码输入；构建工具 6 项测试通过，未编译 APK。
 
 ## 环境
 
@@ -73,3 +73,12 @@ Android WebView 继续只加载 APK 内的页面与脚本。新增只读路径�
 音高保持使用 `@soundtouchjs/core 2.1.1`（MPL-2.0），在浏览器工作线程中准备可复用的源片段。构建脚本把包内许可和源码获取地址写入网页及 Android 引擎的 `third-party/` 目录；提交源码时保留这些说明。新增依赖通过 `dependency-overlay.json` 记录原始与当前依赖清单的指纹，原有 DSP 文件和音频时钟仍逐字节校验。
 
 参考：[Flutter Android 环境设置](https://docs.flutter.dev/platform-integration/android/setup)、[Flutter Android 发布构建](https://docs.flutter.dev/deployment/android)。
+
+
+## Jetson 判断与端侧执行
+
+0.3.0+17 将实际窗口的重叠、FFT 音高差、人声退出和手法资格移到 Jetson。手机核验来源与接点后，下载原曲／分轨，保调变速并执行增益、EQ 和声部控制。Android 增加固定 `/plans` 请求桥，网页与手机使用相同协议。
+
+新预约会保存多个接点的完整批准；“素材齐”与“编排齐”分别计数。旧预约可在详情页点击“准备 Jetson 混音编排”升级，保留 set 曲目和初始曲。未准备好的接点继续等待后续合格边界。
+
+构建后运行 `python tools/verify_android_bundle.py`，确认 `apkBuilt: false` 的素材检查通过。本次没有编译 APK；实际安卓设备的长时间播放与内存表现仍需 Windows 构建后验收。

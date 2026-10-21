@@ -108,7 +108,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
                     if (executionAudio != null && hash == executionAudio.groupValues[1]) return verifiedAudio(path, hash)
                     if (path.matches(Regex("/listen/(?:catalog/[A-Za-z0-9_-]{1,160}/)?media/[A-Za-z0-9_.-]+\\.(flac|wav)")) && hash.matches(Regex("[a-f0-9]{64}"))) return verifiedAudio(path, hash)
                     if (path.matches(Regex("/listen/smart-media/[a-f0-9]{64}/(original|bass|filter|yield|vocal|bass_filter)\\.wav")) && hash.matches(Regex("[a-f0-9]{64}"))) return verifiedAudio(path, hash)
-                    if (path.matches(Regex("/listen/(library\\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?details/[A-Za-z0-9_-]{1,160}\\.json|smart-api/jobs/[a-f0-9]{64})"))) return continuousMetadata(path)
+                    if (path.matches(Regex("/listen/(library\\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?details/[A-Za-z0-9_-]{1,160}\\.json|smart-api/(jobs|plans)/[a-f0-9]{64})"))) return continuousMetadata(path)
                     if (path.matches(Regex("/listen/execution/(index\\.json|tracks/track-[a-f0-9]{20}\\.json|profiles/[a-f0-9]{64}\\.json)"))) return continuousMetadata(path)
                     val publishedAudio = path.matches(Regex("/analysis-lab-static/(v3-live-baseline-20260922|v31-candidate-20260923|vocal-overlap-corpus-20260924)/media/[A-Za-z0-9_.-]+\\.flac"))
                     val registeredAudio = path.matches(Regex("/api/analysis-lab/media/[a-f0-9]{64}"))
@@ -325,18 +325,25 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
     }
     inner class Host {
         @JavascriptInterface fun requestMetric(id: Int, text: String) {
+            requestPreparation(id, text, false)
+        }
+        @JavascriptInterface fun requestPlan(id: Int, text: String) {
+            requestPreparation(id, text, true)
+        }
+        private fun requestPreparation(id: Int, text: String, dataPlan: Boolean) {
             fun reply(value: String) { handler.post {
-                if (!disposed) web.evaluateJavascript("window.dispatchEvent(new CustomEvent('harbeat-metric-result',{detail:{id:$id,reply:${JSONObject.quote(value)}}}));", null)
+                val event = if (dataPlan) "harbeat-plan-result" else "harbeat-metric-result"
+                if (!disposed) web.evaluateJavascript("window.dispatchEvent(new CustomEvent('$event',{detail:{id:$id,reply:${JSONObject.quote(value)}}}));", null)
             } }
             if (disposed || id <= 0 || text.toByteArray().size > 8192 || !metricSlot.tryAcquire()) {
                 reply(JSONObject().put("ok", false).put("error", "上一条准备请求仍在连接，请稍后重试").toString()); return
             }
             try { metricRequests.execute {
-                val value = prepareMetric(text)
+                val value = prepareMetric(text, dataPlan)
                 metricSlot.release(); reply(value)
             } } catch (_: Exception) { metricSlot.release() }
         }
-        private fun prepareMetric(text: String): String {
+        private fun prepareMetric(text: String, dataPlan: Boolean): String {
             return try {
                 check(text.toByteArray().size <= 8192)
                 val body = JSONObject(text)
@@ -344,7 +351,8 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
                 for (key in listOf("from", "to", "windowId")) check(body.getString(key).matches(Regex("[A-Za-z0-9_-]{1,160}")))
                 check(body.getString("from") != body.getString("to"))
                 val start = body.getDouble("start"); check(start.isFinite() && start >= 0 && start <= 86400)
-                val connection = URL("https://8.136.120.255/listen/smart-api/jobs").openConnection() as HttpURLConnection
+                val endpoint = if (dataPlan) "plans" else "jobs"
+                val connection = URL("https://8.136.120.255/listen/smart-api/$endpoint").openConnection() as HttpURLConnection
                 try {
                     connection.requestMethod = "POST"; connection.doOutput = true
                     connection.connectTimeout = 10000; connection.readTimeout = 20000; connection.instanceFollowRedirects = false

@@ -1,5 +1,6 @@
 // tools/activity_set_plan.ts
 var import_node_fs = require("fs");
+var import_node_crypto = require("crypto");
 
 // vendor/realtime-v3/src/metric-upstream/realtime/decision.ts
 var DECISION_POLICY = {
@@ -151,9 +152,9 @@ function level(track, start, end) {
   return result;
 }
 function evaluateEvidence(a, b, w, mixStart, intent) {
-  var _a, _b, _c, _d, _e;
+  var _a2, _b, _c, _d, _e;
   const policy = EVIDENCE_POLICY, direction = intent.energy || (intent.kind === "up" || intent.kind === "down" ? intent.kind : "any");
-  const targetStyle = intent.style || null, local = (_a = b.mixProfile) == null ? void 0 : _a.windows.find((x) => x.id === w.id);
+  const targetStyle = intent.style || null, local = (_a2 = b.mixProfile) == null ? void 0 : _a2.windows.find((x) => x.id === w.id);
   const before = level(a, mixStart - policy.preSec, mixStart);
   const after = Array.from({ length: 4 }, (_, i) => level(b, w.end + i * 4, w.end + (i + 1) * 4));
   const deltas = after.map((x) => before.dbfs !== null && x.dbfs !== null ? x.dbfs - before.dbfs : null);
@@ -169,8 +170,8 @@ function evaluateEvidence(a, b, w, mixStart, intent) {
   };
   const result = (accepted, code, reason) => ({ accepted, code, reason, ...evidence });
   if ((targetStyle || direction !== "any") && [a, b].some((t) => {
-    var _a2;
-    return t.mixProfile && (t.mixProfile.schema !== "harbeat.mix_profiles.v1" || t.mixProfile.source.masterSha256 !== ((_a2 = t.provenance) == null ? void 0 : _a2.masterSha256));
+    var _a3;
+    return t.mixProfile && (t.mixProfile.schema !== "harbeat.mix_profiles.v1" || t.mixProfile.source.masterSha256 !== ((_a3 = t.provenance) == null ? void 0 : _a3.masterSha256));
   })) return result(false, "profile_identity", "\u7A97\u53E3\u6863\u6848\u4E0E\u5F53\u524D\u97F3\u9891\u8EAB\u4EFD\u6216\u7248\u672C\u4E0D\u4E00\u81F4");
   if (targetStyle) {
     const s = local == null ? void 0 : local.takeover.style;
@@ -180,13 +181,13 @@ function evaluateEvidence(a, b, w, mixStart, intent) {
   if (direction !== "any") {
     if (!a.mixProfile || !b.mixProfile || before.dbfs === null || after.some((x) => x.dbfs === null) || w.end + policy.sustainSec > b.duration + 1e-3) return result(false, "energy_missing", "\u4EA4\u63A5\u524D\u6216\u63A5\u7BA1\u540E16\u79D2\u7684\u7EDF\u4E00\u5C3A\u5EA6\u6D4B\u91CF\u4E0D\u5B8C\u6574\uFF1B\u4E0D\u4F7F\u7528\u6574\u66F2\u5E73\u5747\u6216\u76F8\u5BF9\u66F2\u7EBF\u66FF\u4EE3");
     if ([a, b].some((t) => {
-      var _a2;
-      return ((_a2 = t.mixProfile) == null ? void 0 : _a2.policy.calibrationId) !== policy.calibrationId || t.mixProfile.policy.energyUnit !== "dBFS_RMS";
+      var _a3;
+      return ((_a3 = t.mixProfile) == null ? void 0 : _a3.policy.calibrationId) !== policy.calibrationId || t.mixProfile.policy.energyUnit !== "dBFS_RMS";
     })) return result(false, "energy_calibration", "\u80FD\u91CF\u6807\u5C3A\u6216\u5355\u4F4D\u4E0D\u540C\uFF0C\u4E0D\u80FD\u8DE8\u66F2\u6BD4\u8F83");
     if (deltas.some((x) => x !== null && Math.abs(x) > policy.maximumJumpDb)) return result(false, "energy_jump", `\u63A5\u7BA1\u540E\u51FA\u73B0\u8D85\u8FC7 ${policy.maximumJumpDb} dB \u7684\u529F\u7387\u8DF3\u53D8\uFF0C\u8D85\u51FA\u5B9E\u9A8C\u4E0A\u9650`);
     if (deltas.some((x) => x === null || (direction === "up" ? x < policy.minimumDeltaDb : x > -policy.minimumDeltaDb))) return result(false, "energy_not_sustained", `\u76EE\u6807${direction === "up" ? "\u5347" : "\u964D"}\u80FD\u91CF\u672A\u5728\u63A5\u7BA1\u540E\u5168\u90E84\u4E2A\u7A97\u53E3\u6301\u7EED\u81F3\u5C11 ${policy.minimumDeltaDb} dB\uFF1B\u5404\u7A97\u53E3\u5DEE\u503C ${deltas.map((x) => {
-      var _a2;
-      return (_a2 = x == null ? void 0 : x.toFixed(2)) != null ? _a2 : "\u672A\u77E5";
+      var _a3;
+      return (_a3 = x == null ? void 0 : x.toFixed(2)) != null ? _a3 : "\u672A\u77E5";
     }).join(" / ")} dB`);
   }
   return result(true, "local_evidence_pass", `${targetStyle ? `\u63A5\u7BA1\u7A97\u53E3\u6A21\u578B\u5019\u9009 ${targetStyle} \u7B26\u5408\u76EE\u6807\uFF1B` : ""}${direction !== "any" ? `\u63A5\u7BA1\u540E16\u79D2\u6301\u7EED${direction === "up" ? "\u5347" : "\u964D"}\u80FD\u91CF\uFF0C\u5DEE\u503C ${deltas.map((x) => x == null ? void 0 : x.toFixed(2)).join(" / ")} dB` : "\u672C\u6B21\u672A\u9650\u5236\u80FD\u91CF\u65B9\u5411"}${(local == null ? void 0 : local.entry.style.status) === "needs_review" ? "\uFF1B\u8FDB\u5165\u7247\u6BB5\u98CE\u683C\u5F85\u786E\u8BA4\uFF0C\u63A5\u7BA1\u7A97\u53E3\u5355\u72EC\u5224\u65AD" : ""}`);
@@ -212,7 +213,7 @@ function energyAt(t, start, end) {
   return weight ? sum / weight : NaN;
 }
 function planNext(a, tracks, position, intent, ready, budget = 18, requireReady = true, timingGate) {
-  var _a;
+  var _a2;
   const candidates = [];
   const rejected = [];
   const reject = (t, reason) => rejected.push({ track: t.title, reason });
@@ -302,7 +303,7 @@ function planNext(a, tracks, position, intent, ready, budget = 18, requireReady 
         const av = vocalPresence(a.vocals, start, out), bv = vocalPresence(b.vocals, w.start, w.end);
         const midDuck = av * d >= 0.5 && av >= 0.05 && bv * (w.end - w.start) >= 0.5 && bv >= 0.05;
         const boundary = Math.min(...a.sections.flatMap((s) => [Math.abs(s.start - out), Math.abs(s.end - out)])) < 0.4;
-        const section = ((_a = a.sections.find((s) => s.start <= out && s.end > out)) == null ? void 0 : _a.label) || "\u8FB9\u754C";
+        const section = ((_a2 = a.sections.find((s) => s.start <= out && s.end > out)) == null ? void 0 : _a2.label) || "\u8FB9\u754C";
         const wait = out - position;
         const score = 1 - wait / budget * 0.5 - Math.abs(rate - 1) * 1.4 - av * bv * 0.3 + (boundary ? 0.16 : 0) + (w.bars === 4 ? 0.05 : 0) + (a.style === b.style ? 0.04 : 0);
         candidates.push({ id: `${a.id}:${b.id}:${w.id}:${out.toFixed(3)}`, from: a.id, to: b.id, window: w, asset, start, end: out, duration: d, restore: out - Math.min(d, 120 / a.bpm), rate, score, midDuck, aVocal: av, bVocal: bv, aEnergy: ae, bEnergy: w.energy, gridError, section, prepared, evidence, reason: `${boundary ? "\u6BB5\u843D\u8FB9\u754C\u9644\u8FD1" : "\u539F\u59CB\u5C0F\u8282\u9996\u62CD"} \xB7 ${w.bars} \u5C0F\u8282 \xB7 ${midDuck ? "\u53CC\u7A97\u53E3\u4EBA\u58F0\uFF0C\u4E2D\u9891 -5 dB" : "\u65E0\u53CC\u7A97\u53E3\u4EBA\u58F0\u89E6\u53D1"} \xB7 ${prepared ? "\u7D20\u6750\u5C31\u7EEA" : "\u9700\u8981\u51C6\u5907\u7D20\u6750"} \xB7 ${evidence.reason}` });
@@ -319,13 +320,13 @@ function planNext(a, tracks, position, intent, ready, budget = 18, requireReady 
 
 // vendor/realtime-v3/src/metric-upstream/v30/planner.ts
 function sourceBound(t) {
-  var _a;
-  const s = (_a = t.alignment) == null ? void 0 : _a.source, p = t.provenance;
+  var _a2;
+  const s = (_a2 = t.alignment) == null ? void 0 : _a2.source, p = t.provenance;
   return !!s && !!p && ["masterSha256", "reportSha256", "vocalSha256"].every((k) => !!s[k] && s[k] === p[k]);
 }
 function assessExit(a, end) {
-  var _a, _b, _c, _d, _e, _f;
-  const bound = sourceBound(a), bar = bound ? (_a = a.alignment) == null ? void 0 : _a.bars.find((b) => Math.abs(b.end - end) < 0.065) : void 0;
+  var _a2, _b, _c, _d, _e, _f;
+  const bound = sourceBound(a), bar = bound ? (_a2 = a.alignment) == null ? void 0 : _a2.bars.find((b) => Math.abs(b.end - end) < 0.065) : void 0;
   const gridValid = !!(bar == null ? void 0 : bar.valid) && bar.beats.length === 4 && bar.lastBeat !== null && bar.lastBeat < end;
   const phrase = bound ? (_b = a.alignment) == null ? void 0 : _b.phrases.find((p) => p.start < end && p.tailEnd > end) : void 0;
   const conflicts = bound ? (((_c = a.alignment) == null ? void 0 : _c.conflicts) || []).filter((c) => Number.isFinite(c.start) && Number.isFinite(c.end) && c.start < end + 0.25 && c.end > end - 0.25) : [];
@@ -334,13 +335,13 @@ function assessExit(a, end) {
 }
 function makeV30Planner(adjust, eq) {
   return (a, tracks, pos, intent, ready, budget = 18, requireReady = true, timingGate) => {
-    var _a, _b;
+    var _a2, _b;
     const result = planNext(a, tracks, pos, intent, ready, budget, requireReady, timingGate), original = result.best;
     if (!original) return result;
     const before = assessExit(a, original.end), next = a.bars.find((t) => t > original.end + 0.065);
     const possible = next === void 0 ? void 0 : result.candidates.find((c) => c.to === original.to && c.window.id === original.window.id && c.asset.sha256 === original.asset.sha256 && Math.abs(c.end - next) < 1e-3 && Math.abs(c.duration - original.duration) < 1e-6);
     const afterNext = next === void 0 ? void 0 : assessExit(a, next);
-    const improves = !!afterNext && before.sourceBound && before.gridValid && afterNext.gridValid && !before.conflicts.length && !afterNext.conflicts.length && (!!before.activePhraseId && !afterNext.activePhraseId || !before.activePhraseId && !afterNext.activePhraseId && ((_a = before.sectionDistance) != null ? _a : 0) > 0.4 && ((_b = afterNext.sectionDistance) != null ? _b : Infinity) < 0.4);
+    const improves = !!afterNext && before.sourceBound && before.gridValid && afterNext.gridValid && !before.conflicts.length && !afterNext.conflicts.length && (!!before.activePhraseId && !afterNext.activePhraseId || !before.activePhraseId && !afterNext.activePhraseId && ((_a2 = before.sectionDistance) != null ? _a2 : 0) > 0.4 && ((_b = afterNext.sectionDistance) != null ? _b : Infinity) < 0.4);
     let chosen = adjust && possible && improves ? possible : original;
     const after = assessExit(a, chosen.end);
     const reason = !adjust ? "\u539F V3 \u9009\u70B9\uFF1B\u4EC5\u5C55\u793A\u8FB9\u754C\u6838\u9A8C" : chosen !== original ? "\u6574\u4F53\u540E\u79FB\u5230\u76F8\u90BB\u5B9E\u6D4B\u5C0F\u8282\uFF0C\u964D\u4F4E\u53E5\u4E2D\u9000\u51FA\u6216\u6BB5\u843D\u9519\u4F4D\u98CE\u9669\uFF1B\u6DF7\u5408\u65F6\u957F\u4FDD\u6301\u4E0D\u53D8" : !before.sourceBound || !before.gridValid || before.conflicts.length ? before.reason : (afterNext == null ? void 0 : afterNext.conflicts.length) ? afterNext.reason : !possible ? "\u76F8\u90BB\u5C0F\u8282\u4E0D\u5728\u539F V3 \u53EF\u6267\u884C\u5019\u9009\u5185\uFF1B\u4FDD\u6301\u539F\u9009\u70B9" : "\u76F8\u90BB\u5C0F\u8282\u6CA1\u6709\u660E\u786E\u6539\u5584\uFF1B\u4FDD\u6301\u539F\u9009\u70B9";
@@ -359,10 +360,10 @@ function makeV30Planner(adjust, eq) {
 var bands = ["low", "mid", "high"];
 var clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 function sample(t, start, end) {
-  var _a;
+  var _a2;
   const sums = { low: 0, mid: 0, high: 0 }, rows = [];
   let cover = 0, cursor = start;
-  for (const [i, f] of (((_a = t.alignment) == null ? void 0 : _a.bandFrames) || []).entries()) {
+  for (const [i, f] of (((_a2 = t.alignment) == null ? void 0 : _a2.bandFrames) || []).entries()) {
     const s = Math.max(start, f.start), e = Math.min(end, f.end);
     if (e <= s) continue;
     if (s > cursor + 5e-3) throw Error(t.title + " \u9891\u6BB5\u6570\u636E\u6709\u7A7A\u7F3A");
@@ -475,9 +476,9 @@ function alignedVocalOverlap(a, b, mapping) {
 // vendor/realtime-v3/src/metric-upstream/vocal-overlap/planner.ts
 var OVERLAP_POLICY_VERSION = "vocal-overlap-v1";
 function requireBoundVocals(t) {
-  var _a, _b, _c, _d, _e, _f, _g;
+  var _a2, _b, _c, _d, _e, _f, _g;
   const snapshot = t.preprocessing, vad = snapshot == null ? void 0 : snapshot.vocalActivity, source = vad == null ? void 0 : vad.source;
-  if (!sourceBound(t) || !snapshot || snapshot.reportId !== t.reportId || ((_a = t.alignment) == null ? void 0 : _a.source.reportId) !== t.reportId || snapshot.reportSha256 !== ((_b = t.provenance) == null ? void 0 : _b.reportSha256) || snapshot.masterSha256 !== ((_c = t.provenance) == null ? void 0 : _c.masterSha256) || ((_d = snapshot.bindingChecks) == null ? void 0 : _d.reportHash) !== true || ((_e = snapshot.bindingChecks) == null ? void 0 : _e.masterHash) !== true || Object.values(snapshot.bindingChecks).some((v) => v !== true) || (vad == null ? void 0 : vad.status) !== "ready" || vad.time_origin !== "master_audio_start" || vad.unit !== "ms" || (source == null ? void 0 : source.track_id) !== t.id || !((_f = t.provenance) == null ? void 0 : _f.runId) || (source == null ? void 0 : source.analysis_run_id) !== t.provenance.runId || (source == null ? void 0 : source.vocal_sha256) !== ((_g = t.provenance) == null ? void 0 : _g.vocalSha256) || !Array.isArray(t.vocals) || !Array.isArray(vad.intervals) || t.vocals.length !== vad.intervals.length || t.vocals.some(([s, e], i) => Math.abs(s - vad.intervals[i].start_ms / 1e3) > 1e-9 || Math.abs(e - vad.intervals[i].end_ms / 1e3) > 1e-9 || !Number.isFinite(vad.intervals[i].start_ms) || !Number.isFinite(vad.intervals[i].end_ms)))
+  if (!sourceBound(t) || !snapshot || snapshot.reportId !== t.reportId || ((_a2 = t.alignment) == null ? void 0 : _a2.source.reportId) !== t.reportId || snapshot.reportSha256 !== ((_b = t.provenance) == null ? void 0 : _b.reportSha256) || snapshot.masterSha256 !== ((_c = t.provenance) == null ? void 0 : _c.masterSha256) || ((_d = snapshot.bindingChecks) == null ? void 0 : _d.reportHash) !== true || ((_e = snapshot.bindingChecks) == null ? void 0 : _e.masterHash) !== true || Object.values(snapshot.bindingChecks).some((v) => v !== true) || (vad == null ? void 0 : vad.status) !== "ready" || vad.time_origin !== "master_audio_start" || vad.unit !== "ms" || (source == null ? void 0 : source.track_id) !== t.id || !((_f = t.provenance) == null ? void 0 : _f.runId) || (source == null ? void 0 : source.analysis_run_id) !== t.provenance.runId || (source == null ? void 0 : source.vocal_sha256) !== ((_g = t.provenance) == null ? void 0 : _g.vocalSha256) || !Array.isArray(t.vocals) || !Array.isArray(vad.intervals) || t.vocals.length !== vad.intervals.length || t.vocals.some(([s, e], i) => Math.abs(s - vad.intervals[i].start_ms / 1e3) > 1e-9 || Math.abs(e - vad.intervals[i].end_ms / 1e3) > 1e-9 || !Number.isFinite(vad.intervals[i].start_ms) || !Number.isFinite(vad.intervals[i].end_ms)))
     throw Error(t.title + " \u4EBA\u58F0\u533A\u95F4\u4E0E\u7ED1\u5B9A\u7684\u539F\u59CB\u62A5\u544A\u4E0D\u4E00\u81F4\u6216\u5C1A\u672A\u5C31\u7EEA");
 }
 var planVocalOverlap = (a, tracks, position, intent, ready, budget = 18, requireReady = true, timingGate) => {
@@ -565,8 +566,8 @@ var planVocalOverlap = (a, tracks, position, intent, ready, budget = 18, require
 // vendor/realtime-v3/src/metric-upstream/continuous/beatAlignment.ts
 var TOLERANCE = 0.065;
 function localBeats(track, start, end, count) {
-  var _a;
-  if (!sourceBound(track) || ((_a = track.alignment) == null ? void 0 : _a.source.reportId) !== track.reportId) return null;
+  var _a2;
+  if (!sourceBound(track) || ((_a2 = track.alignment) == null ? void 0 : _a2.source.reportId) !== track.reportId) return null;
   const bars = track.alignment.bars;
   const first = bars.findIndex((b) => Math.abs(b.start - start) <= TOLERANCE);
   if (first < 0) return null;
@@ -622,8 +623,8 @@ function level2(t, start, end) {
 }
 var near = (t, time) => t.sections.some((s) => Math.min(Math.abs(s.start - time), Math.abs(s.end - time)) < 0.4);
 var planAutomaticQuality = (a, tracks, position, intent, ready, requireReady = false) => {
-  var _a;
-  const last = (_a = a.bars.filter((t) => t < a.duration - 0.1).at(-1)) != null ? _a : a.duration - 0.1;
+  var _a2;
+  const last = (_a2 = a.bars.filter((t) => t < a.duration - 0.1).at(-1)) != null ? _a2 : a.duration - 0.1;
   const budget = Math.max(0, last - position + 1e-4);
   const exclusions = [];
   const exclude = (t, code, error) => exclusions.push({ trackId: t.id, track: t.title, code, reason: String(error), count: 1 });
@@ -644,9 +645,9 @@ var planAutomaticQuality = (a, tracks, position, intent, ready, requireReady = f
     }
   });
   const raw = planNext(a, bound, position, intent, ready, budget, requireReady, (a2, b, cue2) => {
-    var _a2;
+    var _a3;
     if (cue2.end < last * 0.5) return "\u81EA\u52A8\u7EED\u64AD\u81F3\u5C11\u4FDD\u7559\u4E00\u534A\u5B9E\u6D4B\u97F3\u4E50";
-    const prepared = [b.native.url, (_a2 = cue2.window.variants[a2.id]) == null ? void 0 : _a2.url, nativeSegment(b, cue2.window.end).asset.url].every((url) => ready.has(url));
+    const prepared = [b.native.url, (_a3 = cue2.window.variants[a2.id]) == null ? void 0 : _a3.url, nativeSegment(b, cue2.window.end).asset.url].every((url) => ready.has(url));
     if (cue2.start < position + (prepared ? 0.25 : 12)) return "\u5B8C\u6574\u7D20\u6750\u51C6\u5907\u63D0\u524D\u91CF\u4E0D\u8DB3";
     return localBeatGate(a2, b, cue2);
   });
@@ -704,6 +705,84 @@ function fullVocalCollision(a, b, p) {
   const m = alignedVocalOverlap(a.vocals, b.vocals, { aStart: p.start, bStart: p.window.start, bEnd: p.window.end, duration: p.duration, rate: p.rate });
   return m.simultaneousSec >= p.duration - 0.065;
 }
+
+// vendor/realtime-v3/src/mobile/jetson-contract.ts
+var hash = /^[a-f0-9]{64}$/;
+var methods = ["original", "bass", "filter", "yield", "vocal", "bass_filter"];
+var stems = ["bass", "other", "vocals", "drums"];
+var near2 = (a, b, tol = 2e-3) => typeof a === "number" && typeof b === "number" && Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) < tol;
+function canonicalJson(value) {
+  const clean = (v) => {
+    if (typeof v === "number" && !Number.isFinite(v)) throw Error("Non-finite approval field");
+    if (v === null || typeof v !== "object") return v;
+    if (Array.isArray(v)) return v.map(clean);
+    return Object.fromEntries(Object.keys(v).sort().filter((k) => v[k] !== void 0).map((k) => [k, clean(v[k])]));
+  };
+  return JSON.stringify(clean(value));
+}
+function replayDifference(a, b) {
+  if (typeof a === "number" && typeof b === "number") return Number.isFinite(a) && Number.isFinite(b) ? Math.abs(a - b) : Infinity;
+  if (a === b) return 0;
+  if (!a || !b || typeof a !== "object" || typeof b !== "object" || Array.isArray(a) !== Array.isArray(b)) return Infinity;
+  const aa = Object.keys(a).filter((k) => a[k] !== void 0).sort(), bb = Object.keys(b).filter((k) => b[k] !== void 0).sort();
+  if (JSON.stringify(aa) !== JSON.stringify(bb)) return Infinity;
+  return Math.max(0, ...aa.map((k) => replayDifference(a[k], b[k])));
+}
+async function jsonFingerprint(value) {
+  const raw = new TextEncoder().encode(canonicalJson(value));
+  return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", raw))).map((x) => x.toString(16).padStart(2, "0")).join("");
+}
+async function verifyJetsonDecision(value, a, b, p) {
+  var _a2, _b, _c, _d, _e, _f, _g;
+  let stage = "identity";
+  const fail = () => {
+    throw Error("Jetson \u7F16\u6392\u6765\u6E90\u3001\u63A5\u70B9\u6216\u63A7\u5236\u8303\u56F4\u4E0D\u4E00\u81F4: " + stage);
+  };
+  if (!value || value.schema !== "harbeat.jetson-mix-plan.v1" || value.status !== "ready" || value.producer !== "jetson" || value.analysisVersion !== "jetson-decision-v1" || !hash.test(value.id) || !hash.test(value.algorithmSha256) || !hash.test(value.analysisSha256)) fail();
+  stage = "fingerprint";
+  const { analysisSha256, ...body } = value;
+  if (await jsonFingerprint(body) !== analysisSha256) fail();
+  stage = "geometry";
+  const g = value.plan;
+  if (!g || g.from !== a.id || g.to !== b.id || g.windowId !== p.window.id || !near2(g.start, p.start) || !near2(g.end, p.end) || !near2(g.duration, p.duration) || !near2(g.rate, p.rate, 1e-6) || !near2(g.bStart, p.window.start) || !near2(g.bEnd, p.window.end) || g.duration < 1 || g.duration > 32 || g.rate < 0.95 || g.rate > 1.05 || !Number.isFinite(g.beatErrorMs) || g.beatErrorMs < 0 || g.beatErrorMs > 65 || !near2(value.restore, p.restore)) fail();
+  stage = "eq";
+  if (replayDifference(value.eq, p.v30Eq) > 1e-9) fail();
+  stage = "source";
+  for (const [side, t2] of [["a", a], ["b", b]]) {
+    const s = (_a2 = value.sourceProof) == null ? void 0 : _a2[side];
+    if (!s || s.trackId !== t2.id || s.runId !== ((_b = t2.provenance) == null ? void 0 : _b.runId) || !["masterSha256", "reportSha256", "vocalSha256"].every((k) => {
+      var _a3;
+      return hash.test(s[k]) && s[k] === ((_a3 = t2.provenance) == null ? void 0 : _a3[k]);
+    }) || !hash.test(s.manifestSha256) || !hash.test(s.profileSha256) || !stems.every((k) => {
+      var _a3;
+      return hash.test((_a3 = s.stemSha256) == null ? void 0 : _a3[k]);
+    }) || s.stemSha256.vocals !== s.vocalSha256) fail();
+  }
+  stage = "controls";
+  const c = value.controls, t = c == null ? void 0 : c.bassTiming;
+  if (!c || !near2(c.duration, g.duration) || !t || ![c.lastBarStart, t.duckStart, t.swapStart, t.swapEnd].every((n) => Number.isFinite(n) && n >= 0 && n <= g.duration) || t.duckStart > t.swapStart || t.swapStart > t.swapEnd || t.swapEnd > c.lastBarStart + 2e-3) fail();
+  stage = "vocal-control";
+  const v = c.vocalExit;
+  if (v && (![v.fadeStart, v.fadeEnd, (_c = v.tailEnd) != null ? _c : 0].every((n) => Number.isFinite(n) && n >= 0 && n <= g.duration) || v.fadeEnd <= v.fadeStart || ((_d = v.tailEnd) != null ? _d : 0) > v.fadeStart)) fail();
+  stage = "decision";
+  const d = value.decision, m = value.metrics;
+  if (!m || !["bassOverlap", "otherOverlap", "bassDifference", "otherDifference", "vocalBenefit"].every((k) => m[k] === null || Number.isFinite(m[k]) && m[k] >= 0 && m[k] <= 1) || typeof m.vocalSafe !== "boolean" || !d || !methods.includes(d.recommended) || ((_f = (_e = d.methods) == null ? void 0 : _e.original) == null ? void 0 : _f.eligible) !== true || !methods.every((k) => {
+    var _a3;
+    return typeof ((_a3 = d.methods[k]) == null ? void 0 : _a3.eligible) === "boolean" && (!d.methods[k].eligible || Number.isFinite(d.methods[k].score));
+  }) || ((_g = d.methods[d.recommended]) == null ? void 0 : _g.eligible) !== true) fail();
+  if (d.methods.vocal.eligible && (!v || m.vocalSafe !== true || m.vocalBenefit < 0.2)) fail();
+  stage = "stems";
+  if (!Array.isArray(value.requiredStems) || new Set(value.requiredStems).size !== value.requiredStems.length || !value.requiredStems.every((s) => stems.includes(s))) fail();
+  const required = /* @__PURE__ */ new Set();
+  for (const [method, ss] of [["bass", ["bass"]], ["filter", ["other"]], ["yield", ["other"]], ["vocal", ["vocals"]], ["bass_filter", ["bass", "other"]]]) {
+    if (d.methods[method].eligible) ss.forEach((s) => required.add(s));
+  }
+  if ([...required].some((s) => !value.requiredStems.includes(s))) fail();
+  return value;
+}
+
+// vendor/realtime-v3/src/mobile/jetson-client.ts
+var persistence = Promise.resolve();
 
 // vendor/realtime-v3/src/mobile/nearby.ts
 function nearbyPlan(a, b, position, excluded = /* @__PURE__ */ new Set(), acceptPlan = () => true, scorePlan, budget) {
@@ -765,7 +844,7 @@ function choiceForPlan(a, b, p, energy) {
   return { plan: p, track: b, score: p.score - 0.12 * distance, energy: { beforeDb: before, afterDb, deltasDb: deltas, targetDeltaDb: target }, reason: `\u5B8C\u6574 ${p.window.bars} \u5C0F\u8282 \xB7 \u63A5\u7BA1\u540E 16 \u79D2\u5B9E\u6D4B\u8986\u76D6 \xB7 ${level3 > 3 ? "\u4F18\u5148\u5347\u80FD\uFF0C\u4E5F\u53EF\u5E73\u7A33\u63A5\u7EED" : level3 < 3 ? "\u4F18\u5148\u964D\u80FD\uFF0C\u4E5F\u53EF\u5E73\u7A33\u63A5\u7EED" : "\u4F18\u5148\u5E73\u7A33\u63A5\u7EED"} \xB7 ${p.section}\u9644\u8FD1` };
 }
 function rankChoices(a, tracks, position, energy, ready = /* @__PURE__ */ new Set()) {
-  var _a;
+  var _a2;
   const choices = [], rejected = [];
   for (const source of tracks) {
     const b = { ...source, windows: source.windows.filter((w) => {
@@ -788,17 +867,17 @@ function rankChoices(a, tracks, position, energy, ready = /* @__PURE__ */ new Se
       choices.shift();
     }
   }
-  return { best: (_a = choices[0]) != null ? _a : null, choices, rejected, policy: SMART_POLICY };
+  return { best: (_a2 = choices[0]) != null ? _a2 : null, choices, rejected, policy: SMART_POLICY };
 }
 var NEARBY_DIRECTION_POLICY = "mobile-direction-formal-nearby-v2";
 function rankNearbyChoices(a, tracks, position, energy) {
-  var _a;
+  var _a2;
   const choices = [], rejected = [];
   for (const budget of [18, 60]) {
     for (const b of tracks) {
       const plan = nearbyPlan(a, b, position, /* @__PURE__ */ new Set(), (p) => !!choiceForPlan(a, b, p, energy), (p) => {
-        var _a2, _b;
-        return (_b = (_a2 = choiceForPlan(a, b, p, energy)) == null ? void 0 : _a2.score) != null ? _b : -Infinity;
+        var _a3, _b;
+        return (_b = (_a3 = choiceForPlan(a, b, p, energy)) == null ? void 0 : _a3.score) != null ? _b : -Infinity;
       }, budget);
       const choice = plan ? choiceForPlan(a, b, plan, energy) : null;
       if (choice) choices.push({ ...choice, nearbyBudget: budget });
@@ -807,7 +886,7 @@ function rankNearbyChoices(a, tracks, position, energy) {
   }
   for (const b of tracks) if (!choices.some((c) => c.track.id === b.id)) rejected.push(b.id);
   choices.sort((a2, b) => b.score - a2.score || a2.plan.start - b.plan.start || a2.plan.id.localeCompare(b.plan.id));
-  return { best: (_a = choices[0]) != null ? _a : null, choices, rejected, policy: NEARBY_DIRECTION_POLICY };
+  return { best: (_a2 = choices[0]) != null ? _a2 : null, choices, rejected, policy: NEARBY_DIRECTION_POLICY };
 }
 
 // vendor/realtime-v3/src/mobile/activity-plan.ts
@@ -816,14 +895,14 @@ var ACTIVITY_MAX_EDGES_PER_TRACK = 24;
 var ACTIVITY_REGIONS = 8;
 var ACTIVITY_TARGETS_PER_REGION = 3;
 var activitySourceIdentity = (t) => {
-  var _a, _b, _c, _d, _e, _f, _g, _h, _i;
-  return { reportId: (_a = t.reportId) != null ? _a : "", runId: String((_c = (_b = t.provenance) == null ? void 0 : _b.runId) != null ? _c : ""), masterSha256: String((_e = (_d = t.provenance) == null ? void 0 : _d.masterSha256) != null ? _e : ""), reportSha256: String((_g = (_f = t.provenance) == null ? void 0 : _f.reportSha256) != null ? _g : ""), vocalSha256: String((_i = (_h = t.provenance) == null ? void 0 : _h.vocalSha256) != null ? _i : "") };
+  var _a2, _b, _c, _d, _e, _f, _g, _h, _i;
+  return { reportId: (_a2 = t.reportId) != null ? _a2 : "", runId: String((_c = (_b = t.provenance) == null ? void 0 : _b.runId) != null ? _c : ""), masterSha256: String((_e = (_d = t.provenance) == null ? void 0 : _d.masterSha256) != null ? _e : ""), reportSha256: String((_g = (_f = t.provenance) == null ? void 0 : _f.reportSha256) != null ? _g : ""), vocalSha256: String((_i = (_h = t.provenance) == null ? void 0 : _h.vocalSha256) != null ? _i : "") };
 };
 function planActivitySet(o) {
-  var _a, _b, _c, _d, _e;
+  var _a2, _b, _c, _d, _e;
   if (!Array.isArray(o.tracks) || o.tracks.length > 64 || !Array.isArray(o.styles) || !o.styles.length || o.styles.length > 8 || !Number.isInteger(o.energy) || o.energy < 1 || o.energy > 5 || !Number.isInteger(o.maxTracks) || o.maxTracks < 4 || o.maxTracks > 12) throw Error("Invalid activity preparation bounds");
   if (o.retainedTrackIds !== void 0 && (!Array.isArray(o.retainedTrackIds) || !o.retainedTrackIds.length || o.retainedTrackIds.length > o.maxTracks || new Set(o.retainedTrackIds).size !== o.retainedTrackIds.length || o.retainedTrackIds.some((id) => typeof id !== "string" || !/^[A-Za-z0-9_-]{1,160}$/.test(id)))) throw Error("Invalid retained activity tracks");
-  const retained = new Set((_a = o.retainedTrackIds) != null ? _a : []);
+  const retained = new Set((_a2 = o.retainedTrackIds) != null ? _a2 : []);
   const eligible = o.tracks.filter((t) => t.mixStatus !== "unavailable" && t.playStatus !== "unavailable" && (retained.has(t.id) || o.styles.some((s) => styleMatches(t.styleLabels, s))));
   const connectivity = (a) => eligible.filter((b) => a.id !== b.id && a.bpm / b.bpm >= 0.95 && a.bpm / b.bpm <= 1.05).length;
   const ranked = [...eligible].sort((a, b) => connectivity(b) - connectivity(a) || a.id.localeCompare(b.id));
@@ -861,8 +940,8 @@ function planActivitySet(o) {
     }
     for (let region = 0; region < ACTIVITY_REGIONS; region++) {
       const position = region * a.duration / ACTIVITY_REGIONS;
-      const near2 = rankNearbyChoices(a, options, position, o.energy);
-      for (const choice of near2.choices.slice(0, ACTIVITY_TARGETS_PER_REGION)) add(choice, "nearby");
+      const near3 = rankNearbyChoices(a, options, position, o.energy);
+      for (const choice of near3.choices.slice(0, ACTIVITY_TARGETS_PER_REGION)) add(choice, "nearby");
     }
     const regions = buckets.map((bucket, index) => {
       bucket.sort((a2, b) => Number(b.kind === "automatic") - Number(a2.kind === "automatic") || b.score - a2.score || a2.start - b.start || a2.id.localeCompare(b.id));
@@ -889,16 +968,51 @@ function planActivitySet(o) {
   return { schema: "harbeat.activity-candidates.v2", trackIds: tracks.map((t) => t.id), initialTrackId, edges, coverage, tracks: tracks.map((t) => ({ id: t.id, title: t.title, bpm: t.bpm, duration: t.duration, styleLabels: t.styleLabels })), warnings };
 }
 
+// vendor/realtime-v3/src/mobile/activity-candidates.ts
+var close = (a, b, tolerance = 2e-3) => Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) < tolerance;
+var matches = (p, e) => p.id === e.id && p.window.id === e.windowId && close(p.start, e.start) && close(p.end, e.end) && close(p.duration, e.duration) && close(p.rate, e.rate, 1e-6) && close(p.window.start, e.bStart) && close(p.window.end, e.bEnd);
+function planForActivityEdge(a, b, e, energy) {
+  const w = b.windows.find((w2) => w2.id === e.windowId);
+  if (!w || !["automatic", "nearby"].includes(e.kind)) return null;
+  const target = { ...b, windows: [w] }, position = Math.max(0, e.start - 0.75);
+  const rows = e.kind === "automatic" ? rankChoices(a, [target], 0, energy).choices.map((c) => c.plan) : planContinuous(a, [target], position, { kind: "next", targetId: b.id }, /* @__PURE__ */ new Set(), Math.min(60, e.end - position + 0.01), false).candidates;
+  const candidate = rows.find((p) => matches(p, e));
+  if (!candidate) return null;
+  const plan = { ...candidate, v30Eq: buildV30Eq(a, b, candidate) };
+  return choiceForPlan(a, b, plan, energy) ? plan : null;
+}
+
 // tools/activity_set_plan.ts
 if (!Array.prototype.at) Object.defineProperty(Array.prototype, "at", { value: function(n) {
   const i = n < 0 ? this.length + n : n;
   return this[i];
 } });
-try {
+var _a;
+if (!((_a = globalThis.crypto) == null ? void 0 : _a.subtle)) Object.defineProperty(globalThis, "crypto", { value: { subtle: { digest: async (_algorithm, data) => {
+  const bytes = (0, import_node_crypto.createHash)("sha256").update(new Uint8Array(data)).digest();
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+} } } });
+async function main() {
+  var _a2, _b;
   const raw = (0, import_node_fs.readFileSync)(0, "utf8");
   if (raw.length > 256 * 1024 * 1024) throw Error("\u51C6\u5907\u76EE\u5F55\u8D85\u51FA\u9650\u5236");
-  process.stdout.write(JSON.stringify(planActivitySet(JSON.parse(raw))));
-} catch (error) {
+  const input = JSON.parse(raw);
+  if (input.operation === "verifyJetsonStrategy") {
+    const a = (_a2 = input.tracks) == null ? void 0 : _a2.find((t) => {
+      var _a3;
+      return t.id === ((_a3 = input.edge) == null ? void 0 : _a3.from);
+    }), b = (_b = input.tracks) == null ? void 0 : _b.find((t) => {
+      var _a3;
+      return t.id === ((_a3 = input.edge) == null ? void 0 : _a3.to);
+    });
+    if (!a || !b || !Number.isInteger(input.energy) || input.energy < 1 || input.energy > 5) throw Error("\u9884\u7EA6\u6279\u51C6\u6821\u9A8C\u8D44\u6599\u4E0D\u5B8C\u6574");
+    const plan = planForActivityEdge(a, b, input.edge, input.energy);
+    if (!plan) throw Error("\u9884\u7EA6\u6279\u51C6\u63A5\u70B9\u672A\u901A\u8FC7\u73B0\u6709\u89C4\u5219");
+    await verifyJetsonDecision(input.strategy, a, b, plan);
+    process.stdout.write(JSON.stringify({ verified: true }));
+  } else process.stdout.write(JSON.stringify(planActivitySet(input)));
+}
+main().catch((error) => {
   process.stderr.write(error.message + "\n");
   process.exitCode = 1;
-}
+});

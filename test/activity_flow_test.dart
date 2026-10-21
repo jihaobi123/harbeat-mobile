@@ -9,7 +9,8 @@ import 'package:harbeat/src/local_store.dart';
 import 'package:harbeat/src/repository.dart';
 import 'metric_player_test.dart' show MetricEngine;
 
-ActivityReservation reservation({bool multiCue = true}) =>
+ActivityReservation reservation(
+        {bool multiCue = true, bool strategyApproved = true}) =>
     ActivityReservation.fromJson({
       'id': 'a' * 32,
       'packId': 'b' * 32,
@@ -21,6 +22,8 @@ ActivityReservation reservation({bool multiCue = true}) =>
       'trackLimit': 8,
       'pack': {
         if (multiCue) 'candidateVersion': 'activity-candidate-v2',
+        if (multiCue && strategyApproved)
+          'strategyVersion': 'jetson-decision-v1',
         'state': 'ready',
         'prepared': 2,
         'total': 2,
@@ -84,6 +87,12 @@ class LegacyActivities extends FakeActivities {
   @override
   Future<ActivityReservation> get(String id) async =>
       reservation(multiCue: false);
+}
+
+class SourceOnlyActivities extends FakeActivities {
+  @override
+  Future<ActivityReservation> get(String id) async =>
+      reservation(strategyApproved: false);
 }
 
 class ReplacementActivities extends FakeActivities {
@@ -164,6 +173,27 @@ void main() {
     expect(find.text('素材已下载 · 4 / 4 个片段'), findsOneWidget);
     expect(find.textContaining('附近接点已就绪'), findsNothing);
     expect(find.textContaining('解码和变速'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets('a source-only v2 set offers an explicit Jetson strategy upgrade',
+      (tester) async {
+    final c = AppController(MockHarBeatRepository(),
+        activityRepository: SourceOnlyActivities(),
+        localStore: MemoryLocalStore(),
+        audio: MemoryAudioService());
+    addTearDown(c.dispose);
+    c.activities = [reservation(strategyApproved: false)];
+    await tester.pumpWidget(
+        MaterialApp(home: ActivityDetailScreen(c, reservation().id)));
+    expect(find.textContaining('待准备 Jetson 编排'), findsOneWidget);
+    expect(find.textContaining('云端已备齐'), findsNothing);
+    await tester.scrollUntilVisible(find.text('准备 Jetson 混音编排'), 200);
+    expect(
+        tester
+            .widget<TextButton>(
+                find.widgetWithText(TextButton, '准备 Jetson 混音编排'))
+            .onPressed,
+        isNotNull);
     await tester.pumpWidget(const SizedBox());
   });
   test(

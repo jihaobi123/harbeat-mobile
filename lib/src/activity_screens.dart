@@ -422,7 +422,9 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                             style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(height: 8),
                         Text(a.preparationLabel),
-                        if (a.total > 0)
+                        if (a.total > 0 &&
+                            (!a.hasMultipleCueCandidates ||
+                                a.hasJetsonStrategies))
                           Padding(
                               padding: const EdgeInsets.only(top: 10),
                               child: LinearProgressIndicator(
@@ -430,9 +432,11 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                         if (a.failed > 0) Text('${a.failed} 个交接暂未准备成功'),
                         const SizedBox(height: 8),
                         Text(
-                            a.hasMultipleCueCandidates
-                                ? '云端提前准备多个接点和候选。关闭网页后仍会继续，活动结束后 set 继续保留。'
-                                : '已有旧版素材。准备更多接点后，可提前覆盖更多切歌时刻。活动结束后 set 继续保留。',
+                            a.hasJetsonStrategies
+                                ? 'Jetson 提前准备具体接点、混音方案和后备。手机播放时预热附近接点，活动结束后 set 继续保留。'
+                                : a.hasMultipleCueCandidates
+                                    ? '已有原曲与分轨素材。升级后会为这个 set 提前准备 Jetson 混音编排，并保留当前曲目。'
+                                    : '已有旧版素材。准备更多接点后，可提前覆盖更多切歌时刻。活动结束后 set 继续保留。',
                             style: const TextStyle(fontSize: 14))
                       ])),
               if (unavailable > 0 || replacements > 0) ...[
@@ -483,11 +487,14 @@ class _ActivityDetailScreenState extends State<ActivityDetailScreen> {
                                 : '下载本机素材'))
                   ])),
               const SizedBox(height: 12),
-              if (a.state == 'ready' && !a.hasMultipleCueCandidates)
+              if (a.state == 'ready' &&
+                  (!a.hasMultipleCueCandidates || !a.hasJetsonStrategies))
                 TextButton(
                     onPressed:
                         c.activityBusy ? null : () => c.retryActivity(a.id),
-                    child: const Text('准备更多接点')),
+                    child: Text(a.hasMultipleCueCandidates
+                        ? '准备 Jetson 混音编排'
+                        : '准备更多接点')),
               if (c.activityError != null)
                 Padding(
                     padding: const EdgeInsets.only(bottom: 12),

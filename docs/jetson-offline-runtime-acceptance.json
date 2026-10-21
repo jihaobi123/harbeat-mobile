@@ -1,0 +1,12 @@
+{
+  "scope": "representative one-edge runtime check; source audio playback still requires browser/device acceptance",
+  "embeddedApprovals": 1,
+  "candidateCount": 1,
+  "automaticId": "64942c958b534de85d7b161b44daf9216438d6f6e56dae6531defc718bec91f5",
+  "manualId": "64942c958b534de85d7b161b44daf9216438d6f6e56dae6531defc718bec91f5",
+  "networkCalls": 0,
+  "offlineApprovalReuse": true,
+  "sourceVersionVerified": true,
+  "exactCue": 40.83718820861678,
+  "validator": "ActivitySession.open + verifyJetsonDecision + requestJetsonPlan production code"
+}

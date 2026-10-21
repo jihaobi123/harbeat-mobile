@@ -85,7 +85,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
         parsed = urlsplit(self.path)
         original = re.fullmatch(r'(?:/api/analysis-lab/(reports(?:/[a-f0-9]{64})?|media/[a-f0-9]{64})|/analysis-lab-static/mobile-artwork-v1/(?:catalog\.json|[a-f0-9]{64}\.jpg))', parsed.path)
         execution = re.fullmatch(r'/listen/(?:execution/(?:index\.json|tracks/[A-Za-z0-9_-]{1,160}\.json|profiles/(?P<profile_digest>[a-f0-9]{64})\.json)|execution-media/(?P<digest>[a-f0-9]{64})\.(?:flac|wav))',parsed.path)
-        listen = re.fullmatch(r'/listen/(?:music-covers/[a-f0-9]{64}\.jpg|library\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?details/[A-Za-z0-9_-]{1,160}\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?media/[A-Za-z0-9_.-]+\.(?:flac|wav)|smart-api/(?:health|rules|jobs/[a-f0-9]{64})|set-media/[a-f0-9]{32}/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav|smart-media/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav)', parsed.path)
+        listen = re.fullmatch(r'/listen/(?:music-covers/[a-f0-9]{64}\.jpg|library\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?details/[A-Za-z0-9_-]{1,160}\.json|(?:catalog/[A-Za-z0-9_-]{1,160}/)?media/[A-Za-z0-9_.-]+\.(?:flac|wav)|smart-api/(?:health|rules|(?:jobs|plans)/[a-f0-9]{64})|set-media/[a-f0-9]{32}/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav|smart-media/[a-f0-9]{64}/(?:original|bass|filter|yield|vocal|bass_filter)\.wav)', parsed.path)
         query = parse_qs(parsed.query, keep_blank_values=True)
         if execution:
             expected=execution.group('digest') or execution.group('profile_digest')
@@ -112,8 +112,8 @@ class PreviewHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         if self.path.startswith('/listen/set-api/'):return self.activity_api()
-        # Explicit, bounded render preparation only. No account/admin/upload API.
-        if self.path != '/listen/smart-api/jobs':
+        # Explicit, bounded plan or legacy render preparation only.
+        if self.path not in ('/listen/smart-api/jobs', '/listen/smart-api/plans'):
             return self.send_error(404)
         if self.headers.get('Host') not in self.allowed_hosts() or self.headers.get('Origin') not in tuple(f'http://{h}' for h in self.allowed_hosts()):
             return self.send_error(403)
@@ -126,7 +126,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
                 return self.send_error(422)
             if any(not isinstance(body[k], str) or not re.fullmatch('[A-Za-z0-9_-]{1,160}', body[k]) for k in ('from','to','windowId')) or body['from'] == body['to'] or type(body['start']) not in (int,float) or not math.isfinite(body['start']) or not 0 <= body['start'] <= 86400:
                 return self.send_error(422)
-            response = requests.post('https://8.136.120.255/listen/smart-api/jobs',
+            response = requests.post('https://8.136.120.255'+self.path,
                 json=body, headers={'Origin': 'https://8.136.120.255'},
                 timeout=(12, 35), allow_redirects=False)
             self.send_response(response.status_code)

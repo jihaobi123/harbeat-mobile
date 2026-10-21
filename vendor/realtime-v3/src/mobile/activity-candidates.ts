@@ -11,6 +11,16 @@ const sameIdentity=(a:unknown,b:unknown)=>!!a&&!!b&&['reportId','runId','masterS
 const close=(a:number,b:number,tolerance=.002)=>Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<tolerance
 const matches=(p:Plan,e:ActivityEdge)=>p.id===e.id&&p.window.id===e.windowId&&close(p.start,e.start)&&close(p.end,e.end)&&close(p.duration,e.duration)&&close(p.rate,e.rate,.000001)&&close(p.window.start,e.bStart)&&close(p.window.end,e.bEnd)
 
+/** Reconstruct one exact stored edge for shared cloud/device verification. */
+export function planForActivityEdge(a:Track,b:Track,e:ActivityEdge,energy:number):Plan|null{
+ const w=b.windows.find(w=>w.id===e.windowId);if(!w||!['automatic','nearby'].includes(e.kind))return null
+ const target={...b,windows:[w]},position=Math.max(0,e.start-.75)
+ const rows=e.kind==='automatic'?rankChoices(a,[target],0,energy).choices.map(c=>c.plan):planContinuous(a,[target],position,{kind:'next',targetId:b.id},new Set(),Math.min(60,e.end-position+.01),false).candidates
+ const candidate=rows.find(p=>matches(p,e));if(!candidate)return null
+ const plan={...candidate,v30Eq:buildV30Eq(a,b,candidate)}
+ return choiceForPlan(a,b,plan,energy)?plan:null
+}
+
 /** Retain planning evidence, not unrelated report extensions or other sets' variants. */
 export function activityPlanningTrack(t:Track,ids:Set<string>):Track{
  const preprocessing=t.preprocessing?Object.fromEntries(['schema','reportId','reportSha256','masterSha256','bindingChecks','vocalActivity'].map(k=>[k,(t.preprocessing as any)[k]])) as Track['preprocessing']:undefined
@@ -26,12 +36,8 @@ export function openActivityCandidates(value:any,tracks:Track[]):{plans:BoundAct
   if(!a||!b||!w||a.id===b.id||e.version!==ACTIVITY_CANDIDATE_VERSION||typeof e.id!=='string'||ids.has(e.id)||!['automatic','nearby'].includes(e.kind)||![e.start,e.end,e.duration,e.rate,e.bStart,e.bEnd,e.score].every(Number.isFinite)||!Number.isInteger(e.region)||e.region<0||e.region>=ACTIVITY_REGIONS||e.region!==Math.min(7,Math.floor(e.start/a.duration*8))||e.start<0||e.end>a.duration||e.duration<1||e.duration>32||e.rate<.95||e.rate>1.05||!close(e.end-e.start,e.duration)||!close((e.bEnd-e.bStart)/e.rate,e.duration)||!sameIdentity(e.source?.a,activitySourceIdentity(a))||!sameIdentity(e.source?.b,activitySourceIdentity(b)))throw Error('预约接点的来源或范围已变化')
   counts.set(a.id,(counts.get(a.id)??0)+1);if(counts.get(a.id)!>ACTIVITY_MAX_EDGES_PER_TRACK)throw Error('预约接点数量超过设备范围')
   ids.add(e.id)
-  const target={...b,windows:[w]},position=Math.max(0,e.start-.75)
-  const rows=e.kind==='automatic'?rankChoices(a,[target],0,value.energy).choices.map(c=>c.plan):planContinuous(a,[target],position,{kind:'next',targetId:b.id},new Set(),Math.min(60,e.end-position+.01),false).candidates
-  const candidate=rows.find(p=>matches(p,e))
-  if(!candidate)throw Error('预约候选未通过当前拍点或人声规则')
-  const plan={...candidate,v30Eq:buildV30Eq(a,b,candidate)}
-  if(!choiceForPlan(a,b,plan,value.energy))throw Error('预约候选未通过当前能量或人声检查')
+  const plan=planForActivityEdge(a,b,e,value.energy)
+  if(!plan)throw Error('预约候选未通过当前拍点、人声或能量规则')
   plans.push({edge:e,track:b,plan})
  }
  const c=value.coverage

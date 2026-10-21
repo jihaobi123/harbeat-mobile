@@ -1,0 +1,80 @@
+{
+  "scope": "representative one-edge QA only; not complete reservation coverage",
+  "userDatabaseTouched": false,
+  "state": "ready",
+  "trackCount": 2,
+  "edgeCount": 1,
+  "strategyPrepared": 1,
+  "strategyTotal": 1,
+  "sourceAssetsReady": true,
+  "strategyVersion": "jetson-decision-v1",
+  "cloudCoverageComplete": false,
+  "elapsedSeconds": 0.655,
+  "requests": [
+    {
+      "method": "POST",
+      "path": "/plans",
+      "status": 200,
+      "requestBytes": 122,
+      "responseBytes": 22453
+    }
+  ],
+  "requestCount": 1,
+  "responseBytes": 22453,
+  "checkpointStates": [
+    {
+      "state": "preparing",
+      "prepared": 0,
+      "tasks": [
+        {
+          "state": "running",
+          "planId": "64942c958b534de85d7b161b44daf9216438d6f6e56dae6531defc718bec91f5"
+        }
+      ]
+    },
+    {
+      "state": "preparing",
+      "prepared": 1,
+      "tasks": [
+        {
+          "state": "ready",
+          "planId": "64942c958b534de85d7b161b44daf9216438d6f6e56dae6531defc718bec91f5"
+        }
+      ]
+    },
+    {
+      "state": "ready",
+      "prepared": 1,
+      "tasks": [
+        {
+          "state": "ready",
+          "planId": "64942c958b534de85d7b161b44daf9216438d6f6e56dae6531defc718bec91f5"
+        }
+      ]
+    }
+  ],
+  "verifications": [
+    {
+      "verified": true,
+      "validator": "production Worker.verify_strategy -> bundled Node verifyJetsonDecision",
+      "id": "64942c958b534de85d7b161b44daf9216438d6f6e56dae6531defc718bec91f5"
+    }
+  ],
+  "plan": {
+    "from": "track-d2d58531421de0eb9690",
+    "to": "track-831997216a86a4914ef9",
+    "windowId": "w0-2",
+    "start": 40.83718820861678,
+    "end": 45.34,
+    "duration": 4.50281179138322,
+    "rate": 1.0038166666666666,
+    "bStart": 9.26,
+    "bEnd": 13.78,
+    "beatErrorMs": 37.18820861678296
+  },
+  "producer": "jetson",
+  "algorithmSha256": "1de11515269f6368d9e66ca85adc1c197df3f1fc949df481a94808eb617ca0c3",
+  "analysisSha256": "f2291d5f8778c77dd2fea633066a0ab3365e35baccaf5b67edb7e06306bee26a",
+  "fixtureSha256": "fd1b5188630b709f1b9fb792d8056e9f8ea298a647e4d3a1bbb34e39823ecd5d",
+  "productionActivityServicePackageVerified": true
+}

@@ -32,6 +32,7 @@ class Settings:
     node: str = '/usr/bin/node'
     execution_root: Path | None = None
     execution_requests: Path | None = None
+    jetson_plans: bool = True
     max_active: int = 3
     max_reservations: int = 50
 
@@ -42,6 +43,7 @@ class Settings:
             ('gateway_media', 'ACTIVITY_GATEWAY_MEDIA'), ('planner', 'ACTIVITY_SET_PLANNER'),
             ('execution_root','ACTIVITY_EXECUTION_ROOT'),('execution_requests','ACTIVITY_EXECUTION_REQUESTS')) if env in os.environ}
         if 'ACTIVITY_NODE' in os.environ: values['node'] = os.environ['ACTIVITY_NODE']
+        values['jetson_plans'] = os.environ.get('ACTIVITY_JETSON_PLANS','1') == '1'
         return cls(**values)
 
 
@@ -210,13 +212,17 @@ class Store:
         corrupted=False
         if pack.get('execution'):
             from .execution import validate_execution_pack
-            output={k:v for k,v in pack.items() if k not in ('tasks','request')}
+            output={k:v for k,v in pack.items() if k not in ('tasks','request','strategyChecksums')}
             output['results']=[]
             if not validate_execution_pack(self.settings,pack):
                 output.update(state='partial',prepared=0,failed=pack['total'])
+                if pack.get('strategyVersion'):
+                    output.update(strategyPrepared=0,strategyFailed=pack['total'],sourceAssetsReady=False)
                 output['warnings']=list(dict.fromkeys([*output['warnings'],'execution_assets_invalid']))
             if not current_sources_match(self.settings,pack['sourceFingerprints']):
                 output['state']='stale'
+                if pack.get('strategyVersion'):
+                    output.update(prepared=0,strategyPrepared=0,strategyFailed=pack['total'],sourceAssetsReady=False)
                 output['warnings']=list(dict.fromkeys([*output['warnings'],'source_revision_changed']))
             return output
         for task in pack['tasks']:
@@ -237,6 +243,8 @@ class Store:
         manifest=self.public_manifest(workspace,reservation['packId'])
         progress={k:manifest[k] for k in ('state','prepared','total','failed','warnings','error','trackIds','initialTrackId')}
         if manifest.get('candidateVersion'):progress['candidateVersion']=manifest['candidateVersion']
+        for key in ('strategyVersion','strategyPrepared','strategyTotal','strategyFailed','sourceAssetsReady'):
+            if key in manifest:progress[key]=manifest[key]
         return {**reservation,'pack':{'id':reservation['packId'],**progress}}
 
 
@@ -348,7 +356,7 @@ def create_app(settings: Settings | None = None, *, run_worker=True, music_queue
             row=db.execute('SELECT data FROM packs WHERE id=? AND workspace=?',(reservation['packId'],ws)).fetchone()
             pack=json.loads(row['data'])
             corrupted=(not validate_execution_pack(settings,pack)) if pack.get('execution') else any(task.get('state')=='ready' and not valid_pinned_result(settings,pack['packId'],task['result']) for task in pack['tasks'])
-            upgrade=settings.execution_root is not None and pack.get('planned') and pack.get('candidateVersion')!='activity-candidate-v2'
+            upgrade=settings.execution_root is not None and pack.get('planned') and (pack.get('candidateVersion')!='activity-candidate-v2' or settings.jetson_plans and pack.get('execution',{}).get('strategyVersion')!='jetson-decision-v1')
             changed=pack.get('planned') and not current_sources_match(settings,pack['sourceFingerprints'])
             if pack['state'] not in ('queued','preparing') and (pack['state']!='ready' or corrupted or upgrade or changed):
                 active=db.execute("SELECT count(*) FROM packs WHERE workspace=? AND state IN ('queued','preparing')",(ws,)).fetchone()[0]
@@ -358,12 +366,19 @@ def create_app(settings: Settings | None = None, *, run_worker=True, music_queue
                     # Explicit prepare requests migrate old sets. Reading/reusing
                     # an existing ready set never mutates its preparation.
                     pack.update(replanTrackIds=list(pack['trackIds']),replanInitialTrackId=pack.get('initialTrackId'),planned=False,tasks=[],total=0)
-                    for key in ('execution','candidateVersion','coverage','executionRetryAt'):pack.pop(key,None)
+                    for key in ('execution','candidateVersion','coverage','executionRetryAt','strategyVersion','strategyPrepared','strategyTotal','strategyFailed','strategyChecksums','sourceAssetsReady'):pack.pop(key,None)
                 else:
                     for task in pack['tasks']:
-                        if pack.get('execution') or task.get('state')!='ready' or not valid_pinned_result(settings,pack['packId'],task['result']):
-                            task.update(state='pending');task.pop('result',None);task.pop('error',None);task.pop('jobId',None)
+                        strategy_pack=pack.get('execution',{}).get('strategyVersion')=='jetson-decision-v1'
+                        keep_strategy=strategy_pack and not corrupted and task.get('state')=='ready' and task.get('strategy')
+                        if not keep_strategy and (pack.get('execution') or task.get('state')!='ready' or not valid_pinned_result(settings,pack['packId'],task['result'])):
+                            task.update(state='pending')
+                            for key in ('result','error','jobId','planId','strategy','attempts'):task.pop(key,None)
                 pack.update(state='queued',error=None,prepared=sum(t['state']=='ready' for t in pack['tasks']),failed=0)
+                if pack.get('execution',{}).get('strategyVersion')=='jetson-decision-v1':
+                    pack['execution']['strategies']=[t['strategy'] for t in pack['tasks'] if t['state']=='ready' and t.get('strategy')]
+                    pack.update(strategyPrepared=pack['prepared'],strategyFailed=0)
+                    pack.pop('executionRetryAt',None)
                 pack['warnings']=[w for w in pack['warnings'] if w!='some_edges_failed']
                 db.execute('UPDATE packs SET state=?,data=? WHERE id=?',('queued',json.dumps(pack,separators=(',',':')),pack['packId']))
         return store.view(ws,reservation)

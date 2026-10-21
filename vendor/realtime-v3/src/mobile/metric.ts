@@ -86,7 +86,7 @@ export class MetricRun {
  private explicit:string|null=null;private recent:string[]=[];private excludedPlans=new Set<string>()
  private excludedTracks=new Set<string>()
  private warmController:AbortController|null=null;private warmKey='';private warmRunning=false;private warmAt=0
- private preparedPool=new PreparedPool<Prepared>(2,hasDevicePCM,releaseDevicePCM)
+ private preparedPool=new PreparedPool<Prepared>(3,hasDevicePCM,releaseDevicePCM)
  private resultPin:(()=>void)|null=null
  private warmPreparing:{from:string;to:string;start:number;end:number}|null=null
  private userIntent:{kind:'user-next'|'user-direction';preferred:string|null}|null=null
@@ -159,6 +159,7 @@ export class MetricRun {
  async setSession(manifest:unknown,name:string){
   const sequence=++this.sessionSequence
   const activity=await ActivitySession.open(manifest,name,id=>this.library.load(id))
+  await activity.cacheStrategies?.(this.base)
   if(!this.alive||sequence!==this.sessionSequence)throw new DOMException('预约载入已取消','AbortError')
   if(this.player?.transition)throw Error('请先完成交接或停止，再进入预约')
   this.stop();this.library.trim(new Set([activity.initialTrackId]),4);this.activity=activity;this.selected=this.explicit=null;this.recent=[];this.error='';this.notice='预约 set 已载入，可以开始播放';this.update()
@@ -436,7 +437,15 @@ export class MetricRun {
    const first=primary[0],successor=first?rankNearbyChoices(a,[first.track],first.plan.start+.001,this.energyLevel).best:null
    const next=successor&&!this.excludedPlans.has(successor.plan.id)?[successor]:[]
    const backups=session?.candidates?.(a,p.position,this.energyLevel).filter(c=>allowed.has(c.track.id)&&!this.excludedPlans.has(c.plan.id))??[]
-   const candidates=[...new Map([...(first?[first]:[]),...next,...primary.slice(1),...backups].filter(c=>c.plan.start>p.position+1.5&&!!choiceForPlan(a,c.track,c.plan,this.energyLevel)).map(c=>[c.plan.id,c])).values()].slice(0,2)
+   const eligible=(c:{track:Track;plan:Plan})=>allowed.has(c.track.id)&&!this.excludedPlans.has(c.plan.id)&&c.plan.start>p.position+1.5&&!!choiceForPlan(a,c.track,c.plan,this.energyLevel)
+   // Precomputed approvals otherwise sit behind a cold live request. Prepare
+   // one usable reservation point first, retaining the unchanged nearest and
+   // adjacent live choices for a tap. This order affects preparation only.
+   const approved=session?.approvedCandidates?.(a,p.position,this.energyLevel).filter(eligible).slice(0,1)??[]
+   // A selected/committed PCM owns one of the existing three device slots.
+   // The device cache still enforces its independent 96 MiB hard budget.
+   const limit=Math.min(approved.length?3:2,this.resultPin?2:3)
+   const candidates=[...new Map([...approved,...(first?[first]:[]),...next,...primary.slice(1),...backups].filter(eligible).map(c=>[c.plan.id,c])).values()].slice(0,limit)
    for(const {track:b,plan} of candidates){
     controller.signal.throwIfAborted();if(p.current?.id!==a.id||!canArm(plan,a.id,p.position))continue
     this.warmPreparing={from:a.id,to:b.id,start:plan.start,end:plan.end};this.update()
@@ -520,7 +529,7 @@ export class MetricRun {
  export(){return {...this.player?.export(),schema:'harbeat.metric-mix-session.v1',release:METRIC_RELEASE,automaticPolicy:SMART_POLICY,direction:{style:this.targetStyle,energy:this.energyLevel,automatic:this.automatic},history:this.history,selectedResult:this.result??this.lastResult,selectedMethod:this.method,selection:this.selection,exportedAt:new Date().toISOString()}}
  save(){if(this.player)this.host?.saveSession(JSON.stringify(this.export()))}
  dispose(){this.setCacheController?.abort();this.resetWarm(true);this.alive=false;this.invalidate();this.save();this.player?.dispose()}
- snapshot(){const p=this.player,r=this.result,ready=[...new Map([...this.preparedPool.entries().map(e=>e.value),...(r?[r]:[])].filter(value=>hasDevicePCM(value)&&value.plan.from===p?.current?.id&&canArm(value.plan,p.current!.id,p.position)).map(value=>[value.id,value])).values()];return {activitySet:this.activity?{packId:this.activity.packId,name:this.activity.name,trackCount:this.activity.ids.size,prepared:this.activity.candidateCount??this.activity.results.length,cloudCoverage:this.activity.cloudCoverage,cache:this.cachePackId===this.activity.packId?this.setCache:null}:null,cache:this.setCache?{packId:this.cachePackId,...this.setCache}:null,release:METRIC_RELEASE,selected:this.selected,label:this.label,query:this.query,volume:this.volume,working:this.working,notice:this.error||this.notice,canArm:!!r&&hasDevicePCM(r)&&canArm(r.plan,p?.current?.id??null,p?.position??0)&&!p?.transition,
+ snapshot(){const p=this.player,r=this.result,ready=[...new Map([...this.preparedPool.entries().map(e=>e.value),...(r?[r]:[])].filter(value=>hasDevicePCM(value)&&value.plan.from===p?.current?.id&&canArm(value.plan,p.current!.id,p.position)).map(value=>[value.id,value])).values()];return {activitySet:this.activity?{packId:this.activity.packId,name:this.activity.name,trackCount:this.activity.ids.size,prepared:this.activity.strategyVersion?this.activity.strategyCount:this.activity.candidateCount??this.activity.results.length,strategyVersion:this.activity.strategyVersion,approved:this.activity.strategyCount??0,candidates:this.activity.candidateCount??this.activity.results.length,cloudCoverage:this.activity.cloudCoverage,cache:this.cachePackId===this.activity.packId?this.setCache:null}:null,cache:this.setCache?{packId:this.cachePackId,...this.setCache}:null,release:METRIC_RELEASE,selected:this.selected,label:this.label,query:this.query,volume:this.volume,working:this.working,notice:this.error||this.notice,canArm:!!r&&hasDevicePCM(r)&&canArm(r.plan,p?.current?.id??null,p?.position??0)&&!p?.transition,
   automatic:this.automatic,energyLevel:this.energyLevel,targetStyle:this.targetStyle,phase:this.phase,nearbyWorking:!!this.nearbyTask,recommendation:this.recommendation,selection:this.selection,
   warm:{state:this.warmRunning?'preparing':ready.length?'ready':'idle',preparing:this.warmPreparing,ready:ready.map(value=>({from:value.plan.from,to:value.plan.to,start:value.plan.start,end:value.plan.end,method:value.decision.recommended})),sourcePosition:p?.position??0,limit:3,...deviceBufferUsage()},
   result:r?{id:r.id,policyVersion:r.policyVersion,plan:r.plan,metrics:r.metrics,decision:r.decision,available:METHODS.filter(m=>hasMethod(r,m))}:null,method:this.method}}

@@ -252,11 +252,14 @@ def source_proof_matches(result,sources):
 
 
 class Worker:
-    def __init__(self,settings,store,*,planner=None,submit=None,poll=None):
+    def __init__(self,settings,store,*,planner=None,submit=None,poll=None,submit_plan=None,poll_plan=None,verify_plan=None):
         self.settings=settings;self.store=store;self.stop=threading.Event()
         self.planner=planner or self.invoke_planner
         self.submit=submit or self.submit_job
         self.poll=poll or self.poll_job
+        self.submit_plan=submit_plan or self.submit_strategy
+        self.poll_plan=poll_plan or self.poll_strategy
+        self.verify_plan=verify_plan or self.verify_strategy
         self.session=requests.Session()
         self.session.trust_env=False
 
@@ -279,6 +282,93 @@ class Worker:
         response=self.session.get(GATEWAY+'/jobs/'+job,timeout=(5,35),allow_redirects=False)
         response.raise_for_status()
         return response.json()
+
+    def submit_strategy(self,edge):
+        response=self.session.post(GATEWAY+'/plans',json={k:edge[k] for k in ('from','to','windowId','start')},headers={'Origin':ORIGIN},timeout=(3,8),allow_redirects=False)
+        if response.status_code==429:return {'status':'busy'}
+        response.raise_for_status()
+        return response.json()
+
+    def poll_strategy(self,identity):
+        response=self.session.get(GATEWAY+'/plans/'+identity,timeout=(3,8),allow_redirects=False)
+        response.raise_for_status()
+        return response.json()
+
+    def verify_strategy(self,result,edge,pack,execution_tracks):
+        tracks=[]
+        for source in pack['sourceFingerprints']:
+            if source['id'] not in (edge['from'],edge['to']):continue
+            path=confined(self.settings.site.resolve(),source['detailUrl'])
+            tracks.append(compact_track(json.loads(path.read_bytes())['track']))
+        output=self.invoke_planner({'operation':'verifyJetsonStrategy','tracks':tracks,'edge':edge,'energy':pack['request']['energy'],'strategy':result})
+        return output.get('verified') is True
+
+    def advance_strategies(self,pack,execution_tracks):
+        """Poll once, submit at most three approvals, checkpoint, then yield."""
+        from .strategies import VERSION,validate_strategy,checksum
+        previous=pack.get('execution',{})
+        if previous.get('strategyVersion')!=VERSION or previous.get('tracks')!=execution_tracks:
+            for task in pack['tasks']:
+                task.update(state='pending')
+                for key in ('planId','strategy','error','attempts'):task.pop(key,None)
+            pack['strategyChecksums']={}
+        pack['execution']={'schema':'harbeat.activity-execution.v2','tracks':execution_tracks,'edges':[t['edge'] for t in pack['tasks']],'coverage':pack['coverage'],'energy':pack['request']['energy'],'strategyVersion':VERSION,'strategies':[]}
+        pack.update(strategyVersion=VERSION,sourceAssetsReady=True,strategyTotal=len(pack['tasks']))
+        retry=2
+        def checkpoint():
+            ready=[t['strategy'] for t in pack['tasks'] if t['state']=='ready' and t.get('strategy')]
+            pack['execution']['strategies']=ready
+            pack['prepared']=pack['strategyPrepared']=len(ready)
+            pack['failed']=pack['strategyFailed']=sum(t['state']=='failed' for t in pack['tasks'])
+            self.store.save_pack(pack)
+        def accept(task,result):
+            if result.get('id')!=task.get('planId'):raise PreparationError('invalid_jetson_plan_identity')
+            validate_strategy(result,task['edge'],pack,execution_tracks)
+            if not self.verify_plan(result,task['edge'],pack,execution_tracks):raise PreparationError('jetson_approval_verification_failed')
+            if not current_sources_match(self.settings,pack['sourceFingerprints']):raise PreparationError('source_revision_changed')
+            task.update(state='ready',strategy=result);task.pop('error',None)
+            pack.setdefault('strategyChecksums',{})[result['id']]=checksum(result)
+        for task in pack['tasks']:
+            if self.stop.is_set():checkpoint();return
+            if task['state']!='running':continue
+            try:
+                result=self.poll_plan(task['planId'])
+                if result.get('id')!=task['planId']:raise PreparationError('invalid_jetson_plan_identity')
+                if result.get('status')=='ready':accept(task,result)
+                elif result.get('status')=='failed':raise PreparationError('jetson_plan_failed')
+                elif result.get('status') not in ('queued','running','working','pending','preparing'):raise PreparationError('invalid_jetson_plan_state')
+            except PreparationError as error:task.update(state='failed',error=str(error))
+            except Exception:
+                task['attempts']=task.get('attempts',0)+1
+                if task['attempts']>=3:task.update(state='failed',error='jetson_plan_unavailable')
+            checkpoint()
+        slots=max(0,3-sum(t['state']=='running' for t in pack['tasks']))
+        for task in [t for t in pack['tasks'] if t['state']=='pending'][:slots]:
+            if self.stop.is_set():checkpoint();return
+            try:
+                result=self.submit_plan(task['edge'])
+                if result.get('status')=='busy':retry=10;break
+                if not HASH.fullmatch(str(result.get('id',''))):raise PreparationError('invalid_jetson_plan_identity')
+                task.update(state='running',planId=result['id'])
+                checkpoint()
+                if result.get('status')=='ready':accept(task,result)
+                elif result.get('status')=='failed':raise PreparationError('jetson_plan_failed')
+                elif result.get('status') not in ('queued','running','working','pending','preparing'):raise PreparationError('invalid_jetson_plan_state')
+            except PreparationError as error:task.update(state='failed',error=str(error))
+            except Exception:
+                task['attempts']=task.get('attempts',0)+1
+                if task['attempts']>=3:task.update(state='failed',error='jetson_plan_unavailable')
+            checkpoint()
+        pending=any(t['state'] in ('pending','running') for t in pack['tasks'])
+        pack['warnings']=[w for w in pack['warnings'] if w not in ('preparing_source_assets','preparing_jetson_strategies','jetson_strategy_failures')]
+        if pending:
+            pack.update(state='preparing',error=None,executionRetryAt=time.time()+retry)
+            pack['warnings'].append('preparing_jetson_strategies')
+        else:
+            pack.update(state='ready' if pack['prepared']==len(pack['tasks']) else ('partial' if pack['prepared'] else 'failed'),error=next((t.get('error') for t in pack['tasks'] if t.get('error')),None))
+            pack.pop('executionRetryAt',None)
+        if pack['failed']:pack['warnings'].append('jetson_strategy_failures')
+        checkpoint()
 
     def plan_pack(self,pack):
         retained=pack.get('replanTrackIds')
@@ -333,7 +423,7 @@ class Worker:
                     # its songs. Only queued/preparing packs reach this worker;
                     # ready reservations are retained until explicit prepare.
                     pack.update(replanTrackIds=list(pack['trackIds']),replanInitialTrackId=pack.get('initialTrackId'),planned=False,tasks=[],total=0,prepared=0,failed=0)
-                    for key in ('execution','candidateVersion','coverage','executionRetryAt'):pack.pop(key,None)
+                    for key in ('execution','candidateVersion','coverage','executionRetryAt','strategyVersion','strategyPrepared','strategyTotal','strategyFailed','strategyChecksums','sourceAssetsReady'):pack.pop(key,None)
             if not pack.get('planned'):self.plan_pack(pack)
             if not current_sources_match(self.settings,pack['sourceFingerprints']):raise PreparationError('source_revision_changed')
             if self.settings.execution_root is not None:
@@ -351,6 +441,9 @@ class Worker:
                 if not current_sources_match(self.settings,pack['sourceFingerprints']):raise PreparationError('source_revision_changed')
                 if not pack['tasks']:raise PreparationError('no_qualified_edges')
                 v2=pack.get('candidateVersion')=='activity-candidate-v2'
+                if v2 and self.settings.jetson_plans:
+                    self.advance_strategies(pack,execution_tracks)
+                    return True
                 pack['execution']={'schema':'harbeat.activity-execution.v2' if v2 else 'harbeat.activity-execution.v1','tracks':execution_tracks,'edges':[t['edge'] for t in pack['tasks']]}
                 if v2:pack['execution'].update(coverage=pack['coverage'],energy=pack['request']['energy'])
                 for task in pack['tasks']:task.update(state='ready')

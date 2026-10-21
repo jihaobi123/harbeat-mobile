@@ -57,19 +57,27 @@ class ActivityReservation {
   int get failed => (pack['failed'] as num?)?.toInt() ?? 0;
   bool get hasMultipleCueCandidates =>
       pack['candidateVersion'] == 'activity-candidate-v2';
+  bool get hasJetsonStrategies =>
+      pack['strategyVersion'] == 'jetson-decision-v1';
   bool get playable =>
       prepared > 0 && const ['ready', 'partial'].contains(state);
   String get preparationLabel => switch (state) {
-        'ready' => hasMultipleCueCandidates
-            ? '云端已备齐 · $prepared 个候选交接'
-            : '云端旧版已就绪 · $prepared 个交接',
-        'partial' => hasMultipleCueCandidates
-            ? '云端部分就绪 · $prepared / $total 个候选交接'
-            : '云端旧版部分就绪 · $prepared / $total 个交接',
+        'ready' => hasJetsonStrategies
+            ? '云端已备齐 · $prepared 个 Jetson 批准接点'
+            : hasMultipleCueCandidates
+                ? '源素材已备齐 · 待准备 Jetson 编排'
+                : '云端旧版已就绪 · $prepared 个交接',
+        'partial' => hasJetsonStrategies
+            ? '云端部分就绪 · $prepared / $total 个 Jetson 批准接点'
+            : hasMultipleCueCandidates
+                ? '源素材部分就绪 · Jetson 编排待准备'
+                : '云端旧版部分就绪 · $prepared / $total 个交接',
         'stale' => '分析版本已更新，请重新准备',
         'failed' => '准备未完成，可重试',
         'planning' => '正在选曲和检查分析',
-        'preparing' => '正在准备 · $prepared / $total 个交接',
+        'preparing' => hasJetsonStrategies
+            ? 'Jetson 正在准备 · $prepared / $total 个批准接点'
+            : '正在准备 · $prepared / $total 个交接',
         _ => '已预约，等待准备',
       };
   static ActivityReservation fromJson(Map<String, dynamic> value) {

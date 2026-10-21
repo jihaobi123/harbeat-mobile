@@ -1,0 +1,136 @@
+{
+  "release": {
+    "id": "jetson-decision-device-execution-20261021",
+    "sourceCommit": "978df49191450a602f1b473b31f630a687585a8d",
+    "policyVersion": "metric-mix-v1.0"
+  },
+  "selectedMethod": "filter",
+  "resultSchema": "harbeat.device-execution-plan.v1",
+  "policyVersion": "jetson-decision-v1",
+  "cloudRenderRequests": 0,
+  "preparedReuses": 2,
+  "relevant": [
+    {
+      "kind": "device_plan_ready",
+      "planId": "224d7f47fa66795a5496f6f7857ec110fd54374d763bded3c34fb79e6c2bd6c5",
+      "approvedPlanId": "64942c958b534de85d7b161b44daf9216438d6f6e56dae6531defc718bec91f5",
+      "method": "filter",
+      "renderRequested": false,
+      "musicAnalysis": "jetson",
+      "preservePitch": true,
+      "sourceCacheHit": false,
+      "bufferBytes": 9540024,
+      "at": "2026-10-21T12:26:25.081Z"
+    },
+    {
+      "kind": "device_rolling_ready",
+      "from": "track-d2d58531421de0eb9690",
+      "to": "track-831997216a86a4914ef9",
+      "start": 40.83718820861678,
+      "method": "filter",
+      "sourcePosition": 33.189024943310656,
+      "renderRequested": false
+    },
+    {
+      "kind": "device_prepared_reused",
+      "from": "track-d2d58531421de0eb9690",
+      "to": "track-831997216a86a4914ef9",
+      "start": 40.83718820861678,
+      "sourcePosition": 35.39201814058957
+    },
+    {
+      "kind": "device_rolling_ready",
+      "from": "track-d2d58531421de0eb9690",
+      "to": "track-831997216a86a4914ef9",
+      "start": 40.83718820861678,
+      "method": "filter",
+      "sourcePosition": 35.39201814058957,
+      "renderRequested": false
+    },
+    {
+      "kind": "device_prepared_reused",
+      "from": "track-d2d58531421de0eb9690",
+      "to": "track-831997216a86a4914ef9",
+      "start": 40.83718820861678,
+      "sourcePosition": 37.641451247165534
+    },
+    {
+      "kind": "device_rolling_ready",
+      "from": "track-d2d58531421de0eb9690",
+      "to": "track-831997216a86a4914ef9",
+      "start": 40.83718820861678,
+      "method": "filter",
+      "sourcePosition": 37.641451247165534,
+      "renderRequested": false
+    },
+    {
+      "kind": "pause",
+      "at": "2026-10-21T12:27:04.081Z",
+      "context": 72.3156462585034
+    },
+    {
+      "kind": "pause",
+      "at": "2026-10-21T12:27:04.362Z",
+      "context": 72.32145124716553
+    },
+    {
+      "kind": "device_plan_ready",
+      "planId": "224d7f47fa66795a5496f6f7857ec110fd54374d763bded3c34fb79e6c2bd6c5",
+      "approvedPlanId": "64942c958b534de85d7b161b44daf9216438d6f6e56dae6531defc718bec91f5",
+      "method": "filter",
+      "renderRequested": false,
+      "musicAnalysis": "jetson",
+      "preservePitch": true,
+      "sourceCacheHit": true,
+      "bufferBytes": 9540024,
+      "at": "2026-10-21T12:27:40.337Z"
+    },
+    {
+      "kind": "device_plan_scheduled",
+      "at": 76.461768707483,
+      "context": 72.34757369614512,
+      "method": "filter",
+      "plan": {
+        "from": "track-d2d58531421de0eb9690",
+        "to": "track-831997216a86a4914ef9",
+        "windowId": "w0-2",
+        "start": 40.83718820861678,
+        "end": 45.34,
+        "duration": 4.50281179138322,
+        "rate": 1.0038166666666666,
+        "bStart": 9.26,
+        "bEnd": 13.78,
+        "beatErrorMs": 37.18820861678296
+      },
+      "end": 80.96458049886623,
+      "preparation": "device-shared-source-wsola-v1",
+      "tempoAfterTakeover": "native",
+      "renderRequested": false,
+      "metrics": {
+        "bassOverlap": 0.2636234611608993,
+        "otherOverlap": 0.34042577338576907,
+        "bassDifference": 0.44876027354650216,
+        "otherDifference": 0.560653421773732,
+        "vocalSafe": false,
+        "vocalBenefit": 0,
+        "definitions": {
+          "overlap": "125ms digital RMS and original gain balance; not a clash probability",
+          "difference": "Observed-window 32768-sample Hann FFT chroma cosine; not chord truth",
+          "renderStats": "Not rendered: device headroom protection remains required"
+        }
+      }
+    },
+    {
+      "kind": "handoff_complete",
+      "at": "2026-10-21T12:27:57.575Z",
+      "context": 81.01732426303855,
+      "track": "track-831997216a86a4914ef9",
+      "sourceOffset": 13.832743764172319,
+      "method": "filter"
+    }
+  ],
+  "limitations": [
+    "Render-quantum timings are not device/Bluetooth latency",
+    "Rule scores are provisional,not listening success probabilities"
+  ]
+}

@@ -171,6 +171,8 @@ def validate_execution_pack(settings, pack):
         if execution['schema']=='harbeat.activity-execution.v2':
             if type(execution.get('energy')) is not int or not 1<=execution['energy']<=5:return False
             validate_candidate_edges(execution.get('edges'),sources,execution.get('coverage'))
+            from .strategies import embedded_valid
+            if not embedded_valid(pack):return False
         return set(saved)==set(pack['trackIds']) and all(read_execution_track(settings,s)==saved[s['id']] for s in sources)
     except (KeyError,TypeError,ValueError,OSError):return False
 

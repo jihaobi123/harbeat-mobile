@@ -22,7 +22,7 @@ class ServiceTests(unittest.TestCase):
         self.assertIsNotNone(create_app, 'persistent activity set service must exist')
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
-        self.settings = Settings(root=self.root/'sets', site=self.root/'site', gateway_media=self.root/'gateway', planner=self.root/'set-plan.cjs')
+        self.settings = Settings(root=self.root/'sets', site=self.root/'site', gateway_media=self.root/'gateway', planner=self.root/'set-plan.cjs', jetson_plans=False)
         self.app = create_app(self.settings, run_worker=False)
         self.client = TestClient(self.app)
         self.token = self.client.post('/workspaces').json()['token']
