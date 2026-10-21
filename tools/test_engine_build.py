@@ -36,6 +36,7 @@ class EngineBuildTests(unittest.TestCase):
             root = Path(temp)
             (root / 'metric-engine.html').touch()
             (root / 'v3-clock.js').touch()
+            (root / 'v3-device-clock.js').touch()
             with self.assertRaisesRegex(ValueError, 'JavaScript'):
                 verify_bundle(root)
             (root / 'assets').mkdir()

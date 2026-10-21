@@ -54,18 +54,19 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
     private val focusListener = AudioManager.OnAudioFocusChangeListener { change ->
         if (change != AudioManager.AUDIOFOCUS_GAIN) {
             focused = false
-            pauseEngine()
+            pauseEngine("audio-focus:$change")
         }
     }
     private val noisy = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
             if (intent?.action == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
-                pauseEngine()
+                pauseEngine("headphones-disconnected")
                 releaseFocus()
             }
         }
     }
 
+    private var lastPlaybackLog = 0L
     private var ready = false
     private var engineMode = "v3"
     private var disposed = false
@@ -133,7 +134,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
                 return WebResourceResponse("text/plain", "UTF-8", 403, "Blocked", emptyMap(), ByteArrayInputStream(ByteArray(0)))
             }
             override fun onPageFinished(view: WebView, url: String) {
-                if (!foreground) pauseEngine()
+                if (!foreground) pauseEngine("host-inactive")
             }
         }
         web.addJavascriptInterface(Host(), "HarBeatHost")
@@ -147,8 +148,9 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
         web.loadUrl("https://appassets.androidplatform.net/assets/realtime/engine.html")
     }
 
-    private fun pauseEngine() {
-        if (::web.isInitialized) web.evaluateJavascript("window.dispatchEvent(new CustomEvent('harbeat-host',{detail:{active:false}}));", null)
+    private fun pauseEngine(reason: String) {
+        android.util.Log.i("HarBeatPlayback", "pause:$reason")
+        if (::web.isInitialized) web.evaluateJavascript("window.dispatchEvent(new CustomEvent('harbeat-host',{detail:{active:false,reason:${JSONObject.quote(reason)}}}));", null)
     }
     private fun acquireFocus(): Boolean {
         if (!foreground || activity.isFinishing || disposed) return false
@@ -177,7 +179,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
     }
     fun pause() {
         foreground = false
-        pauseEngine()
+        pauseEngine("activity-background")
         releaseFocus()
         activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
@@ -204,7 +206,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
         if (method == "prepare") {
             val nextMode = if (args["mode"] == "metric") "metric" else "v3"
             if (nextMode != engineMode) {
-                pauseEngine(); ready = false; engineMode = nextMode
+                pauseEngine("engine-mode-change"); ready = false; engineMode = nextMode
                 web.loadUrl("https://appassets.androidplatform.net/assets/realtime/" + if (nextMode == "metric") "metric-engine.html" else "engine.html")
             }
         }
@@ -216,7 +218,7 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
             if (pending.remove(id) != null) {
                 waiting.remove(message)
                 // Do not leave an unacknowledged start running after the caller times out.
-                pauseEngine()
+                pauseEngine("command-timeout:$method")
                 result.error("timeout", "实时引擎响应超时，请重新开启 V3", null)
             }
         }, if (method in listOf("metricPrepare", "mixSoon")) 420000 else if (method in listOf("start", "metricApply")) 180000 else 30000)
@@ -308,8 +310,19 @@ class RealtimeMixEngine(private val activity: Activity, private val emit: (Map<S
                     ready = true
                     waiting.toList().forEach { send(it) }; waiting.clear()
                 }
-                if (foreground && (json.optBoolean("playing") || json.optBoolean("busy"))) activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                if (foreground && (json.optBoolean("playing") || json.optBoolean("busy") || (json.optBoolean("buffering") && !json.optBoolean("paused")))) activity.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 else activity.window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                val now = android.os.SystemClock.elapsedRealtime()
+                if (engineMode == "metric" && now - lastPlaybackLog >= 10000) {
+                    lastPlaybackLog = now
+                    val metric = json.optJSONObject("metric")
+                    val diagnostic = JSONObject().put("track", json.optJSONObject("current")?.optString("id"))
+                        .put("position", json.optDouble("position")).put("playing", json.optBoolean("playing"))
+                        .put("paused", json.optBoolean("paused")).put("buffering", json.optBoolean("buffering"))
+                        .put("phase", metric?.optString("phase")).put("notice", metric?.optString("notice"))
+                        .put("error", json.optString("error")).put("audioHealth", json.optJSONObject("audioHealth"))
+                    android.util.Log.i("HarBeatPlayback", diagnostic.toString())
+                }
                 @Suppress("UNCHECKED_CAST")
                 emit(value(json) as Map<String, Any?>)
             }

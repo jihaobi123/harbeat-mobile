@@ -9,17 +9,18 @@ import {scheduleDeviceGraph} from './device-graph'
 type Stream={track:Track;at:number;offset:number;gain:GainNode;sources:Set<AudioBufferSourceNode>;scheduler:SegmentScheduler}
 export class MetricTransport{
  readonly localExecution=true
+ continuation:{track:Track;at:number;stream:Stream}|null=null
  ctx=new AudioContext({sampleRate:44100,latencyHint:'interactive'});cache:AudioCache;logs:any[]=[];active:Stream|null=null;transition:PlayingTransition|null=null;status='选择当前歌曲后开始播放';busy=false;buffering=false;paused=false
  private monitor!:AudioWorkletNode;private volume:GainNode;private limiter:DynamicsCompressorNode;private timer:number;private nodes:AudioNode[]=[];private mixSource:AudioBufferSourceNode|null=null;private dead=false;private revision=0;private load?:AbortController;private ready?:Promise<void>;private cleanupAt=0;private streams=new Set<Stream>();private bufferingResume=false;private bufferingOperation=false
- constructor(private base:URL,private changed:()=>void){this.cache=new AudioCache(this.ctx,base,s=>{this.status=s;this.changed()});this.volume=this.ctx.createGain();this.limiter=this.ctx.createDynamicsCompressor();this.limiter.threshold.value=-.5;this.limiter.knee.value=0;this.limiter.ratio.value=20;this.limiter.attack.value=.003;this.limiter.release.value=.12;this.limiter.connect(this.volume);this.volume.gain.value=.7;this.volume.connect(this.ctx.destination);this.timer=window.setInterval(()=>this.tick(),80)}
- initialize(){return this.ready??=(async()=>{await this.ctx.audioWorklet.addModule(new URL('v3-clock.js',this.base));this.monitor=new AudioWorkletNode(this.ctx,'v3-clock',{outputChannelCount:[2]});this.monitor.connect(this.limiter);this.monitor.port.onmessage=({data})=>{this.logs.push({kind:'audio_observation',at:new Date().toISOString(),...data})}})()}
+ constructor(private base:URL,private changed:()=>void){this.cache=new AudioCache(this.ctx,base,s=>{this.status=s;this.changed()});this.volume=this.ctx.createGain();this.limiter=this.ctx.createDynamicsCompressor();this.limiter.threshold.value=-.5;this.limiter.knee.value=0;this.limiter.ratio.value=20;this.limiter.attack.value=.003;this.limiter.release.value=.12;this.limiter.connect(this.volume);this.volume.gain.value=.7;this.volume.connect(this.ctx.destination);this.ctx.addEventListener('statechange',()=>{if(!this.dead)this.log('audio_context_state',{state:this.ctx.state,paused:this.paused,buffering:this.buffering,position:this.position})});this.timer=window.setInterval(()=>this.tick(),80)}
+ initialize(){return this.ready??=(async()=>{await this.ctx.audioWorklet.addModule(new URL('v3-device-clock.js',this.base));this.monitor=new AudioWorkletNode(this.ctx,'v3-clock',{outputChannelCount:[2]});this.monitor.connect(this.limiter);this.monitor.port.onmessage=({data})=>{this.logs.push({kind:data.kind==='audio_health'?'audio_health':'audio_observation',at:new Date().toISOString(),...data})}})()}
  get current(){return this.active?.track??null}
  get position(){return this.active?Math.min(this.active.track.duration,this.active.offset+Math.max(0,this.ctx.currentTime-this.active.at)):0}
  get playing(){return !!this.active&&this.ctx.state==='running'&&!this.paused}
  get locked(){return !!this.transition&&this.ctx.currentTime>=this.transition.at-.25}
  setVolume(v:number){this.volume.gain.setTargetAtTime(.7*Math.max(0,Math.min(1,v)),this.ctx.currentTime,.02)}
  private log(kind:string,data:any={}){this.logs.push({kind,at:new Date().toISOString(),context:this.ctx.currentTime,...data})}
- private clear(){this.revision++;this.load?.abort();for(const s of this.streams){s.scheduler.dispose();for(const source of s.sources){try{source.stop()}catch{}source.disconnect()}s.gain.disconnect()}this.streams.clear();if(this.mixSource){try{this.mixSource.stop()}catch{}this.mixSource.disconnect();this.mixSource=null}for(const n of this.nodes){if('stop' in n)try{(n as AudioBufferSourceNode).stop()}catch{}n.disconnect();}this.nodes=[];this.cleanupAt=0;this.active=null;this.transition=null;this.cache.protected.clear();this.monitor?.port.postMessage({kind:'clear'});this.buffering=false;this.bufferingResume=false}
+ private clear(){this.revision++;this.load?.abort();for(const s of this.streams){s.scheduler.dispose();for(const source of s.sources){try{source.stop()}catch{}source.disconnect()}s.gain.disconnect()}this.streams.clear();if(this.mixSource){try{this.mixSource.stop()}catch{}this.mixSource.disconnect();this.mixSource=null}for(const n of this.nodes){if('stop' in n)try{(n as AudioBufferSourceNode).stop()}catch{}n.disconnect();}this.nodes=[];this.cleanupAt=0;this.active=null;this.transition=null;this.continuation=null;this.cache.protected.clear();this.monitor?.port.postMessage({kind:'clear'});this.buffering=false;this.bufferingResume=false}
  private stream(track:Track,offset:number,at:number,buffer:AudioBuffer,fade=false):Stream{
   const gain=this.ctx.createGain();gain.gain.value=.60;gain.connect(this.monitor);const sources=new Set<AudioBufferSourceNode>();let stream:Stream
   const scheduler=new SegmentScheduler(track,at,offset,{now:()=>this.ctx.currentTime,load:(asset,signal)=>this.cache.load(asset,signal),changed:()=>this.pins(),scheduled:e=>this.log('native_chunk',{track:track.id,...e}),schedule:(pcm,start,sourceOffset,duration,edge)=>{
@@ -36,6 +37,7 @@ export class MetricTransport{
  }
  async arm(result:Prepared,method:Method,b:Track,signal?:AbortSignal){
   signal?.throwIfAborted()
+  if(this.continuation)throw Error('已安排原曲续播，请等待接管或停止')
   const a=this.active;if(!a||b.id!==result.plan.to||!canArm(result.plan,a.track.id,this.position)||this.transition)throw Error('这个接点已过或正在交接，请重新准备')
   if(!hasMethod(result,method))throw Error('该方案未通过本轮条件检查')
   const rev=this.revision;this.busy=true;this.load=new AbortController();const load=this.load,cancel=()=>load.abort(signal?.reason);signal?.addEventListener('abort',cancel,{once:true});if(signal?.aborted)cancel();this.changed()
@@ -73,27 +75,38 @@ export class MetricTransport{
    const started=await this.start(a,offset);if(started)await this.arm(result,method,b)
   }finally{if(rev===this.revision){this.busy=false;this.changed()}}
  }
+ /** Ordinary whole-track continuation is not an unapproved DJ overlap. */
+ async queueNativeNext(track:Track,signal:AbortSignal){
+  const a=this.active;if(!a||this.transition||this.continuation||track.id===a.track.id)throw Error('当前不能安排原曲续播')
+  const rev=this.revision,at=a.at+a.track.duration-a.offset
+  const buffer=await this.cache.load(nativeSegment(track,0).asset,signal)
+  signal.throwIfAborted();if(rev!==this.revision||this.active!==a||this.transition||this.continuation||this.ctx.currentTime>=at-.1)throw Error('原曲续播准备未赶上结尾')
+  const stream=this.stream(track,0,at,buffer,true);this.continuation={track,at,stream};this.pins()
+  this.status='已安排原曲顺序续播：'+track.title
+  this.log('sequential_scheduled',{from:a.track.id,to:track.id,at,sourceOffset:0,mixed:false});this.changed()
+ }
  private tick(){
   if(this.dead||!this.active)return
-  const now=this.ctx.currentTime,t=this.transition
+  const now=this.ctx.currentTime,t=this.transition,q=this.continuation
+  if(q&&now>=q.at){const old=this.active;old.scheduler.dispose();for(const source of old.sources){try{source.stop()}catch{}source.disconnect()}old.gain.disconnect();this.streams.delete(old);this.active=q.stream;this.continuation=null;this.status='原曲续播：'+q.track.title;this.log('sequential_complete',{track:q.track.id,sourceOffset:this.position,mixed:false});this.pins()}
   if(t&&now>=t.at+.008&&this.streams.has(this.active)){this.active.scheduler.dispose();for(const source of this.active.sources){try{source.stop()}catch{}source.disconnect()}this.active.sources.clear();this.streams.delete(this.active)}
-  if(t&&now>=t.end){const old=this.active,body=[...this.streams].find(s=>s.track.id===t.b.id&&s.at===t.end);if(!body){this.status='正文准备异常，请停止后重试';this.pause();return}this.active=body;old.scheduler.dispose();for(const s of old.sources){try{s.stop()}catch{}s.disconnect()}old.sources.clear();old.gain.disconnect();this.streams.delete(old);this.cleanupAt=t.end+.008;this.transition=null;this.status='已进入 '+body.track.title;this.log('handoff_complete',{track:body.track.id,sourceOffset:adoptedPosition(t.result.plan,t.end,now),method:t.method});this.pins()}
+  if(t&&now>=t.end){const old=this.active,body=[...this.streams].find(s=>s.track.id===t.b.id&&s.at===t.end);if(!body){this.status='正文准备异常，请停止后重试';this.pause('body-missing');return}this.active=body;old.scheduler.dispose();for(const s of old.sources){try{s.stop()}catch{}s.disconnect()}old.sources.clear();old.gain.disconnect();this.streams.delete(old);this.cleanupAt=t.end+.008;this.transition=null;this.status='已进入 '+body.track.title;this.log('handoff_complete',{track:body.track.id,sourceOffset:adoptedPosition(t.result.plan,t.end,now),method:t.method});this.pins()}
   if(this.cleanupAt&&now>=this.cleanupAt){for(const n of this.nodes)n.disconnect();this.nodes=[];this.cleanupAt=0}
   for(const s of this.streams)s.scheduler.pump()
   const starving=[...this.streams].find(s=>s.scheduler.error||s.scheduler.late||now>=s.scheduler.deadline-.12)
-  if(starving&&!this.bufferingOperation&&this.playing){this.bufferingOperation=true;this.buffering=true;this.bufferingResume=true;void this.ctx.suspend().then(()=>{this.status='网络准备中，已暂停时间轴';this.changed()}).finally(()=>this.bufferingOperation=false)}
+  if(starving&&!this.bufferingOperation&&this.playing){this.log('buffering_start',{track:starving.track.id,position:this.position,error:starving.scheduler.error,late:starving.scheduler.late,deadline:starving.scheduler.deadline,coveredSourceEnd:starving.scheduler.coveredSourceEnd});this.bufferingOperation=true;this.buffering=true;this.bufferingResume=true;void this.ctx.suspend().then(()=>{this.status='网络准备中，已暂停时间轴';this.changed()}).finally(()=>this.bufferingOperation=false)}
   if(this.buffering&&!this.bufferingOperation){
    for(const s of this.streams)if(s.scheduler.error)s.scheduler.retry()
-   if([...this.streams].every(s=>!s.scheduler.error&&!s.scheduler.late&&this.ctx.currentTime<s.scheduler.deadline-.12)){this.buffering=false;if(this.bufferingResume&&!this.paused){this.bufferingOperation=true;void this.ctx.resume().finally(()=>{this.bufferingOperation=false;this.changed()})}}
+   if([...this.streams].every(s=>!s.scheduler.error&&!s.scheduler.late&&this.ctx.currentTime<s.scheduler.deadline-.12)){this.log('buffering_end',{position:this.position});this.buffering=false;if(this.bufferingResume&&!this.paused){this.bufferingOperation=true;void this.ctx.resume().finally(()=>{this.bufferingOperation=false;this.changed()})}}
    if([...this.streams].some(s=>s.scheduler.late))this.status='音频准备晚于接点，请停止后重试'
   }
-  if(this.position>=this.active.track.duration-.03&&!this.transition&&!this.paused){this.status='播放结束，请选择下一首';this.pause()}
+  if(this.position>=this.active.track.duration-.03&&!this.transition&&!this.continuation&&!this.paused){this.status='播放结束，请选择下一首';this.pause('track-ended')}
   this.changed()
  }
- pause(){this.paused=true;this.bufferingResume=false;void this.ctx.suspend();this.log('pause');this.changed()}
+ pause(reason='user'){this.paused=true;this.bufferingResume=false;void this.ctx.suspend();this.log('pause',{reason,track:this.current?.id,position:this.position,buffering:this.buffering});this.changed()}
  async resume(){this.paused=false;this.bufferingResume=true;if(!this.buffering)await this.ctx.resume();this.log('resume');this.changed()}
  stop(){this.log('stop');this.clear();this.busy=false;this.paused=false;this.status='已停止';this.changed()}
  async seek(offset:number){const track=this.current;if(!track)return;await this.start(track,offset)}
- export(){return {schema:'harbeat.metric-mix-session.v1',sampleRate:this.ctx.sampleRate,logs:this.logs,limitations:['Render-quantum timings are not device/Bluetooth latency','Rule scores are provisional,not listening success probabilities']}}
+ export(){return {schema:'harbeat.metric-mix-session.v1',sampleRate:this.ctx.sampleRate,transport:{track:this.current?.id,position:this.position,duration:this.current?.duration,state:this.ctx.state,paused:this.paused,buffering:this.buffering,status:this.status,streams:[...this.streams].map(s=>({track:s.track.id,offset:s.offset,at:s.at,deadline:Number.isFinite(s.scheduler.deadline)?s.scheduler.deadline:null,coveredSourceEnd:s.scheduler.coveredSourceEnd,error:s.scheduler.error,late:s.scheduler.late}))},logs:this.logs,limitations:['Render-quantum timings are not device/Bluetooth latency','Rule scores are provisional,not listening success probabilities']}}
  dispose(){this.dead=true;this.clear();clearInterval(this.timer);this.cache.dispose();this.monitor?.disconnect();this.volume.disconnect();this.limiter.disconnect();void this.ctx.close()}
 }

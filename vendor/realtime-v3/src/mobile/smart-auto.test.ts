@@ -315,3 +315,37 @@ it('does not consume the cloud attempt when the first cue has no request budget'
  let calls=0;const {run,p,host}=setup({waitArm:async()=>{if(++calls===1)throw Error('try next cue')}});run.direction({automatic:false});await run.start('a');p.position=3.1;run.choose('b');await run.mixSoon()
  expect(host.prepareMetric).toHaveBeenCalledTimes(1);expect(p.arm).toHaveBeenCalledTimes(2)
 })
+
+it('a short song retains its last safe automatic exit instead of exhausting the 35 second lookahead',async()=>{
+ const {run,p}=setup();await run.start('a');p.position=40;run.tick();await finished(run)
+ expect(run.result).not.toBeNull();expect(run.result!.plan.start).toBeGreaterThanOrEqual(52)
+ expect(run.result!.plan.end).toBeLessThan(80)
+ p.position=run.result!.plan.start-9;run.tick();await finished(run)
+ expect(p.arm).toHaveBeenCalledTimes(1);expect(p.pause).not.toHaveBeenCalled()
+})
+it('background during preparation preserves the already playing deck for an explicit resume',async()=>{
+ const {run,p}=setup();await run.start('a');p.busy=true;run.pauseForHost('audio-focus:-2')
+ expect(p.stop).not.toHaveBeenCalled();expect(p.pause).toHaveBeenCalledWith('audio-focus:-2')
+ expect(p.current.id).toBe('a');expect(p.paused).toBe(true)
+})
+
+it('a missing execution profile queues an ordinary native successor at the song end',async()=>{
+ const {run,p}=setup();run.index.tracks[0].mixStatus='unavailable'
+ p.queueNativeNext=vi.fn(async(track:any)=>{p.continuation={track,at:80}})
+ await run.start('a');run.tick();await finished(run)
+ expect(run.phase).toBe('no_match');p.position=55;run.tick();await finished(run)
+ expect(p.queueNativeNext).toHaveBeenCalledTimes(1);expect(p.queueNativeNext.mock.calls[0][0].id).toBe('b')
+ expect(p.arm).not.toHaveBeenCalled();expect(p.start).toHaveBeenCalledTimes(1);expect(p.paused).toBe(false)
+})
+it('manual pause or automatic off does not trigger the end-of-track continuation',async()=>{
+ const {run,p}=setup();run.index.tracks[0].mixStatus='unavailable';p.queueNativeNext=vi.fn()
+ await run.start('a');run.tick();await finished(run);p.position=55;run.pause();run.tick()
+ expect(p.queueNativeNext).not.toHaveBeenCalled()
+ await run.resume();run.direction({automatic:false});run.tick();expect(p.queueNativeNext).not.toHaveBeenCalled()
+})
+
+it('play at an already ended track continues the next source instead of immediately pausing again',async()=>{
+ const {run,p}=setup();await run.start('a');p.position=80;p.paused=true;p.playing=false
+ await run.resume();expect(p.start).toHaveBeenCalledTimes(2);expect(p.current.id).toBe('b')
+ expect(p.resume).not.toHaveBeenCalled();expect(p.logs.some((e:any)=>e.kind==='resume_ended_track'&&e.mixed===false)).toBe(true)
+})

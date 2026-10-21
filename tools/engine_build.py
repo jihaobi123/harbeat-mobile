@@ -57,14 +57,14 @@ def source_fingerprints(root):
         'package.json', 'package-lock.json', 'tsconfig.json', 'upstream.json',
         'dependency-overlay.json', 'metric-upstream.json', 'continuous-source.json', 'public/catalog.json',
         'engine.html', 'mobile.html', 'metric-engine.html',
-        'vite.mobile.config.ts', 'vite.metric-mobile.config.ts', 'public/v3-clock.js')]
+        'vite.mobile.config.ts', 'vite.metric-mobile.config.ts', 'public/v3-clock.js', 'public/v3-device-clock.js')]
     paths += [root / 'tools' / name for name in ('build_realtime.py', 'engine_build.py', 'prepare_continuous.py')]
     return {path.relative_to(root).as_posix(): sha256(path)
             for path in sorted(set(paths)) if path.is_file()}
 
 
 def verify_bundle(directory):
-    for required in ('metric-engine.html', 'v3-clock.js'):
+    for required in ('metric-engine.html', 'v3-clock.js', 'v3-device-clock.js'):
         if not (directory / required).is_file():
             raise ValueError('Missing built audio engine asset: ' + required)
     if not any((directory / 'assets').glob('*.js')):

@@ -93,3 +93,10 @@ export function rankNearbyChoices(a:Track,tracks:Track[],position:number,energy:
  choices.sort((a,b)=>b.score-a.score||a.plan.start-b.plan.start||a.plan.id.localeCompare(b.plan.id))
  return {best:choices[0]??null,choices,rejected,policy:NEARBY_DIRECTION_POLICY}
 }
+
+/** Keep generous preparation lead when possible; recover the last valid exit
+ * of a short/in-progress song without weakening the upstream quality gates. */
+export function rankContinuousChoices(a:Track,tracks:Track[],position:number,energy:number,ready=new Set<string>()){
+ const ahead=rankChoices(a,tracks,position+35,energy,ready)
+ return ahead.choices.length?ahead:rankChoices(a,tracks,position,energy,ready)
+}

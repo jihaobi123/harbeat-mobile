@@ -1,4 +1,4 @@
-import {TrackLibrary, readLibraryIndex, type LibraryIndex} from '../metric-upstream/continuous/catalog'
+import {TrackLibrary, readLibraryIndex, type LibraryIndex,type LibraryEntry} from '../metric-upstream/continuous/catalog'
 import {planContinuous} from '../metric-upstream/continuous/beatAlignment'
 import {initializeFromGesture} from '../metric-upstream/continuous/activation'
 import {MetricTransport} from './device-transport'
@@ -6,7 +6,7 @@ import {canArm} from '../metric-upstream/metric-mix/plan'
 import type {Prepared, Method} from '../metric-upstream/metric-mix/types'
 import type {Track,Plan} from '../metric-upstream/realtime/planner'
 import {nativeSegment} from '../metric-upstream/continuous/segments'
-import {candidateStages,rankChoices,rankNearbyChoices,choiceForPlan,SMART_POLICY,NEARBY_DIRECTION_POLICY,type SmartChoice} from './smart-selection'
+import {candidateStages,rankContinuousChoices,rankNearbyChoices,choiceForPlan,SMART_POLICY,NEARBY_DIRECTION_POLICY,styleMatches,type SmartChoice} from './smart-selection'
 import type {Host} from './session'
 import {mixNearby,nearbyPlan} from './nearby'
 import {localOriginal,preloadOriginal} from './local-original'
@@ -91,7 +91,7 @@ export class MetricRun {
  private warmPreparing:{from:string;to:string;start:number;end:number}|null=null
  private userIntent:{kind:'user-next'|'user-direction';preferred:string|null}|null=null
  private nearbyTask:Promise<void>|null=null
- private retryAt=0;private autoTask:Promise<void>|null=null;private lastResult:Prepared|null=null
+ private nativeRetryAt=0;private retryAt=0;private autoTask:Promise<void>|null=null;private lastResult:Prepared|null=null
  private history:Record<string,unknown>[]=[]
  private selection:{available:number;styleCandidates:number;tempoCandidates:number;recentCandidates:number;checked:number;metadataFailed:number;qualified:number;stage:string|null;usedRecent:boolean}|null=null
  constructor(readonly index:LibraryIndex,readonly base:URL,private changed:()=>void,private host?:Host,
@@ -161,10 +161,10 @@ export class MetricRun {
   const activity=await ActivitySession.open(manifest,name,id=>this.library.load(id))
   await activity.cacheStrategies?.(this.base)
   if(!this.alive||sequence!==this.sessionSequence)throw new DOMException('预约载入已取消','AbortError')
-  if(this.player?.transition)throw Error('请先完成交接或停止，再进入预约')
+  if(this.player?.transition||this.player?.continuation)throw Error('请先完成交接或停止，再进入预约')
   this.stop();this.library.trim(new Set([activity.initialTrackId]),4);this.activity=activity;this.selected=this.explicit=null;this.recent=[];this.error='';this.notice='预约 set 已载入，可以开始播放';this.update()
  }
- clearSet(){this.sessionSequence++;if(this.player?.transition)throw Error('交接完成后可退出预约');this.resetWarm(true);this.invalidate();this.activity=null;this.notice='已回到完整曲库';this.update()}
+ clearSet(){this.sessionSequence++;if(this.player?.transition||this.player?.continuation)throw Error('交接完成后可退出预约');this.resetWarm(true);this.invalidate();this.activity=null;this.notice='已回到完整曲库';this.update()}
  async cacheSet(manifest:unknown){
   const sequence=++this.cacheSequence;this.setCacheController?.abort();const controller=this.setCacheController=new AbortController()
   if(this.setCache?.state==='downloading'){this.setCache={...this.setCache,state:'partial',message:'上一次下载已暂停'};this.update()}
@@ -178,7 +178,7 @@ export class MetricRun {
  async start(id:string){
   if(this.activity&&!this.activity.ids.has(id))throw Error('这首歌不在预约 set 中，请先退出预约')
   this.resetWarm(true);this.userIntent=null
-  if(this.player?.transition)throw Error('请先完成交接或停止，再更换当前歌曲')
+  if(this.player?.transition||this.player?.continuation)throw Error('请先完成交接或停止，再更换当前歌曲')
   this.invalidate();const token=this.revision;this.working=true;this.update()
   try{
    const p=await this.ensure(),track=await this.library.load(id)
@@ -191,7 +191,7 @@ export class MetricRun {
  }
  choose(id:string){
   if(this.activity&&!this.activity.ids.has(id))throw Error('这首歌不在预约 set 中，请先退出预约')
-  if(this.player?.transition)throw Error('正在交接；完成后可以选择下一首')
+  if(this.player?.transition||this.player?.continuation)throw Error('正在交接；完成后可以选择下一首')
   if(!this.index.tracks.some(t=>t.id===id&&t.playStatus==='ready'&&t.mixStatus==='ready'))throw Error('这首歌尚未具备智能混音条件')
   if(id===this.player?.current?.id)throw Error('请选择不同的下一首')
   this.resetWarm(true);this.invalidate();this.selected=this.explicit=id;this.retryAt=0;this.excludedPlans.clear();this.excludedTracks.clear()
@@ -206,7 +206,7 @@ export class MetricRun {
   if(value.automatic!==undefined)this.automatic=value.automatic
   // Once scheduled, the shared clock finishes that handoff. New preferences
   // apply to the following song; never stop A or partially replace automation.
-  if(this.player?.transition){this.notice='当前交接完成后采用新的音乐方向';this.update();return}
+  if(this.player?.transition||this.player?.continuation){this.notice='当前交接完成后采用新的音乐方向';this.update();return}
   const enabled=this.automatic
   this.invalidate(value.automatic===false?false:true)
   if(changed){this.resetWarm(true);this.explicit=null;this.selected=null;this.userIntent=this.player?.current?{kind:'user-direction',preferred:null}:null}
@@ -285,7 +285,7 @@ export class MetricRun {
  }
  async prepare(){
   const p=this.player,id=this.selected
-  if(!p?.current||!id||id===p.current.id||p.transition||p.busy)throw Error('先播放当前歌曲并选择不同的下一首')
+  if(!p?.current||!id||id===p.current.id||p.transition||p.continuation||p.busy)throw Error('先播放当前歌曲并选择不同的下一首')
   this.invalidate();const token=this.revision,controller=this.request=new AbortController(),a=p.current
   this.working=true;this.notice='正在读取下一首的分析资料';this.update()
   try{
@@ -313,6 +313,7 @@ export class MetricRun {
    const search=candidateStages(this.activity?this.index.tracks.filter(t=>this.activity!.ids.has(t.id)):this.index.tracks,entry,this.targetStyle,this.recent,this.excludedTracks,intent?null:this.explicit,intent?.preferred)
    const selection:NonNullable<MetricRun['selection']>={...search.counts,checked:0,metadataFailed:0,qualified:0,stage:null,usedRecent:false}
    this.selection=selection
+   if(entry.mixStatus!=='ready')throw Error('当前歌曲的混音资料尚未发布，播完后将按方向续播原曲')
    if(!search.stages.length)throw Error(`当前风格有 ${selection.styleCandidates} 首候选，速度相容 ${selection.tempoCandidates} 首；请换个方向或补充这个速度区间的音乐`)
    const energy=this.energyLevel
    let choices:SmartChoice[]=[]
@@ -333,7 +334,7 @@ export class MetricRun {
       for(const r of group)if(r.status==='fulfilled')loaded.push(r.value);else selection.metadataFailed++
      }
      if(!valid())return
-     const ranked=intent?rankNearbyChoices(a,loaded,p.position,energy):rankChoices(a,loaded,p.position+35,energy,p.cache.ready)
+     const ranked=intent?rankNearbyChoices(a,loaded,p.position,energy):rankContinuousChoices(a,loaded,p.position,energy,p.cache.ready)
      const eligible=ranked.choices.filter(c=>!this.excludedPlans.has(c.plan.id))
      for(const c of eligible)qualified.add(c.track.id)
      choices=[...choices,...eligible].sort(compare).slice(0,3)
@@ -403,14 +404,14 @@ export class MetricRun {
    }
    if(expired)throw expiredCue()
    throw Error(lastError||'本轮转场尚未准备成功，当前音乐继续播放')
-  }catch(e){if(valid()&&(e as Error).name!=='AbortError'){this.phase='no_match';this.error=(e as Error).message;this.recommendation=null;this.selected=null;this.retryAt=Date.now()+(isExpiredCue(e)?1000:30000)}}
+  }catch(e){if(valid()&&(e as Error).name!=='AbortError'){this.phase='no_match';this.error=(e as Error).message;p.logs.push({kind:'automatic_no_match',at:new Date().toISOString(),track:a.id,sourcePosition:p.position,duration:a.duration,selection:{...this.selection},reason:this.error});this.recommendation=null;this.selected=null;this.retryAt=Date.now()+(isExpiredCue(e)?1000:30000)}}
   finally{this.library.trim(new Set([p.current?.id??'',this.selected??'']),10);if(token===this.revision){this.working=false;this.update()}}
  }
  /** Roll a small device-ready horizon. This timer only prepares immutable
   * plans; the common audio clock still schedules every accepted handoff. */
  private warmNearby(){
   const p=this.player,a=p?.current
-  const key=this.alive&&p?.playing&&!p.paused&&!p.busy&&!p.transition&&a?[a.id,this.targetStyle,this.energyLevel,this.explicit??'',this.activity?.packId??''].join(':'):''
+  const key=this.alive&&p?.playing&&this.index.tracks.find(t=>t.id===a?.id)?.mixStatus==='ready'&&!p.continuation&&!p.paused&&!p.busy&&!p.transition&&a?[a.id,this.targetStyle,this.energyLevel,this.explicit??'',this.activity?.packId??''].join(':'):''
   if(key!==this.warmKey){this.resetWarm();this.warmKey=key}
   if(!key||!p||!a||this.working||this.warmRunning||Date.now()<this.warmAt)return
   this.preparedPool.prune(r=>r.plan.from===a.id&&canArm(r.plan,a.id,p.position))
@@ -456,9 +457,13 @@ export class MetricRun {
    .finally(()=>{if(this.warmController===controller){this.warmRunning=false;this.warmPreparing=null;this.warmAt=Date.now()+2000;this.update()}})
  }
  tick(){
-  this.warmNearby()
   const p=this.player
-  if(!this.alive||!p?.playing||p.paused||p.busy||p.buffering||p.transition||this.working||this.autoTask||this.nearbyTask)return
+  if(this.automatic&&p?.playing&&!p.paused&&!p.transition&&!p.continuation&&!this.working&&!this.autoTask&&!this.nearbyTask&&this.phase==='no_match'&&p.current&&p.current.duration-p.position<=30&&Date.now()>=this.nativeRetryAt){
+   const task=this.queueNativeContinuation().finally(()=>{if(this.autoTask===task)this.autoTask=null});this.autoTask=task;return
+  }
+  if(p?.continuation)return
+  this.warmNearby()
+  if(!this.alive||!p?.playing||p.continuation||p.paused||p.busy||p.buffering||p.transition||this.working||this.autoTask||this.nearbyTask)return
   if(this.userIntent){
    const intent=this.userIntent;this.userIntent=null
    const task=this.recommend(intent).finally(()=>{if(this.autoTask===task)this.autoTask=null})
@@ -480,6 +485,27 @@ export class MetricRun {
   const task=this.recommend().finally(()=>{if(this.autoTask===task)this.autoTask=null})
   this.autoTask=task
  }
+ private nativeCandidates(entry:LibraryEntry){
+  const rows=(this.activity?this.index.tracks.filter(t=>this.activity!.ids.has(t.id)):this.index.tracks).filter(t=>t.id!==entry.id&&t.playStatus==='ready'&&styleMatches(t.styleLabels,this.targetStyle))
+  const search=candidateStages(rows.map(t=>({...t,mixStatus:'ready' as const})),entry,this.targetStyle,this.recent,new Set(),this.explicit)
+  const ordered=search.stages.flatMap(s=>s.entries)
+  return [...ordered,...rows.filter(t=>!ordered.some(x=>x.id===t.id))].slice(0,3)
+ }
+ private async queueNativeContinuation(){
+  const p=this.player,a=p?.current,entry=this.index.tracks.find(t=>t.id===a?.id);if(!p||!a||!entry)return
+  this.resetWarm();this.invalidate();const token=this.revision,controller=this.request=new AbortController()
+  this.working=true;this.phase='preparing';this.notice='本轮混音未就绪，正在准备原曲顺序续播';this.update()
+  try{
+   let last='没有可续播的同风格原曲'
+   for(const row of this.nativeCandidates(entry)){
+    try{const b=await abortable(this.library.load(row.id),controller.signal);if(token!==this.revision)return
+     await p.queueNativeNext(b,controller.signal);this.selected=b.id;this.phase='armed';this.notice='混音资料或接点未就绪，本次按原曲顺序续播';this.error='';return
+    }catch(e){controller.signal.throwIfAborted();last=(e as Error).message}
+   }
+   throw Error(last)
+  }catch(e){if(token===this.revision&&!controller.signal.aborted){this.phase='no_match';this.error=(e as Error).message;this.nativeRetryAt=Date.now()+3000;p.logs.push({kind:'sequential_unavailable',at:new Date().toISOString(),reason:this.error,position:p.position})}}
+  finally{if(token===this.revision){this.working=false;this.update()}}
+ }
  mixSoon(){
   if(this.nearbyTask)return this.nearbyTask
   const task=this.performNearby().finally(()=>{if(this.nearbyTask===task){this.nearbyTask=null;this.update()}})
@@ -487,7 +513,7 @@ export class MetricRun {
  }
  private async performNearby(){
   const p=this.player,a=p?.current,id=this.selected
-  if(!p?.playing||!a||p.transition||p.busy)throw Error('先播放当前歌曲，再点击最近接点切歌')
+  if(!p?.playing||!a||p.transition||p.continuation||p.busy)throw Error('先播放当前歌曲，再点击最近接点切歌')
   if(!id||id===a.id)throw Error('先选择下一首，或等待推荐出现')
   const ready=this.result?{result:this.result,method:this.method}:undefined
   this.invalidate();const token=this.revision,controller=this.request=new AbortController()
@@ -503,7 +529,7 @@ export class MetricRun {
   finally{if(token===this.revision){this.working=false;this.update()}}
  }
  requestNext(){
-  if(this.player?.transition)throw Error('正在交接，稍后可以继续换歌')
+  if(this.player?.transition||this.player?.continuation)throw Error('正在交接，稍后可以继续换歌')
   const preferred=this.selected
   this.invalidate(false);this.userIntent={kind:'user-next',preferred};this.excludedPlans.clear();this.excludedTracks.clear();this.retryAt=0
   this.notice=this.player?.playing?'正在按当前方向接入下一首':'继续播放后，按当前方向接入下一首';this.update()
@@ -511,7 +537,7 @@ export class MetricRun {
 
  selectMethod(method:Method){if(this.player?.transition||this.player?.busy)throw Error('请等待本次交接完成');if(!this.result||!hasMethod(this.result,method))throw Error('该方法没有通过本轮检查');this.method=method;this.update()}
  async apply(audition=false,origin='manual'){
-  if(!this.result||!this.pair||this.working||this.player?.transition)throw Error('请先准备本次交接')
+  if(!this.result||!this.pair||this.working||this.player?.transition||this.player?.continuation)throw Error('请先准备本次交接')
   this.request?.abort();const controller=this.request=new AbortController()
   const result=this.result,pair=this.pair,method=this.method,token=++this.revision;this.working=true;this.update()
   try{const p=await this.ensure(audition||!this.player?.paused);if(!this.alive||token!==this.revision)return;if(audition)await p.audition(result,method,pair.a,pair.b);else await p.arm(result,method,pair.b,controller.signal)
@@ -519,11 +545,20 @@ export class MetricRun {
   }finally{if(token===this.revision){this.working=false;this.update()}}
  }
  pause(){this.resetWarm();this.userIntent=null;this.invalidate(false);this.player?.pause();this.phase=this.result?'ready':'idle';this.notice='已暂停，继续播放后按你的方向自动推荐';this.save();this.update()}
- async resume(){const p=await this.ensure();await p.resume();this.retryAt=0}
- async seek(position:number){this.userIntent=null;if(this.player?.transition)throw Error('请先完成交接或停止，再调整位置');this.resetWarm(true);this.invalidate();this.excludedPlans.clear();this.retryAt=0;const paused=this.player?.paused;await this.player?.seek(position);if(paused)this.player?.pause()}
- cancel(){this.userIntent=null;if(this.player?.transition)throw Error('已安排交接，暂停可暂停时间轴，停止可取消');this.invalidate();this.retryAt=Date.now()+30000;this.notice='已取消这次准备，当前歌曲继续播放';this.update()}
+ async resume(){
+  const p=await this.ensure(),a=p.current
+  if(a&&p.position>=a.duration-.1){
+   const entry=this.index.tracks.find(t=>t.id===a.id),next=this.automatic&&entry?this.nativeCandidates(entry)[0]:null
+   if(this.automatic&&!next)throw Error('歌曲已结束，当前方向暂无其他可播放音乐')
+   p.logs?.push({kind:'resume_ended_track',at:new Date().toISOString(),from:a.id,to:next?.id??a.id,mixed:false})
+   await this.start(next?.id??a.id);return
+  }
+  await p.resume();this.retryAt=0
+ }
+ async seek(position:number){this.userIntent=null;if(this.player?.transition||this.player?.continuation)throw Error('请先完成交接或停止，再调整位置');this.resetWarm(true);this.invalidate();this.excludedPlans.clear();this.retryAt=0;const paused=this.player?.paused;await this.player?.seek(position);if(paused)this.player?.pause()}
+ cancel(){this.userIntent=null;if(this.player?.transition||this.player?.continuation)throw Error('已安排交接，暂停可暂停时间轴，停止可取消');this.invalidate();this.retryAt=Date.now()+30000;this.notice='已取消这次准备，当前歌曲继续播放';this.update()}
  stop(){this.resetWarm(true);this.sessionSequence++;this.userIntent=null;this.invalidate();this.player?.stop();this.lastCurrent=null;this.retryAt=0;this.notice='已停止';this.save();this.update()}
- pauseForHost(){this.resetWarm();this.sessionSequence++;this.cacheSequence++;this.setCacheController?.abort();this.userIntent=null;this.invalidate(false);if(this.player?.busy){this.player.stop();this.notice='已暂停准备，回到前台后重新开始'}else this.player?.pause();this.save()}
+ pauseForHost(reason='host-inactive'){this.resetWarm();this.sessionSequence++;this.cacheSequence++;this.setCacheController?.abort();this.userIntent=null;this.invalidate(false);if(this.player?.busy&&!this.player.current){this.player.stop();this.notice='已暂停准备，回到前台后重新开始'}else this.player?.pause(reason);this.save()}
  setVolume(value:number){if(!Number.isFinite(value))throw Error('音量无效');this.volume=Math.max(0,Math.min(1,value));this.player?.setVolume(this.volume);this.update()}
  filters(value:{label?:string;query?:string}){this.label=value.label??this.label;this.query=value.query??this.query;this.update()}
  export(){return {...this.player?.export(),schema:'harbeat.metric-mix-session.v1',release:METRIC_RELEASE,automaticPolicy:SMART_POLICY,direction:{style:this.targetStyle,energy:this.energyLevel,automatic:this.automatic},history:this.history,selectedResult:this.result??this.lastResult,selectedMethod:this.method,selection:this.selection,exportedAt:new Date().toISOString()}}
@@ -534,4 +569,12 @@ export class MetricRun {
   warm:{state:this.warmRunning?'preparing':ready.length?'ready':'idle',preparing:this.warmPreparing,ready:ready.map(value=>({from:value.plan.from,to:value.plan.to,start:value.plan.start,end:value.plan.end,method:value.decision.recommended})),sourcePosition:p?.position??0,limit:3,...deviceBufferUsage()},
   result:r?{id:r.id,policyVersion:r.policyVersion,plan:r.plan,metrics:r.metrics,decision:r.decision,available:METHODS.filter(m=>hasMethod(r,m))}:null,method:this.method}}
 }
-export async function loadMetricIndex(base:URL){return readLibraryIndex(await readMetricJson('/listen/library.json',base))}
+export async function loadMetricIndex(base:URL){
+ const index=readLibraryIndex(await readMetricJson('/listen/library.json',base))
+ try{const execution=await readMetricJson('/listen/execution/index.json',base)
+  if(execution?.schema!=='harbeat.execution-library.v1'||!Array.isArray(execution.tracks))throw Error('混音发布目录不可用')
+  const published=new Set(execution.tracks.filter((t:any)=>typeof t?.trackId==='string'&&/^[a-f0-9]{64}$/.test(t?.profile?.sha256??'')).map((t:any)=>t.trackId))
+  for(const row of index.tracks)if(!published.has(row.id)){row.mixStatus='unavailable';row.reason='原曲可播放，混音资料尚未发布'}
+ }catch{for(const row of index.tracks){row.mixStatus='unavailable';row.reason='混音发布目录暂不可用，原曲可播放'}}
+ return index
+}
