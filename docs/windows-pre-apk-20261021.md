@@ -1,5 +1,7 @@
 # Windows 上准备 Android 构建
 
+2026-10-21 更新：后续已在 Windows 完成准备检查、Android ARM64 编译、保留数据安装及实体手机本地混音，见 [安卓部署记录](android-deployment-20261021.md)。以下“不生成 APK”描述此前 Mac 交接阶段，以及准备脚本自身的职责；准备脚本仍不直接打包安装。
+
 Mac 和 Windows 都能编译 Android APK。本轮按约定准备源码、预处理接口、App 音频执行器和构建素材，不生成新 APK。Windows 上仍需完成 Gradle 构建和手机试听；网页测试不能代替 Android WebView 的真实音频性能测试。
 
 本轮在 Mac 上已执行 `python tools/build_realtime.py`：原有 218 个音频文件共 282,540,060 字节逐个校验通过，TypeScript 和两个 Vite 引擎构建通过。`python tools/verify_android_bundle.py` 核对了 260 个生成文件及 136 个源码输入；新特征工作线程、变速工作线程和 MPL 许可都进入 Android 素材目录。构建工具的 6 项测试通过。尚未运行 Windows PowerShell 脚本、Android Gradle 编译或手机验收。

@@ -1,0 +1,147 @@
+{
+  "schema": "harbeat.android-deployment.v1",
+  "date": "2026-10-21",
+  "source": {
+    "upstreamCommit": "a3f7d5b887b7a6ed1811e444e4c856901d82f63e",
+    "buildCommit": "b973928d5cb41eb27b014f1340729c2640ea64e3",
+    "androidBridgeFix": [
+      "setSession",
+      "clearSet",
+      "cacheSet",
+      "refreshLibrary"
+    ]
+  },
+  "apk": {
+    "bytes": 333250747,
+    "sha256": "218a93e37381f2d3c2cb233e0ced7b4ae297842dd6a23bccfbc6115a58da2ec2",
+    "package": "com.example.harbeat.preview",
+    "version": "0.2.0+15",
+    "verifiedAssets": 260,
+    "sourceInputs": 136,
+    "bundleScripts": [
+      "assets/feature-worker-CkTivJv8.js",
+      "assets/metric-engine-CesbuB8W.js",
+      "assets/stretch-worker-DS0kl2LE.js"
+    ],
+    "file": "HarBeat-Preview-0.2.0-20261021-LocalExecution-arm64.apk"
+  },
+  "device": {
+    "model": "2106118C",
+    "androidVersion": "12",
+    "api": 31,
+    "abi": "arm64-v8a",
+    "webViewVersion": "141.0.7390.122"
+  },
+  "installation": {
+    "method": "adb install -r",
+    "result": "Success",
+    "previousVersion": "0.1.10+12",
+    "installedVersion": "0.2.0+15",
+    "certificateSha256": "77992ac3567232a4b8d3f9a96e581fced60311e93aa9b1c4765f50207acc1337",
+    "oldApkBackedUp": true,
+    "existingLoginAndCollectionsObserved": true,
+    "observedSavedTracks": 4,
+    "observedPlaylists": 4
+  },
+  "checks": {
+    "flutterTestsPassed": 150,
+    "flutterAnalyze": "No issues found",
+    "typescriptTestsPassed": 273,
+    "typescriptTestsSkipped": 3,
+    "engineBuildTestsPassed": 6,
+    "androidBridgeContractTestsPassed": 1,
+    "previewProxyTestsPassed": 9,
+    "webBuild": "passed",
+    "androidArm64ReleaseBuild": "passed"
+  },
+  "playback": {
+    "from": "HIPHOP",
+    "to": "Make It Right",
+    "method": "bass_filter",
+    "plan": {
+      "from": "track-d2d58531421de0eb9690",
+      "to": "track-831997216a86a4914ef9",
+      "windowId": "w0-2",
+      "start": 113.25718820861678,
+      "end": 117.76,
+      "duration": 4.50281179138322,
+      "rate": 1.0038166666666666,
+      "bStart": 9.26,
+      "bEnd": 13.78,
+      "beatErrorMs": 37.18820861678296
+    },
+    "preparation": "device-shared-source-wsola-v1",
+    "preservePitch": true,
+    "renderRequested": false,
+    "tempoAfterTakeover": "native",
+    "audioObservations": [
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-21T10:27:03.306Z",
+        "name": "本机声部交接开始",
+        "frame": 5247742,
+        "planId": "a703c8ca5f21ad9dbb5c01a67b80ee8ab18ef8c06b184d2893d369a3c1b2fdf0",
+        "requestId": "bass_filter",
+        "observedFrame": 5247744,
+        "quantumStart": 5247616,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6000000238418579,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      },
+      {
+        "kind": "audio_observation",
+        "at": "2026-10-21T10:27:07.809Z",
+        "name": "B正文接管",
+        "frame": 5446316,
+        "planId": "a703c8ca5f21ad9dbb5c01a67b80ee8ab18ef8c06b184d2893d369a3c1b2fdf0",
+        "requestId": "bass_filter",
+        "observedFrame": 5446400,
+        "quantumStart": 5446272,
+        "quantumFrames": 128,
+        "late": 0,
+        "limiterDelayFrames": 221,
+        "peak": 0.6000000238418579,
+        "limiterGainAtObservation": 1,
+        "sessionMinimumLimiterGain": 1
+      }
+    ],
+    "handoff": {
+      "kind": "handoff_complete",
+      "at": "2026-10-21T10:27:07.873Z",
+      "context": 123.56208616780046,
+      "track": "track-831997216a86a4914ef9",
+      "sourceOffset": 13.84285714285714,
+      "method": "bass_filter"
+    },
+    "trackStartEvents": 1,
+    "pauseEvents": 2,
+    "resumeEvents": 1,
+    "backgroundReturn": "paused",
+    "observedTotalPssKiB": 382035
+  },
+  "sessionEvidence": {
+    "sha256": "311c4f10afceed1fda794b7e446ec1b3f9535af716956c6c0253f880c8b1df62",
+    "bytes": 356262,
+    "rawExportStoredLocally": true
+  },
+  "additionalUiChecks": {
+    "musicCatalogue": "opened",
+    "reservations": "opened empty device workspace without creating a reservation"
+  },
+  "deliveryState": {
+    "screen": "player",
+    "currentTrack": "Make It Right",
+    "pausedAtSeconds": 51,
+    "energyRestoredTo": 5,
+    "style": "unlimited",
+    "manualFilterCleared": true
+  },
+  "limits": [
+    "One real song pair and short playback session; not long-duration or headphone/Bluetooth validation",
+    "Audio render-quantum timings do not measure acoustic/device latency",
+    "No new-song analysis or reservation preparation job was created in this phone smoke test"
+  ]
+}
