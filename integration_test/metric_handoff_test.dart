@@ -1,6 +1,6 @@
-// Explicit live QA: ORG_GRADLE_PROJECT_harbeatQa=true flutter test integration_test/metric_handoff_test.dart \
-//   -d DEVICE --dart-define=HARBEAT_LIVE_AUDIO_QA=true
-// Uses the separate .nativeqa package selected by the Android build config.
+// Build with harbeatQa=true and HARBEAT_LIVE_AUDIO_QA=true, verify .nativeqa,
+// then flutter drive --use-application-binary with metric_handoff_driver.dart.
+// Keep the app running until its external QA report has been collected.
 import 'dart:convert';
 import 'dart:collection';
 import 'dart:io';
@@ -51,8 +51,12 @@ void main() {
       await command('metricPrepare');
       final metric = object(state['metric']);
       final result = object(metric['result']);
+      expect(result['policyVersion'], 'jetson-decision-v1');
       final plan = object(result['plan']);
       final method = metric['method'];
+      expect(method, isNot('original'),
+          reason:
+              'This known-benefit pair must exercise an approved stem method.');
       expect(plan['from'], a);
       expect(plan['to'], b);
       expect((plan['duration'] as num).toDouble(), greaterThan(1));
@@ -84,6 +88,7 @@ void main() {
           greaterThan(previousHealthFrame));
       final observations = state['observations'] as List;
       expect(observations.length, greaterThanOrEqualTo(2));
+      expect(observations.any((o) => o['name'] == '本机声部交接开始'), isTrue);
       expect(observations.every((o) => o['late'] == 0), isTrue);
       expect((object(state['audioHealth'])['rms'] as num).toDouble(),
           greaterThan(0));

@@ -28,13 +28,15 @@ Mac 可以构建 Android APK。本次使用 Apple Silicon Mac，拉取 `codex/me
 
 - Flutter 3.41.6、Dart 3.11.4，Node 22.17.0。
 - Amazon Corretto JDK 21，ARM64；Gradle Wrapper 9.3.1。
-- Android SDK 36、Build Tools 36.0.0、Platform Tools 37.0.1。
+- Android SDK 33–36、Build Tools 36.0.0、Platform Tools 37.0.1。
 - NDK 28.2.13676358、CMake 3.22.1。
 - OpenMTP 3.3.0，Apple Silicon 官方包，已通过 macOS 公证检查并识别 MIX 4。
 
 本机 SDK 位于 `~/Library/Android/sdk`，JDK 位于 `~/Library/Java/JavaVirtualMachines/amazon-corretto-21.jdk/Contents/Home`。Flutter 配置和被忽略的 `android/local.properties` 已指向这些目录。Wrapper 脚本和 JAR 从 Flutter 随附模板生成；下载的 Gradle ZIP 用官方 SHA-256 核验。
 
 工具来源：[Android SDK](https://developer.android.com/studio)、[Amazon Corretto](https://docs.aws.amazon.com/corretto/latest/corretto-21-ug/downloads-list.html)、[OpenMTP](https://openmtp.ganeshrvel.com/)。
+
+首次构建遇到 Google 下载连接中断。本机 `~/.gradle/gradle.properties` 使用已有的 `127.0.0.1:7890` 代理；`~/Library/Android/harbeat-maven.init.gradle` 为这个 checkout 加入阿里云官方 Google/Central Maven 镜像，保留原仓库作为后备。镜像通过单次 Gradle 命令的 `-I` 参数加载，版本号不变。这些机器配置不提交仓库，也不要求 Windows 复制本机代理地址。
 
 ## 构建与验证命令
 
@@ -55,11 +57,17 @@ npm --prefix vendor/realtime-v3 test -- --reporter=dot
 ORG_GRADLE_PROJECT_harbeatQa=true flutter build apk --release --target-platform android-arm64
 ```
 
-实际音频测试单独执行，默认不会联网播放。运行时必须显式设置 `harbeatQa=true`，因为 Flutter 可能把测试入口包装为临时 listener 文件，不能只依赖入口路径来识别测试包。开启后使用已发布的 HIPHOP → Make It Right，不申请新工作区，也不清除原 App 数据：
+实际音频测试单独执行，默认不会联网播放。运行时必须显式设置 `harbeatQa=true`，因为 Flutter 可能把测试入口包装为临时 listener 文件，不能只依赖入口路径来识别测试包。先构建并核对包名为 `com.example.harbeat.nativeqa`，再启动测试。开启后使用已发布的 HIPHOP → Make It Right，不申请新工作区，也不清除原 App 数据：
 
 ```sh
-ORG_GRADLE_PROJECT_harbeatQa=true flutter test integration_test/metric_handoff_test.dart -d DEVICE_SERIAL \
+ORG_GRADLE_PROJECT_harbeatQa=true flutter build apk --debug --target-platform android-arm64 \
+  --target=integration_test/metric_handoff_test.dart \
   --dart-define=HARBEAT_LIVE_AUDIO_QA=true
+# 使用 SDK 的 aapt 核对 APK 包名和版本后再运行；保留测试包以便提取记录。
+flutter drive --driver=test_driver/metric_handoff_driver.dart \
+  --target=integration_test/metric_handoff_test.dart \
+  --use-application-binary=build/app/outputs/flutter-apk/app-debug.apk \
+  --keep-app-running -d DEVICE_SERIAL
 ```
 
-这个测试先暂停进行冷准备，再通过主播放引擎安排并执行交接，检查 B 接管、音频线程迟到和缓冲。它不代表播放时间轴下所有冷准备都能及时完成，也不覆盖自动择优分支的全部实机表现。设备记录仅保存在 `.nativeqa` 的外部应用目录，不能把测试 APK 构建通过当作混音听感已验收。
+这个测试先暂停进行冷准备，确认 Jetson 策略和获准分轨手法，再通过主播放引擎安排并执行交接。它检查 B 接管后继续播放、执行期间缓冲、音频线程迟到，以及本机声部控制开始的记录。它不代表播放时间轴下所有冷准备都能及时完成，也不覆盖自动择优分支的全部实机表现。设备记录仅保存在 `.nativeqa` 的外部应用目录，不能把测试 APK 构建通过当作混音听感已验收。
