@@ -1,0 +1,666 @@
+{
+  "schema": "harbeat.execution-publication-audit.v1",
+  "observedAt": "2026-10-22T02:28:08.547191+00:00",
+  "indexGeneratedAt": 1792636078,
+  "libraryCount": 159,
+  "profileCount": 153,
+  "assetsReadyCount": 9,
+  "ready": [
+    {
+      "trackId": "track-0a1c8c54ff45b04f1568",
+      "title": "All Falls Down"
+    },
+    {
+      "trackId": "track-642bd1ac0da727a3b53b",
+      "title": "Attention"
+    },
+    {
+      "trackId": "track-831997216a86a4914ef9",
+      "title": "Make It Right"
+    },
+    {
+      "trackId": "track-6bcba4d577699a35104c",
+      "title": "GRILLZ (feat. Ilir808)"
+    },
+    {
+      "trackId": "track-d2d58531421de0eb9690",
+      "title": "HIPHOP"
+    },
+    {
+      "trackId": "track-90b739cb337d10030cc5",
+      "title": "Sorry"
+    },
+    {
+      "trackId": "track-042c62464b524ce46103",
+      "title": "What I'm After"
+    },
+    {
+      "trackId": "track-074b5867a7993833d698",
+      "title": "Prayer Vox feat. Vivian Chen ~infused by Caccini 「Ave Maria」~"
+    },
+    {
+      "trackId": "track-081af87cba3d1f0cb5f8",
+      "title": "Ante Up (Robbin Hoodz Theory)"
+    }
+  ],
+  "profileOnly": [
+    {
+      "trackId": "track-b36fb933dcd2d9cff436",
+      "title": "The Spectre"
+    },
+    {
+      "trackId": "track-274577b1e51f104f4658",
+      "title": "Meant To Be"
+    },
+    {
+      "trackId": "track-8d55cb314b5aff07d3ac",
+      "title": "Alone"
+    },
+    {
+      "trackId": "track-8c616fddb7ca97986acc",
+      "title": "In the Name of Love"
+    },
+    {
+      "trackId": "track-f4219339062cac4ce823",
+      "title": "Move Up (Lost Gravity)"
+    },
+    {
+      "trackId": "track-f83cf73c441f8e96e0d5",
+      "title": "Closer"
+    },
+    {
+      "trackId": "track-aab34351ca8529caf4f2",
+      "title": "Nevada"
+    },
+    {
+      "trackId": "track-95060500a263d21dc683",
+      "title": "After LIKE"
+    },
+    {
+      "trackId": "track-6f00bcef1ad28fdca81e",
+      "title": "Alcohol-Free"
+    },
+    {
+      "trackId": "track-20cb7bd9306804d2ea54",
+      "title": "ANTIFRAGILE"
+    },
+    {
+      "trackId": "track-833990382a48e02ae62c",
+      "title": "AS IF IT'S YOUR LAST (像最后一样)"
+    },
+    {
+      "trackId": "track-89ae59c7323490cdfe31",
+      "title": "BANG BANG BANG (뱅뱅뱅)"
+    },
+    {
+      "trackId": "track-b95895081efc74a37949",
+      "title": "Black Mamba"
+    },
+    {
+      "trackId": "track-a829631f4aa2cfc26c34",
+      "title": "BOOMBAYAH (붐바야)"
+    },
+    {
+      "trackId": "track-62f1425047763578f494",
+      "title": "CALL ME BABY"
+    },
+    {
+      "trackId": "track-9239965abd97cd9cef82",
+      "title": "DDU-DU DDU-DU (Korean Ver.)"
+    },
+    {
+      "trackId": "track-a10dddba9130e5fb908d",
+      "title": "ELEVEN"
+    },
+    {
+      "trackId": "track-d47d54b2d76cd780482e",
+      "title": "FAKE LOVE"
+    },
+    {
+      "trackId": "track-663f90be06a1628baa37",
+      "title": "FANCY"
+    },
+    {
+      "trackId": "track-181660177eedf82d9b64",
+      "title": "Fantastic Baby"
+    },
+    {
+      "trackId": "track-514678c39bb62b4d92af",
+      "title": "Feel Special"
+    },
+    {
+      "trackId": "track-18aea0d91130bf64e3f5",
+      "title": "Girls"
+    },
+    {
+      "trackId": "track-75ff48d540fb05f6d1dd",
+      "title": "GOOD BOY"
+    },
+    {
+      "trackId": "track-9fbfb800b64e90305927",
+      "title": "Haru Haru (一天一天)"
+    },
+    {
+      "trackId": "track-5e50cf3e3aed2089d825",
+      "title": "HIGHLIGHT"
+    },
+    {
+      "trackId": "track-ec8ae4b48416175b6874",
+      "title": "HISTORY"
+    },
+    {
+      "trackId": "track-1fb233be88ac05309915",
+      "title": "How You Like That"
+    },
+    {
+      "trackId": "track-8f230d51b9df167c17ad",
+      "title": "I AM"
+    },
+    {
+      "trackId": "track-dd6a1866b4e55a2df544",
+      "title": "I Need U"
+    },
+    {
+      "trackId": "track-3b9afb4ba9f390e6f7a9",
+      "title": "I'm Not Cool"
+    },
+    {
+      "trackId": "track-1b038ace9d83085ba5a9",
+      "title": "Jopping"
+    },
+    {
+      "trackId": "track-7eaf9606b3750a25d988",
+      "title": "Kill This Love"
+    },
+    {
+      "trackId": "track-a56c92c57e41bb11018f",
+      "title": "Ko Ko Bop"
+    },
+    {
+      "trackId": "track-0b58de3c82298bd796cc",
+      "title": "LEFT RIGHT"
+    },
+    {
+      "trackId": "track-1d742e58f6849d43e1e6",
+      "title": "Lies (谎言)"
+    },
+    {
+      "trackId": "track-acde43181dd9cd23a30f",
+      "title": "LOSER (失败者)"
+    },
+    {
+      "trackId": "track-1474559754edf279588b",
+      "title": "Love Shot"
+    },
+    {
+      "trackId": "track-a898a569f7d597b4fc9c",
+      "title": "Lovesick Girls"
+    },
+    {
+      "trackId": "track-efb9dd969be307d64e3a",
+      "title": "MAMA"
+    },
+    {
+      "trackId": "track-8bf938990b65ae46fd50",
+      "title": "MANIAC"
+    },
+    {
+      "trackId": "track-d17a5768e30a6c51d358",
+      "title": "Monster (Korean Ver.)"
+    },
+    {
+      "trackId": "track-7806c42c676d773d01d7",
+      "title": "O.O"
+    },
+    {
+      "trackId": "track-83339868fe9ea963694f",
+      "title": "Obsession"
+    },
+    {
+      "trackId": "track-9a38bd427b6910b69b34",
+      "title": "Pink Venom"
+    },
+    {
+      "trackId": "track-3fc3a237d246c10f2968",
+      "title": "REALLY REALLY"
+    },
+    {
+      "trackId": "track-8170faf9bac800f6b38d",
+      "title": "RINGA LINGA (링가 링가)"
+    },
+    {
+      "trackId": "track-40d32a4aaedd94ed6ee0",
+      "title": "Shut Down"
+    },
+    {
+      "trackId": "track-7ffab10898e5ec0cd2e0",
+      "title": "SOLO"
+    },
+    {
+      "trackId": "track-71203695cdf008d4a88e",
+      "title": "UN Village"
+    },
+    {
+      "trackId": "track-c940dec416aaef1deda7",
+      "title": "WA DA DA"
+    },
+    {
+      "trackId": "track-d4bf4167b30c5979b616",
+      "title": "WANNABE"
+    },
+    {
+      "trackId": "track-43a24f6f8d1350598166",
+      "title": "What is Love？"
+    },
+    {
+      "trackId": "track-56ae507c37842aeb5294",
+      "title": "WHISTLE (口哨)"
+    },
+    {
+      "trackId": "track-fcecd23e5a3e79edb634",
+      "title": "YES or YES"
+    },
+    {
+      "trackId": "track-d8dbb18e59d42420aa76",
+      "title": "怪火 (Illusion)"
+    },
+    {
+      "trackId": "track-c40cc6dddb34d1d3ba99",
+      "title": "꽃 (FLOWER)"
+    },
+    {
+      "trackId": "track-d8b2060466d80ac04d26",
+      "title": "내가 제일 잘 나가 (我最红)"
+    },
+    {
+      "trackId": "track-7425f6cd2e624e01a32a",
+      "title": "누난 너무 예뻐 (姐姐真漂亮) (Replay)"
+    },
+    {
+      "trackId": "track-cc11937812fcaf86bc0f",
+      "title": "마리아 (Maria)"
+    },
+    {
+      "trackId": "track-2963d92eb4e3c28b147e",
+      "title": "모 아니면 도 (Go Big or Go Home)"
+    },
+    {
+      "trackId": "track-8da0488835cf8c030b6b",
+      "title": "몸매 (MOMMAE) (身姿)"
+    },
+    {
+      "trackId": "track-fed23fbf86f3e0a71f6a",
+      "title": "빨간 맛 (Red Flavor) (红色味道)"
+    },
+    {
+      "trackId": "track-c627eee8f3d2862aa161",
+      "title": "아무노래"
+    },
+    {
+      "trackId": "track-5d916bf8119280cec077",
+      "title": "아주 NICE (Very Nice)"
+    },
+    {
+      "trackId": "track-97002c769f3b0ee278dd",
+      "title": "영웅 (英雄; Kick It)"
+    },
+    {
+      "trackId": "track-200f23d2aea5e32ac7cd",
+      "title": "울고 싶지 않아 (不想哭)"
+    },
+    {
+      "trackId": "track-b9dfd803ba6f485dc612",
+      "title": "으르렁(Growl) (咆哮)"
+    },
+    {
+      "trackId": "track-3fd2d82d18eedc5aa79b",
+      "title": "전야 (前夜)"
+    },
+    {
+      "trackId": "track-90026ac6e1e897b56f58",
+      "title": "첫 눈 (初雪)"
+    },
+    {
+      "trackId": "track-64f489707fddc3101438",
+      "title": "Woman"
+    },
+    {
+      "trackId": "track-d8e167ca8fe99139729a",
+      "title": "Monalisa"
+    },
+    {
+      "trackId": "track-160ae213bbe0b921dd79",
+      "title": "Calm Down"
+    },
+    {
+      "trackId": "track-c7ec310ec6b714c831cf",
+      "title": "Truth or Dare"
+    },
+    {
+      "trackId": "track-d762327fee24ce3e04af",
+      "title": "Water"
+    },
+    {
+      "trackId": "track-19dd6399e3f1caa0a9fa",
+      "title": "Hamba Nobani"
+    },
+    {
+      "trackId": "track-7ae130bf79ad0b474a41",
+      "title": "Big Flexa"
+    },
+    {
+      "trackId": "track-1c495e2c042293db340f",
+      "title": "BADDEST"
+    },
+    {
+      "trackId": "track-61926ee832b5095d266a",
+      "title": "Yensa"
+    },
+    {
+      "trackId": "track-1b0fdbbffc8d0e98688f",
+      "title": "Sample"
+    },
+    {
+      "trackId": "track-bd261eec5af100ee721c",
+      "title": "Clap Clap"
+    },
+    {
+      "trackId": "track-f2b99cc618ddbeeb7eae",
+      "title": "like JENNIE"
+    },
+    {
+      "trackId": "track-120cc0677da8aa7fb3f5",
+      "title": "No Me Tocas"
+    },
+    {
+      "trackId": "track-9008996c0865ce4778de",
+      "title": "São Paulo"
+    },
+    {
+      "trackId": "track-dfa2711a5ba3f541fb47",
+      "title": "Crazy Love"
+    },
+    {
+      "trackId": "track-8978aa380e85155e8a2d",
+      "title": "Lonely & Cold"
+    },
+    {
+      "trackId": "track-7c28de573d1db91e6dd3",
+      "title": "Bounce"
+    },
+    {
+      "trackId": "track-afc2c5c171a1fce80ef0",
+      "title": "Luv(sic.) Part 3 (feat. Shing02)"
+    },
+    {
+      "trackId": "track-2421bf94e8c0430cd78c",
+      "title": "Rump Shaker"
+    },
+    {
+      "trackId": "track-0d8966dace2780868998",
+      "title": "No Respect"
+    },
+    {
+      "trackId": "track-4901bfdc3cf959f2899f",
+      "title": "Lose Control"
+    },
+    {
+      "trackId": "track-f73c75305b8a88de4dfb",
+      "title": "Let Me Be Your Fantasy - Original Mix"
+    },
+    {
+      "trackId": "track-c6b932fd11db127bcf74",
+      "title": "40 Miles"
+    },
+    {
+      "trackId": "track-44108e04909e6bd101d2",
+      "title": "Far Out"
+    },
+    {
+      "trackId": "track-01717e42ff56d1620e68",
+      "title": "MIA (feat. Drake)"
+    },
+    {
+      "trackId": "track-af4abf1b2f3769305105",
+      "title": "Questions"
+    },
+    {
+      "trackId": "track-61f26b2414652cfe39e8",
+      "title": "Let Me Love You"
+    },
+    {
+      "trackId": "track-a51ea8ccae8992c6f06f",
+      "title": "16 Shots"
+    },
+    {
+      "trackId": "track-441fc43b35110f9b50f1",
+      "title": "Shoot Your Shot"
+    },
+    {
+      "trackId": "track-dcc387e31f96b0f72a6d",
+      "title": "Leave Me Alone"
+    },
+    {
+      "trackId": "track-506d0d59407ac4c53c1a",
+      "title": "Tonight"
+    },
+    {
+      "trackId": "track-30542f6b6f86e2789810",
+      "title": "Give Me Up"
+    },
+    {
+      "trackId": "track-a9a3ae9c675678f624f6",
+      "title": "Never Gonna Give You Up"
+    },
+    {
+      "trackId": "track-6b70bdcea259890c30a4",
+      "title": "Treasure (1)"
+    },
+    {
+      "trackId": "track-f2c81091b622e28460c2",
+      "title": "Let's Groove"
+    },
+    {
+      "trackId": "track-cbd413e0e1c43d7e419f",
+      "title": "If I Saw You Again"
+    },
+    {
+      "trackId": "track-246e6a03787422897e28",
+      "title": "Doin' It"
+    },
+    {
+      "trackId": "track-b6591545584d43e0a6fd",
+      "title": "Energy"
+    },
+    {
+      "trackId": "track-79b8034c69bfb4de05c8",
+      "title": "I Like"
+    },
+    {
+      "trackId": "track-f0697213cb363c437304",
+      "title": "Cold"
+    },
+    {
+      "trackId": "track-68e1b6036f7f3d0dfc31",
+      "title": "Feeling for You"
+    },
+    {
+      "trackId": "track-b8ffcc19b1cb7e0798a9",
+      "title": "Talgo"
+    },
+    {
+      "trackId": "track-8609b4e8327adfe21adc",
+      "title": "Gone Gone Gone"
+    },
+    {
+      "trackId": "track-1016c9c0d9a4ecd66bc5",
+      "title": "For The Time Being"
+    },
+    {
+      "trackId": "track-ec77d16b9f1c0372f326",
+      "title": "SOMETHING AIN'T RIGHT"
+    },
+    {
+      "trackId": "track-1f5e732a369cc1becc27",
+      "title": "Love Note (Original Instrumental)"
+    },
+    {
+      "trackId": "track-5f7a688d0c0dff4e1bc7",
+      "title": "Playback (feat. Ine)"
+    },
+    {
+      "trackId": "track-8728534e623361f35870",
+      "title": "Ampersand"
+    },
+    {
+      "trackId": "track-8ce53e93953814086ae0",
+      "title": "Soul Of Freedom"
+    },
+    {
+      "trackId": "track-09371f0f29e2c6a482f0",
+      "title": "FREE BRO"
+    },
+    {
+      "trackId": "track-d6bc87ba8daaaa9d4178",
+      "title": "DSK"
+    },
+    {
+      "trackId": "track-660a7b9fd0a7eca81b19",
+      "title": "Shake The Room Jersey Club"
+    },
+    {
+      "trackId": "track-ace27450c5d5ab365e64",
+      "title": "Come Up"
+    },
+    {
+      "trackId": "track-eeab700d2f17b14f5c6b",
+      "title": "Old Town Road"
+    },
+    {
+      "trackId": "track-b3f6c0aa6864581c4366",
+      "title": "Wylin'"
+    },
+    {
+      "trackId": "track-6f1731cc39ec867d2f23",
+      "title": "Lazarus"
+    },
+    {
+      "trackId": "track-d11e0b16330b97317d77",
+      "title": "Lightskin Lil Wayne"
+    },
+    {
+      "trackId": "track-27ef0a8826d2066a5c3d",
+      "title": "DJ Alien-Track 17"
+    },
+    {
+      "trackId": "track-cf23264f7eb3b1a888d1",
+      "title": "Pandaaaaaa"
+    },
+    {
+      "trackId": "track-42f027ee822c71afddf2",
+      "title": "MOP - Ante Up...Bang[Edit Beats]"
+    },
+    {
+      "trackId": "track-ee96480c21a657e5cf4f",
+      "title": "中国风？ (已售)"
+    },
+    {
+      "trackId": "track-8cc99b421fe47b03e7ca",
+      "title": "POPPING SEASON 01"
+    },
+    {
+      "trackId": "track-86141f55b6b1219e1c38",
+      "title": "Straight (Battle Beat)"
+    },
+    {
+      "trackId": "track-362a03ce8f8dd390df31",
+      "title": "Snake Gang"
+    },
+    {
+      "trackId": "track-800c87e20dd333ab44b4",
+      "title": "Feather"
+    },
+    {
+      "trackId": "track-d2ed76c76928c4743202",
+      "title": "Clap Back (Instrumental Version)"
+    },
+    {
+      "trackId": "track-5cc479203a77576b7120",
+      "title": "Just A Lil Bit (FENK Remix)"
+    },
+    {
+      "trackId": "track-326d0ae03ba1586414e1",
+      "title": "DjAspro (Track 2)"
+    },
+    {
+      "trackId": "track-bdfd7096a6578e310b89",
+      "title": "DJ Alco-Logic (KOD Track 20)"
+    },
+    {
+      "trackId": "track-99a9ba016b98e7615752",
+      "title": "Buummm (Popping Edit)"
+    },
+    {
+      "trackId": "track-e19d478202765868e570",
+      "title": "How It Is"
+    },
+    {
+      "trackId": "track-a7ba523770c8e09e4351",
+      "title": "ORIENTRACK 06"
+    },
+    {
+      "trackId": "track-2bd46ba03bbce4feb31e",
+      "title": "Off Chops Ft. Jess Chambers"
+    },
+    {
+      "trackId": "track-279ccdf918bb538eedf1",
+      "title": "Ayy Macarena"
+    },
+    {
+      "trackId": "track-5892435ae3b298cdb4ae",
+      "title": "Adderall"
+    }
+  ],
+  "excluded": [
+    {
+      "trackId": "track-49d4ac83da372eab5722",
+      "title": "24K Magic (1)",
+      "reason": "source binding or audio evidence unavailable"
+    },
+    {
+      "trackId": "track-94f7145943172f32bcc0",
+      "title": "Victory Lap Five",
+      "reason": "source binding or audio evidence unavailable"
+    },
+    {
+      "trackId": "track-6aa43bf8997b97571097",
+      "title": "RATATA",
+      "reason": "source binding or audio evidence unavailable"
+    },
+    {
+      "trackId": "track-86facefc6cb91411d57e",
+      "title": "Big Girls",
+      "reason": "source binding or audio evidence unavailable"
+    },
+    {
+      "trackId": "track-164314a928b8d35d764a",
+      "title": "Yikes",
+      "reason": "source binding or audio evidence unavailable"
+    },
+    {
+      "trackId": "track-080bca25199811cdd57d",
+      "title": "Clear (Shawn Wasabi Remix)",
+      "reason": "source binding or audio evidence unavailable"
+    }
+  ],
+  "meaning": "Profile-only means published analysis without cloud device stem objects; it does not prove NAS stems are absent.",
+  "ssh": {
+    "cloud": "root@8.136.120.255",
+    "jetson": "mark@100.87.142.21",
+    "cloudProbeResult": "Permission denied (publickey,password)",
+    "trackedSshConfig": false,
+    "windowsPrivateKeyFound": false,
+    "tailscaleState": "NoState"
+  },
+  "serverMutated": false
+}

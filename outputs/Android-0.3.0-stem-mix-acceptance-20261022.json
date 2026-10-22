@@ -1,0 +1,142 @@
+{
+  "schema": "harbeat.android-stem-mix-acceptance.v1",
+  "observedAt": "2026-10-22T02:28:08.547191+00:00",
+  "version": "0.3.0+17",
+  "sourceFixCommit": "4706ee242c85848aa0e707c81ca49e41ad4bf7e6",
+  "backendSourceRef": "codex/client-execution-20261021",
+  "backendSourceCommit": "23080628836546da08e343d4eaac4407595fc88c",
+  "device": "Xiaomi 2106118C / Android 12 / ARM64",
+  "sessionSha256": "88dac1c4b1f73b43199ee58bf1e7d9b4b4cbf7ed9cb3c5c61e1e37f54b58cf4a",
+  "sessionBytes": 346620,
+  "testMode": "Controlled manual selection; paused cold preparation; apply then resume main playback",
+  "from": {
+    "id": "track-d2d58531421de0eb9690",
+    "title": "HIPHOP"
+  },
+  "to": {
+    "id": "track-831997216a86a4914ef9",
+    "title": "Make It Right"
+  },
+  "method": "bass_filter",
+  "renderRequested": false,
+  "approvedPlanId": "9e7fbda5a02ba11e4e7bb51f6ea57f60c5686a7cfa19649f3e06e399fb2e14de",
+  "analysisSha256": "8e40c7f0c6e5c04237ee68bc43fc81816cd85c3299ce842522bba5bd1051c1ee",
+  "devicePlanId": "2e09799682a261d70af0bce054f0b91a16c3e133c5be14f27924dabfd2d0688e",
+  "plan": {
+    "from": "track-d2d58531421de0eb9690",
+    "to": "track-831997216a86a4914ef9",
+    "windowId": "w24-4",
+    "start": 63.49437641723356,
+    "end": 72.5,
+    "duration": 9.00562358276644,
+    "rate": 1.0038166666666666,
+    "bStart": 63.62,
+    "bEnd": 72.66,
+    "beatErrorMs": 54.37641723356279
+  },
+  "preparation": "device-shared-source-wsola-v1",
+  "preservePitch": true,
+  "sourceCacheHit": false,
+  "pcmBufferBytes": 19071576,
+  "verifiedPublication": [
+    {
+      "trackId": "track-d2d58531421de0eb9690",
+      "manifestSha256": "759716fa118d55120e6a89d1ed681de33a91e4d7ba89a671ae0956d32c6c0cce",
+      "profileSha256": "839e8449a4d94acb93d64b7445f3106781fe0d090f3789503663117163414a5f",
+      "profileHashVerified": true,
+      "approvedStemHashesMatch": true,
+      "segmentsPerStem": {
+        "drums": 9,
+        "bass": 9,
+        "other": 9,
+        "vocals": 9
+      }
+    },
+    {
+      "trackId": "track-831997216a86a4914ef9",
+      "manifestSha256": "72e824e0c6636d1a71495cbad4ea78e4a5b7f1a9155f6693acff857cf3de722a",
+      "profileSha256": "ac4a230ceb2cc428fc252890445e3824787570dfc7dfc4d8e3f6d23204d0563f",
+      "profileHashVerified": true,
+      "approvedStemHashesMatch": true,
+      "segmentsPerStem": {
+        "drums": 15,
+        "bass": 15,
+        "other": 15,
+        "vocals": 15
+      }
+    }
+  ],
+  "resumedAt": "2026-10-22T02:23:50.919Z",
+  "handoffAt": "2026-10-22T02:24:35.588Z",
+  "pausedAt": "2026-10-22T02:25:24.863Z",
+  "elapsedAfterResumeSeconds": 93.944,
+  "bodyPlaybackAfterTakeoverSeconds": 49.28476190476189,
+  "handoffCount": 1,
+  "stemFallbackCount": 0,
+  "bufferingCount": 0,
+  "audioObservations": [
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-22T02:24:26.577Z",
+      "name": "本机声部交接开始",
+      "frame": 3892114,
+      "planId": "2e09799682a261d70af0bce054f0b91a16c3e133c5be14f27924dabfd2d0688e",
+      "requestId": "bass_filter",
+      "observedFrame": 3892224,
+      "quantumStart": 3892096,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6000000238418579,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    },
+    {
+      "kind": "audio_observation",
+      "at": "2026-10-22T02:24:35.585Z",
+      "name": "B正文接管",
+      "frame": 4289262,
+      "planId": "2e09799682a261d70af0bce054f0b91a16c3e133c5be14f27924dabfd2d0688e",
+      "requestId": "bass_filter",
+      "observedFrame": 4289280,
+      "quantumStart": 4289152,
+      "quantumFrames": 128,
+      "late": 0,
+      "limiterDelayFrames": 221,
+      "peak": 0.6061474680900574,
+      "limiterGainAtObservation": 1,
+      "sessionMinimumLimiterGain": 1
+    }
+  ],
+  "resumedOutputWindows": 19,
+  "resumedZeroWindows": 0,
+  "resumedMinWindowRms": 0.08369303503648762,
+  "bodyOutputWindows": 10,
+  "finalTransport": {
+    "track": "track-831997216a86a4914ef9",
+    "position": 121.94476190476189,
+    "duration": 226.32102040816326,
+    "state": "suspended",
+    "paused": true,
+    "buffering": false,
+    "status": "素材已就绪",
+    "streams": [
+      {
+        "track": "track-831997216a86a4914ef9",
+        "offset": 72.66,
+        "at": 97.2621768707483,
+        "deadline": 204.6021768707483,
+        "coveredSourceEnd": 180,
+        "error": null,
+        "late": false
+      }
+    ]
+  },
+  "limitations": [
+    "One controlled stem transition, not automatic multi-song stem-mix acceptance.",
+    "Cold preparation was allowed while paused; real-time readiness under a moving deadline remains unproven.",
+    "Digital output checks do not measure physical speaker/Bluetooth output or subjective listening quality.",
+    "This session also includes earlier Kpop/HIPHOP setup and pauses; only the resumed interval is counted.",
+    "No SSH login or NAS/server mutation succeeded in this turn; missing publications remain pending."
+  ]
+}
