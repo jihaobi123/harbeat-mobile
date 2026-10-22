@@ -365,14 +365,17 @@ export class MetricRun {
     const qualified=new Set<string>()
     const compare=(x:SmartChoice,y:SmartChoice)=>(stage.kind==='recent'?this.recent.lastIndexOf(x.track.id)-this.recent.lastIndexOf(y.track.id):0)||
      (intent?(x.nearbyBudget??60)-(y.nearbyBudget??60)||y.score-x.score||x.plan.start-y.plan.start:y.score-x.score||y.plan.end-x.plan.end)||x.plan.id.localeCompare(y.plan.id)
-    // Use the prepared, source-verified cloud candidates in automatic mode.
-    // Ranking an unrelated fresh cue would throw away all precomputed approvals.
+    // Cached approvals prepare exact cues; they do not replace the automatic
+    // quality policy with the earliest nearby cue intended for a manual tap.
     if(!intent){
      const allowed=new Set(stage.entries.map(t=>t.id))
-     choices=(this.activity?.approvedCandidates?.(a,p.position+12,energy)??[])
+     const approved=(this.activity?.approvedCandidates?.(a,p.position+12,energy)??[])
       .filter(c=>allowed.has(c.track.id)&&!this.excludedPlans.has(c.plan.id))
-      .map(c=>choiceForPlan(a,c.track,c.plan,energy)).filter((c):c is SmartChoice=>!!c)
-      .sort((x,y)=>x.plan.start-y.plan.start||compare(x,y)).slice(0,3)
+     const byPlan=new Map(approved.map(c=>[c.plan.id,c]))
+     const tracks=[...new Map(approved.map(c=>[c.track.id,c.track])).values()]
+     choices=rankContinuousChoices(a,tracks,p.position,energy,p.cache.ready).choices
+      .flatMap(c=>{const saved=byPlan.get(c.plan.id);return saved?[{...c,plan:saved.plan}]:[]})
+      .sort(compare).slice(0,3)
      if(choices.length){selection.checked=choices.length;selection.qualified=choices.length;break}
     }
     // Rank and release each eight-track batch. Keep only the three render

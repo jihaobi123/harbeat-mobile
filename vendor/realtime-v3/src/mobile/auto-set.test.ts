@@ -4,7 +4,7 @@ import {ActivitySession} from './activity-session'
 import * as cache from './set-cache'
 import * as prepare from './device-prepare'
 import {qualityTrack} from '../metric-upstream/continuous/qualityFixture'
-import {rankNearbyChoices} from './smart-selection'
+import {rankContinuousChoices,rankNearbyChoices} from './smart-selection'
 
 afterEach(()=>vi.restoreAllMocks())
 function setup(){
@@ -69,7 +69,7 @@ it('a late old-direction download cannot replace the new direction',async()=>{
 })
 it('automatic selection uses a verified future approval rather than requesting an unrelated cold cue',async()=>{
  const {run,p,session,a,b}=setup()
- const plan=rankNearbyChoices(a,[b],35,3).best!.plan
+ const plan=rankContinuousChoices(a,[b],20,3).best!.plan
  session.approvedCandidates=()=>[{track:b,plan}]
  vi.spyOn(prepare,'hasDevicePCM').mockReturnValue(true)
  vi.spyOn(prepare,'pinDevicePCM').mockReturnValue(()=>{})
@@ -80,5 +80,24 @@ it('automatic selection uses a verified future approval rather than requesting a
   await (run as any).recommend()
   expect(load).toHaveBeenCalledTimes(1);expect(load.mock.calls[0][3].id).toBe(plan.id)
   expect(run.result?.decision.recommended).toBe('bass_filter');expect(p.start).toHaveBeenCalledTimes(1)
+ }finally{run.dispose()}
+})
+it('automatic cached selection retains the original quality policy instead of taking a nearby manual cue',async()=>{
+ const {run,p,session,a,b}=setup()
+ const early=rankNearbyChoices(a,[b],35,3).best!.plan
+ const automatic=rankContinuousChoices(a,[b],20,3).best!.plan
+ expect(early.end).toBeLessThan(a.duration*.65)
+ expect(automatic.end).toBeGreaterThanOrEqual(a.duration*.65)
+ session.approvedCandidates=()=>[{track:b,plan:early},{track:b,plan:automatic}]
+ vi.spyOn(prepare,'hasDevicePCM').mockReturnValue(true)
+ vi.spyOn(prepare,'pinDevicePCM').mockReturnValue(()=>{})
+ vi.spyOn(prepare,'loadPrepared').mockResolvedValue(undefined)
+ const load=vi.spyOn(prepare,'prepareDevice').mockImplementation(async(_p,_a,_b,plan)=>({schema:'harbeat.device-execution-plan.v1',id:'b'.repeat(64),status:'ready',plan:{...plan,from:a.id,to:b.id,windowId:plan.window.id,bStart:plan.window.start,bEnd:plan.window.end},execution:{schema:'harbeat.device-execution-plan.v1'},decision:{recommended:'bass_filter',methods:{bass_filter:{eligible:true,name:'bass_filter'}}},assets:{}} as any))
+ try{
+  await run.start(a.id);await run.prepareAutoSet({},'Automatic');run.tick()
+  await (run as any).recommend()
+  expect(load).toHaveBeenCalledTimes(1)
+  expect(load.mock.calls[0][3].id).toBe(automatic.id)
+  expect(run.result?.plan.start).toBe(automatic.start)
  }finally{run.dispose()}
 })
