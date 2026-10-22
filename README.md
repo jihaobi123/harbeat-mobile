@@ -2,7 +2,7 @@
 
 手机先完成选歌、播放与方向控制，饰品作为可选快捷控制。界面采用浅色背景、青绿与杏黄、细描边圆角卡片；播放、音乐、我的三个主入口保持不变。
 
-当前源码版本为 **Android Preview 0.3.1+19**：播放页按风格和能量自动请求后台准备、发布缺失分轨并下载到本机；自动使用来源核验通过的预批接点，Jetson 判断手法、设备执行混音。当前音乐和已安排交接保持连续，准备期间不重复挤占冷审批队列。流程、真实发布与验证范围见 [自动准备说明](docs/automatic-preparation-20261022.md)。用户准备携手机外出，最终修正版仅在 Windows 构建和验证，未进行新版真机验收。历史 0.3.0 的六首连续播放与分轨实测见 [连续播放记录](docs/android-continuous-playback-20261021.md) 和 [分轨实测](docs/backend-mix-publishing-followup-20261022.md)。构建步骤见 [打包前准备](docs/windows-pre-apk-20261021.md)。
+当前源码版本为 **0.3.1+20**：恢复已预备自动接点的连续播放质量排序，避免直接选中更早的附近接点。播放页仍按风格和能量请求后台准备、发布分轨并下载到本机，Jetson 判断手法、设备执行混音。Mac 已构建并安装独立 **HarBeat Native QA +20**；原 **HarBeat Preview** 保留数据更新至同签名的 **+19**。+20 的实机音频测试尚未运行，不能视为听感验收。修复、签名区别和工具配置见 [Mac 构建与排查](docs/macos-android-setup-20261022.md)。自动准备流程及此前 Windows 验证见 [自动准备说明](docs/automatic-preparation-20261022.md)。历史六首连续播放见 [连续播放记录](docs/android-continuous-playback-20261021.md)。
 
 ## 运行
 
@@ -54,11 +54,11 @@ python tools/serve_preview.py --port 8766
 
 ### Android 测试安装包
 
-当前测试包：[下载 0.3.1+19 ARM64 APK](https://github.com/jihaobi123/harbeat-mobile/releases/download/v0.3.1-preview-20261022/HarBeat-Preview-0.3.1-19-20261022-AutoPrepare-arm64.apk)，[发布说明与 SHA-256](https://github.com/jihaobi123/harbeat-mobile/releases/tag/v0.3.1-preview-20261022)。Windows 已验证自动下载 336 个片段和 4 次真实分轨交接；按用户要求未安装最终 +19 到手机，手机停止操作前为第一轮 +18。详细范围见 [自动准备验收](docs/automatic-preparation-20261022.md)。
+公开测试包：[下载 0.3.1+19 ARM64 APK](https://github.com/jihaobi123/harbeat-mobile/releases/download/v0.3.1-preview-20261022/HarBeat-Preview-0.3.1-19-20261022-AutoPrepare-arm64.apk)，[发布说明与 SHA-256](https://github.com/jihaobi123/harbeat-mobile/releases/tag/v0.3.1-preview-20261022)。此前 Windows 已验证自动下载 336 个片段和 4 次真实分轨交接，详细范围见 [自动准备验收](docs/automatic-preparation-20261022.md)。该 +19 包现已从 Mac 保留数据安装到 MIX 4；本轮 +20 独立 QA 包留在本机，没有替换这个 Release 附件。
 
 历史安装包：[下载 Android ARM64 APK 0.1.12 (14)](https://github.com/jihaobi123/harbeat-mobile/releases/download/v0.1.12-preview-20261020/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk)，[预览版本发布页](https://github.com/jihaobi123/harbeat-mobile/releases/tag/v0.1.12-preview-20261020)提供安装包与 SHA-256 校验文件。该 APK 固定于源码 `406525a`，对应旧执行方式，不包含后续最近接点修复及本机分轨执行；历史构建结果见 [交付说明](docs/unified-playback-20261020.md)。
 
-此前 **0.2.1+16**、**0.3.0+17** 及第一轮 **0.3.1+18** 已在 Windows 构建并保留数据安装。最终 **0.3.1+19** 为用户要求改在电脑完成验证的修正版，不代表手机已经升级。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；安装时使用保留数据的安全安装器。APK 不存入 Git，上方历史 Release 附件也不包含本轮更新。
+此前 **0.2.1+16**、**0.3.0+17** 及第一轮 **0.3.1+18** 已在 Windows 构建并保留数据安装。手机上的 **HarBeat Preview +19** 使用 `com.example.harbeat.preview`，新装的 **HarBeat Native QA +20** 使用 `com.example.harbeat.nativeqa`。Mac 缺少原 Windows 签名密钥，因此采用独立包验证；覆盖原预览并保留数据，需要沿用 Windows 原密钥。APK 不存入 Git，上方 Release 附件不包含本轮源码修复。
 
 默认构建使用并存预览包名，只有显式 `-PharbeatPreview=false` 才使用原包名。此次修复了应用未启用 Kotlin 插件、audio_session 0.2.4 与关闭内置 Kotlin 的兼容问题，以及网络配置缺少 includeSubdomains 属性的发布检查错误。Gradle 限制为 1536MB 堆、1 个 worker 和 2 个可用处理器，避免本机原生内存不足。
 
@@ -72,7 +72,7 @@ flutter build apk --release --target-platform android-arm64
 
 调试与 release 切换时不要加 `--no-pub` 或直接调用 Gradle：本项目 Flutter 版本需要重新生成按构建模式筛选的插件注册文件，否则可能残留仅供测试的 `integration_test` 注册项。无需把测试插件加入生产依赖。
 
-本机首次构建使用已有 HTTP 代理，并通过 `-Dhttps.protocols=TLSv1.2 -Djdk.tls.client.protocols=TLSv1.2` 完成依赖下载；未关闭证书校验。代理参数仅作用于当次构建，未写入全局配置。[Gradle 代理配置](https://docs.gradle.org/current/userguide/networking.html)。
+此前 Windows 首次构建使用已有 HTTP 代理，并通过 `-Dhttps.protocols=TLSv1.2 -Djdk.tls.client.protocols=TLSv1.2` 完成依赖下载；代理参数仅作用于当次构建。Mac 的镜像与代理配置单独记录在 [Mac 构建说明](docs/macos-android-setup-20261022.md)。两者均保留证书校验。[Gradle 代理配置](https://docs.gradle.org/current/userguide/networking.html)。
 
 详见 [手机混音迁移评估](docs/mobile-mixing-assessment.md)。
 

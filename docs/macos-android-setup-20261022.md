@@ -36,7 +36,7 @@ Mac 可以构建 Android APK。本次使用 Apple Silicon Mac，拉取 `codex/me
 
 工具来源：[Android SDK](https://developer.android.com/studio)、[Amazon Corretto](https://docs.aws.amazon.com/corretto/latest/corretto-21-ug/downloads-list.html)、[OpenMTP](https://openmtp.ganeshrvel.com/)。
 
-首次构建遇到 Google 下载连接中断。本机 `~/.gradle/gradle.properties` 使用已有的 `127.0.0.1:7890` 代理；`~/Library/Android/harbeat-maven.init.gradle` 为这个 checkout 加入阿里云官方 Google/Central Maven 镜像，保留原仓库作为后备。镜像通过单次 Gradle 命令的 `-I` 参数加载，版本号不变。这些机器配置不提交仓库，也不要求 Windows 复制本机代理地址。
+首次构建遇到 Google 下载连接中断。本机 `~/.gradle/gradle.properties` 使用已有的 `127.0.0.1:7890` 代理；`~/Library/Android/harbeat-maven.init.gradle` 为这个 checkout 加入阿里云官方 Google/Central Maven 镜像，保留原仓库作为后备。`~/.gradle/init.d/harbeat-mac-local.gradle` 让标准 Flutter 构建也能加载同一脚本，脚本按仓库绝对路径限制作用范围，版本号不变。Flutter 运行库使用[官方文档列出的 CFUG 镜像](https://docs.flutter.dev/community/china)。这些机器配置不提交仓库，也不要求 Windows 复制本机代理地址。
 
 ## 构建与验证命令
 
@@ -57,6 +57,10 @@ npm --prefix vendor/realtime-v3 test -- --reporter=dot
 ORG_GRADLE_PROJECT_harbeatQa=true flutter build apk --release --target-platform android-arm64
 ```
 
+切换测试入口和正式界面时，保留标准 Flutter 构建的依赖准备步骤。这个版本的 `regeneratePlatformSpecificToolingIfApplicable` 在 `--no-pub` 下直接返回，旧注册文件可能仍引用 `integration_test`，但 release 的 Gradle 已排除该测试依赖。本次通过标准 release 构建重新生成注册文件，确认测试插件引用消失，`pubspec.lock` 没有变化。
+
+Android lint 联网查询依赖新版本时也遇到 Google 连接等待。补齐 lint 使用的两份 DataStore JVM 依赖后，使用 Gradle `--offline` 完成最终构建，`lintVitalReportRelease` 为 `No issues found.`。离线构建保留检查，但不联网查询依赖新版本。没有修改应用的 lint 规则或把测试插件加入生产依赖。
+
 实际音频测试单独执行，默认不会联网播放。运行时必须显式设置 `harbeatQa=true`，因为 Flutter 可能把测试入口包装为临时 listener 文件，不能只依赖入口路径来识别测试包。先构建并核对包名为 `com.example.harbeat.nativeqa`，再启动测试。开启后使用已发布的 HIPHOP → Make It Right，不申请新工作区，也不清除原 App 数据：
 
 ```sh
@@ -71,3 +75,19 @@ flutter drive --driver=test_driver/metric_handoff_driver.dart \
 ```
 
 这个测试先暂停进行冷准备，确认 Jetson 策略和获准分轨手法，再通过主播放引擎安排并执行交接。它检查 B 接管后继续播放、执行期间缓冲、音频线程迟到，以及本机声部控制开始的记录。它不代表播放时间轴下所有冷准备都能及时完成，也不覆盖自动择优分支的全部实机表现。设备记录仅保存在 `.nativeqa` 的外部应用目录，不能把测试 APK 构建通过当作混音听感已验收。
+
+## 2026-10-23 构建与安装结果
+
+测试入口的 debug APK 和正常界面的 release APK 均已在这台 Mac 构建成功。正常界面包名为 `com.example.harbeat.nativeqa`，版本 `0.3.1+20`，应用名 `HarBeat Native QA`，已用 `adb install -r` 安装到 MIX 4。它与 Mac 测试入口包签名一致，与原 Windows 预览签名不同。
+
+正常界面 APK：`HarBeat-NativeQA-0.3.1-20.apk`，333,263,503 字节，SHA-256：
+
+```text
+135c1221c0b9d5757482309f98290c29ee4f0d4d6a4dea2e5dbe4c70c23b2a59
+```
+
+已复核 APK 内全部 261 个引擎资源和 165 个当前源文件指纹，实际包含 `metric-engine-Cji6KGkj.js`。APK 另已复制到手机 `Download/HarBeat`，手机端 SHA-256 一致。本机包和原始核验记录位于 `~/Downloads/HarBeat-Android-Tools/`，不提交 Git。
+
+原 `com.example.harbeat.preview` 仍是 +19，首次安装时间仍为 2026-09-16 17:47:25；新 `.nativeqa` 的首次安装时间为 2026-10-23 00:20:24，正常界面更新时间为 00:32:00。两者均保留。
+
+安装后手机仍显示锁屏，已请求用户解锁。本轮实机音频探针尚未启动，也没有对新包作主观听感结论。后续运行探针时使用已保存的 debug APK，收集记录后再装回正常界面的 release APK，两者使用同一 Mac QA 签名；原 Preview 的数据独立保留。
