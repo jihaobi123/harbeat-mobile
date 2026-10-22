@@ -12,7 +12,7 @@ if(webHost){
 let run:MetricRun|null=null,ready=true,error=''
 const info=(t:any)=>t?{id:t.id,title:t.title,bpm:t.bpm,style:t.style??'待确认',duration:t.duration,collection:t.collection,styleLabels:t.styleLabels,playStatus:t.playStatus,mixStatus:t.mixStatus}:null
 function snapshot(){const p=run?.player,t=p?.transition,q=p?.continuation;return {ready,error:error||run?.error||'',playing:p?.playing||false,paused:p?.paused||false,busy:p?.busy||false,buffering:p?.buffering||false,current:info(p?.current),position:p?.position||0,duration:p?.current?.duration||0,status:run?.working?run.notice:p?.status||run?.notice||'智能分轨已就绪',pending:t?{title:t.b.title,remaining:Math.max(0,t.end-p!.ctx.currentTime),locked:true}:q?{title:q.track.title,remaining:Math.max(0,q.at-p!.ctx.currentTime),locked:true,kind:'sequential'}:null,
- audioHealth:p?.logs.filter(e=>e.kind==='audio_health').slice(-1)[0]??null,metric:run?.snapshot()||{},cacheMB:p?.cache.sizeMB||0,observations:p?.logs.filter(e=>e.kind==='audio_observation').slice(-3)||[],logCount:p?.logs.length||0}}
+ audioHealth:p?.logs.filter(e=>e.kind==='audio_health').slice(-1)[0]??null,metric:{...run?.snapshot(),autoPreparation:run?.autoPreparationStatus},cacheMB:p?.cache.sizeMB||0,observations:p?.logs.filter(e=>e.kind==='audio_observation').slice(-3)||[],logCount:p?.logs.length||0}}
 function publish(){window.HarBeatEngineHost.state(JSON.stringify(snapshot()))}
 window.addEventListener('harbeat-host',event=>{if(!(event as CustomEvent).detail?.active)run?.pauseForHost((event as CustomEvent).detail?.reason??'host-inactive')})
 document.addEventListener('visibilitychange',()=>{if(document.hidden)run?.pauseForHost('document-hidden')})
@@ -24,6 +24,8 @@ window.HarBeatEngine={async dispatch({id,method,args}){try{
   if(!run)throw Error('请先开启智能分轨混音')
   switch(method){
    case 'setSession':await run.setSession(args.manifest,String(args.name??''));break
+   case 'prepareAutoSet':void run.prepareAutoSet(args.manifest,String(args.name??'')).catch(e=>{error=(e as Error).message;publish()});break
+   case 'autoPreparation':run.setAutoPreparationPending(args.pending===true);break
    case 'clearSet':run.clearSet();break
    case 'cacheSet':void run.cacheSet(args.manifest).catch(e=>{if((e as Error).name!=='AbortError')error=(e as Error).message;publish()});break
    case 'refreshLibrary':await run.refreshLibrary();break

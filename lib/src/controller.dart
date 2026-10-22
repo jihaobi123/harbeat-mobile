@@ -20,6 +20,7 @@ import 'realtime_engine.dart';
 import 'realtime_factory.dart';
 import 'dance_repository.dart';
 import 'activity_repository.dart';
+import 'auto_mix_preparation.dart';
 import 'music_search_repository.dart';
 
 part 'phone_controller.dart';
@@ -88,6 +89,28 @@ class AppController extends ChangeNotifier {
   int _activityGeneration = 0;
   String? activityError, activeActivityId, activeActivityName;
   final Map<String, Map<String, dynamic>> activityCaches = {};
+  AutoMixPreparation? _autoMixPreparation;
+  bool _autoCloudPending = false;
+  AutoMixPreparation get autoMixPreparation => _autoMixPreparation ??=
+          AutoMixPreparation(activityRepository, (manifest, name) async {
+        if (_disposed || !v3Metric || !smartAutomatic) return;
+        final reply = await realtimeEngine
+            .command('prepareAutoSet', {'manifest': manifest, 'name': name});
+        if (reply['state'] is Map) {
+          _receiveV3(Map<String, dynamic>.from(reply['state']));
+        }
+      })
+            ..addListener(_autoMixProgress);
+  void _autoMixProgress() {
+    final pending =
+        const ['waiting', 'preparing'].contains(_autoMixPreparation?.state);
+    if (!_disposed && v3Metric && pending != _autoCloudPending) {
+      _autoCloudPending = pending;
+      unawaited(_v3Command('autoPreparation', {'pending': pending}));
+    }
+    _changed();
+  }
+
   List<Map<String, dynamic>> danceStyles = [];
   Map<String, dynamic>? dancePlan;
   String danceStyle = 'Hip-Hop';
@@ -1023,6 +1046,7 @@ class AppController extends ChangeNotifier {
     _searchTimer?.cancel();
     _musicSearchTimer?.cancel();
     _musicSearchEpoch++;
+    _autoMixPreparation?.dispose();
     remoteRepository?.close();
     nasRepository?.close();
     danceRepository.close();

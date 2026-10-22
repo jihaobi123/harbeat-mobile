@@ -1,0 +1,15 @@
+{
+  "schema": "harbeat.android-build-receipt.v1",
+  "version": "0.3.1+19",
+  "bytes": 333263487,
+  "apk": "HarBeat-Preview-0.3.1-19-20261022-AutoPrepare-arm64.apk",
+  "sha256": "3b7997bf41c72dfd00d564a85ab2613bb18f7082349225069da3f9f1f147c4b8",
+  "verifiedFiles": 261,
+  "verifiedSourceFiles": 165,
+  "engine": [
+    "assets/metric-engine-CnruwNHr.js"
+  ],
+  "installedOnPhone": false,
+  "reason": "User requested Windows-only validation before taking the phone to user research.",
+  "signerSha256": "77992ac3567232a4b8d3f9a96e581fced60311e93aa9b1c4765f50207acc1337"
+}

@@ -294,6 +294,28 @@ class _ListeningDirection extends StatelessWidget {
             onChanged: c.v3Loading
                 ? null
                 : (value) => c.setSmartDirection(automatic: value)),
+        if (c.smartAutomatic && c.autoMixPreparation.message.isNotEmpty) ...[
+          const Divider(height: 24),
+          Semantics(
+              liveRegion: true,
+              child: Text(
+                  (c.metricState['autoPreparation'] as Map?)?['message']
+                          ?.toString() ??
+                      c.autoMixPreparation.message,
+                  style: const TextStyle(fontSize: 14))),
+          if ((c.metricState['cache'] as Map?)?['state'] == 'downloading')
+            Text(
+                ActivityCacheStatus(Map<String, dynamic>.from(
+                        c.metricState['cache'] as Map))
+                    .label,
+                style: const TextStyle(fontSize: 14)),
+          if (c.autoMixPreparation.state == 'error' ||
+              (c.metricState['autoPreparation'] as Map?)?['state'] == 'partial')
+            TextButton.icon(
+                onPressed: () => c.prepareAutomaticMusic(retry: true),
+                icon: const Icon(Icons.refresh),
+                label: const Text('继续准备音乐')),
+        ],
       ]));
 }
 

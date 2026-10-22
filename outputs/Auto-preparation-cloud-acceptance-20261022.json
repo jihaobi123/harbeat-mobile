@@ -1,0 +1,78 @@
+{
+  "schema": "harbeat.auto-preparation-cloud-acceptance.v1",
+  "request": {
+    "styles": [
+      "boombap"
+    ],
+    "energy": 3,
+    "trackLimit": 4
+  },
+  "packId": "03697744ed284b8ba43dc04e4b946a2c",
+  "createdAt": "2026-10-22T02:41:46.534102+00:00",
+  "state": "ready",
+  "prepared": 35,
+  "total": 35,
+  "failed": 0,
+  "initialTrackId": "track-afc2c5c171a1fce80ef0",
+  "tracks": [
+    {
+      "id": "track-042c62464b524ce46103",
+      "title": "What I'm After",
+      "bpm": 95.9,
+      "duration": 260.4,
+      "styleLabels": [
+        "boombap"
+      ]
+    },
+    {
+      "id": "track-8978aa380e85155e8a2d",
+      "title": "Lonely & Cold",
+      "bpm": 96,
+      "duration": 190.75,
+      "styleLabels": [
+        "boombap"
+      ]
+    },
+    {
+      "id": "track-afc2c5c171a1fce80ef0",
+      "title": "Luv(sic.) Part 3 (feat. Shing02)",
+      "bpm": 95,
+      "duration": 336.8666666666667,
+      "styleLabels": [
+        "boombap"
+      ]
+    },
+    {
+      "id": "track-2421bf94e8c0430cd78c",
+      "title": "Rump Shaker",
+      "bpm": 103.4,
+      "duration": 355.76,
+      "styleLabels": [
+        "boombap"
+      ]
+    }
+  ],
+  "methodCounts": {
+    "filter": 18,
+    "bass_filter": 12,
+    "bass": 4,
+    "original": 1
+  },
+  "warnings": [
+    "candidate_coverage_gaps:track-042c62464b524ce46103",
+    "candidate_coverage_gaps:track-8978aa380e85155e8a2d",
+    "candidate_coverage_gaps:track-2421bf94e8c0430cd78c"
+  ],
+  "sourceAssetsReady": true,
+  "stemBytes": 341659613,
+  "initialFullStemPublicationCount": 9,
+  "observedFullStemPublicationCount": 12,
+  "newlyPublishedTrackIds": [
+    "track-8978aa380e85155e8a2d",
+    "track-afc2c5c171a1fce80ef0",
+    "track-2421bf94e8c0430cd78c"
+  ],
+  "sshUsed": false,
+  "api": "Existing authenticated /listen/set-api preparation flow",
+  "manifestSha256": "6027612b1feb0843f5d193da05dda5041dbe65890fdebf43e45152de0b74f62e"
+}

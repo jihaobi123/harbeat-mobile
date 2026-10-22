@@ -2,7 +2,7 @@
 
 手机先完成选歌、播放与方向控制，饰品作为可选快捷控制。界面采用浅色背景、青绿与杏黄、细描边圆角卡片；播放、音乐、我的三个主入口保持不变。
 
-当前源码版本为 **Android Preview 0.3.0+17**：Jetson 判断具体接点的声部适配和混音手法，手机在同一音频时钟执行渐混、分轨增益、EQ 和滤波。预约预计算多个批准接点，手机滚动预热，自动与手动共用准备结果。点击后仍等待合格拍点、人声句尾或段落边界。新增执行分工和网页实测见 [本轮交接](docs/jetson-device-arrangement-20261021.md)。此前 0.2.1 已在 Windows 构建、安装并完成 3 次真机原渐混及预热复用，见 [0.2.1 真机记录](docs/android-deployment-0.2.1-20261021.md)；0.3.0 尚未编译 APK。构建步骤见 [打包前准备](docs/windows-pre-apk-20261021.md)。
+当前源码版本为 **Android Preview 0.3.1+19**：播放页按风格和能量自动请求后台准备、发布缺失分轨并下载到本机；自动使用来源核验通过的预批接点，Jetson 判断手法、设备执行混音。当前音乐和已安排交接保持连续，准备期间不重复挤占冷审批队列。流程、真实发布与验证范围见 [自动准备说明](docs/automatic-preparation-20261022.md)。用户准备携手机外出，最终修正版仅在 Windows 构建和验证，未进行新版真机验收。历史 0.3.0 的六首连续播放与分轨实测见 [连续播放记录](docs/android-continuous-playback-20261021.md) 和 [分轨实测](docs/backend-mix-publishing-followup-20261022.md)。构建步骤见 [打包前准备](docs/windows-pre-apk-20261021.md)。
 
 ## 运行
 
@@ -56,7 +56,7 @@ python tools/serve_preview.py --port 8766
 
 历史安装包：[下载 Android ARM64 APK 0.1.12 (14)](https://github.com/jihaobi123/harbeat-mobile/releases/download/v0.1.12-preview-20261020/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk)，[预览版本发布页](https://github.com/jihaobi123/harbeat-mobile/releases/tag/v0.1.12-preview-20261020)提供安装包与 SHA-256 校验文件。该 APK 固定于源码 `406525a`，对应旧执行方式，不包含后续最近接点修复及本机分轨执行；历史构建结果见 [交付说明](docs/unified-playback-20261020.md)。
 
-此前 **0.2.1+16** 已在 Windows 构建为 `outputs/HarBeat-Preview-0.2.1-20261021-LocalExecution-arm64.apk` 并安装到手机，校验值和播放记录见 [部署说明](docs/android-deployment-0.2.1-20261021.md)。本次 **0.3.0+17** 提交源码与构建前校验，需要从最新分支重新编译并验收手机性能。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；安装时使用保留数据的安全安装器。APK 不存入 Git，上方历史 Release 附件也不包含本轮更新。
+此前 **0.2.1+16**、**0.3.0+17** 及第一轮 **0.3.1+18** 已在 Windows 构建并保留数据安装。最终 **0.3.1+19** 为用户要求改在电脑完成验证的修正版，不代表手机已经升级。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；安装时使用保留数据的安全安装器。APK 不存入 Git，上方历史 Release 附件也不包含本轮更新。
 
 默认构建使用并存预览包名，只有显式 `-PharbeatPreview=false` 才使用原包名。此次修复了应用未启用 Kotlin 插件、audio_session 0.2.4 与关闭内置 Kotlin 的兼容问题，以及网络配置缺少 includeSubdomains 属性的发布检查错误。Gradle 限制为 1536MB 堆、1 个 worker 和 2 个可用处理器，避免本机原生内存不足。
 

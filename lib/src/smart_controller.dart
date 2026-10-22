@@ -60,11 +60,17 @@ extension SmartPlaybackFlow on AppController {
   Future<bool> playSmartTrack(Track track) async {
     if (!await prepareSmartPlayer(initial: track)) return v3Active;
     await v3TogglePlayback();
+    prepareAutomaticMusic();
     return true;
   }
 
   Future<void> setSmartDirection(
       {int? level, String? style, bool? automatic}) async {
+    if ((level != null && level != draftEnergy) ||
+        (style != null && style != smartStyle) ||
+        automatic == false) {
+      _autoMixPreparation?.cancel();
+    }
     if (level != null) energy = draftEnergy = level.clamp(1, 5);
     if (style != null) smartStyle = style;
     if (automatic != null) smartAutomatic = automatic;
@@ -79,6 +85,33 @@ extension SmartPlaybackFlow on AppController {
       editDirection(style: style);
     }
     await _persist();
+    prepareAutomaticMusic();
+  }
+
+  void prepareAutomaticMusic({bool retry = false}) {
+    if (_disposed || !v3Metric || activityBusy || activeActivityId != null) {
+      return;
+    }
+    if (!smartAutomatic) {
+      _autoMixPreparation?.cancel();
+      return;
+    }
+    // An unrestricted direction still needs a bounded cloud request. Select
+    // compatible style families around the current source, never invent labels.
+    final rows = List<Map<String, dynamic>>.of(v3Catalog);
+    final bpm = nowPlaying?.bpm ?? 100;
+    rows.sort((a, b) => (((a['bpm'] as num?) ?? 0) - bpm)
+        .abs()
+        .compareTo((((b['bpm'] as num?) ?? 0) - bpm).abs()));
+    final styles = smartStyle.isNotEmpty
+        ? [smartStyle]
+        : rows
+            .expand(
+                (r) => (r['styleLabels'] as List? ?? []).whereType<String>())
+            .toSet()
+            .take(8)
+            .toList();
+    autoMixPreparation.request(styles, draftEnergy, retry: retry);
   }
 
   Future<void> recommendNext() async {

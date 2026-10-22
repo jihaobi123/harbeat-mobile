@@ -77,6 +77,20 @@ export class MetricRun {
  phase='idle'
  private refreshTask:Promise<void>|null=null
  private activity:ActivitySession|null=null
+ private automaticSet=false
+ private autoSetSequence=0
+ private pendingAutoSet:ActivitySession|null=null
+ private autoManifest:unknown=null
+ private autoName=''
+ private autoDownloading=false
+ private autoPreparation:{state:string;message:string}|null=null
+ private cloudPreparing=false
+ setAutoPreparationPending(pending:boolean){
+  if(pending===this.cloudPreparing)return
+  this.cloudPreparing=pending
+  if(pending&&!this.player?.transition&&!this.player?.continuation){this.resetWarm();this.invalidate(false)}
+  this.update()
+ }
  private sessionSequence=0;private cacheSequence=0
  private setCacheController:AbortController|null=null
  private setCache:SetCacheProgress|null=null
@@ -157,6 +171,7 @@ export class MetricRun {
   this.refreshTask=task;return task
  }
  async setSession(manifest:unknown,name:string){
+  this.cancelAutoSet();this.automaticSet=false
   const sequence=++this.sessionSequence
   const activity=await ActivitySession.open(manifest,name,id=>this.library.load(id))
   await activity.cacheStrategies?.(this.base)
@@ -164,7 +179,32 @@ export class MetricRun {
   if(this.player?.transition||this.player?.continuation)throw Error('请先完成交接或停止，再进入预约')
   this.stop();this.library.trim(new Set([activity.initialTrackId]),4);this.activity=activity;this.selected=this.explicit=null;this.recent=[];this.error='';this.notice='预约 set 已载入，可以开始播放';this.update()
  }
- clearSet(){this.sessionSequence++;if(this.player?.transition||this.player?.continuation)throw Error('交接完成后可退出预约');this.resetWarm(true);this.invalidate();this.activity=null;this.notice='已回到完整曲库';this.update()}
+ clearSet(){this.sessionSequence++;if(this.player?.transition||this.player?.continuation)throw Error('交接完成后可退出预约');this.cancelAutoSet();this.resetWarm(true);this.invalidate();this.activity=null;this.notice='已回到完整曲库';this.update()}
+ get autoPreparationStatus(){return this.autoPreparation}
+ /** Prepare in the background, then adopt between committed handoffs. Never
+  * restart the current song or turn a partial download into ready. */
+ async prepareAutoSet(manifest:unknown,name:string){
+  if(this.activity&&!this.automaticSet)throw Error('正在播放已选舞程，退出后可自动准备新的方向')
+  const sequence=++this.autoSetSequence
+  this.autoManifest=manifest;this.autoName=name;this.pendingAutoSet=null;this.autoDownloading=true
+  this.autoPreparation={state:'downloading',message:'正在自动下载并校验分轨，当前歌曲继续播放'};this.update()
+  try{
+   const cache=await this.cacheSet(manifest)
+   if(!this.alive||sequence!==this.autoSetSequence)return
+   if(cache.state!=='ready')throw Error('分轨只下载了部分，可重试继续准备；当前歌曲继续播放')
+   const session=await ActivitySession.open(manifest,name,id=>this.library.load(id))
+   if(!this.alive||sequence!==this.autoSetSequence)return
+   this.pendingAutoSet=session;this.autoPreparation={state:'waiting',message:'分轨已下载，当前交接后启用'}
+   this.player?.logs.push({kind:'automatic_set_downloaded',at:new Date().toISOString(),packId:session.packId,tracks:[...session.ids],files:cache.completed,bytes:cache.bytes})
+  }catch(e){if(this.alive&&sequence===this.autoSetSequence)this.autoPreparation={state:'partial',message:(e as Error).name==='AbortError'?'下载已暂停，继续播放时自动接着准备':(e as Error).message}}
+  finally{if(sequence===this.autoSetSequence){this.autoDownloading=false;this.update()}}
+ }
+ private cancelAutoSet(){
+  this.autoSetSequence++;this.pendingAutoSet=null;this.autoManifest=null;this.cloudPreparing=false
+  if(this.autoDownloading)this.setCacheController?.abort()
+  this.autoDownloading=false;this.autoPreparation=null
+  if(this.automaticSet){this.activity=null;this.automaticSet=false}
+ }
  async cacheSet(manifest:unknown){
   const sequence=++this.cacheSequence;this.setCacheController?.abort();const controller=this.setCacheController=new AbortController()
   if(this.setCache?.state==='downloading'){this.setCache={...this.setCache,state:'partial',message:'上一次下载已暂停'};this.update()}
@@ -176,7 +216,7 @@ export class MetricRun {
   try{await session.cacheMetadata(this.base,controller.signal);return await cacheActivityAssets(session.assets(),this.base,controller.signal,progress=>{if(this.setCacheController===controller){this.setCache=progress;this.update()}})}catch(e){if(this.setCacheController===controller&&this.setCache){this.setCache={...this.setCache,state:'partial',message:controller.signal.aborted?'下载已暂停，可再次准备':(e as Error).message};this.update()}throw e}finally{if(this.setCacheController===controller)this.setCacheController=null}
  }
  async start(id:string){
-  if(this.activity&&!this.activity.ids.has(id))throw Error('这首歌不在预约 set 中，请先退出预约')
+  if(this.activity&&!this.automaticSet&&!this.activity.ids.has(id))throw Error('这首歌不在预约 set 中，请先退出预约')
   this.resetWarm(true);this.userIntent=null
   if(this.player?.transition||this.player?.continuation)throw Error('请先完成交接或停止，再更换当前歌曲')
   this.invalidate();const token=this.revision;this.working=true;this.update()
@@ -190,13 +230,14 @@ export class MetricRun {
   }finally{if(token===this.revision){this.working=false;this.update()}}
  }
  choose(id:string){
-  if(this.activity&&!this.activity.ids.has(id))throw Error('这首歌不在预约 set 中，请先退出预约')
+  if(this.activity&&!this.automaticSet&&!this.activity.ids.has(id))throw Error('这首歌不在预约 set 中，请先退出预约')
   if(this.player?.transition||this.player?.continuation)throw Error('正在交接；完成后可以选择下一首')
   if(!this.index.tracks.some(t=>t.id===id&&t.playStatus==='ready'&&t.mixStatus==='ready'))throw Error('这首歌尚未具备智能混音条件')
   if(id===this.player?.current?.id)throw Error('请选择不同的下一首')
   this.resetWarm(true);this.invalidate();this.selected=this.explicit=id;this.retryAt=0;this.excludedPlans.clear();this.excludedTracks.clear()
   this.notice='已指定下一首，系统会自动寻找合适接点';this.update()
  }
+ private playbackEntries(){return this.activity?this.index.tracks.filter(t=>this.activity!.ids.has(t.id)||this.automaticSet&&t.id===this.explicit):this.index.tracks}
  direction(value:{style?:string;energy?:number;automatic?:boolean}){
   const changed=(value.style!==undefined&&value.style!==this.targetStyle)||(value.energy!==undefined&&value.energy!==this.energyLevel)
   if(value.energy!==undefined&&(!Number.isInteger(value.energy)||value.energy<1||value.energy>5))throw Error('能量档位无效')
@@ -204,6 +245,7 @@ export class MetricRun {
   if(value.style!==undefined)this.targetStyle=value.style
   if(value.energy!==undefined)this.energyLevel=value.energy
   if(value.automatic!==undefined)this.automatic=value.automatic
+  if(changed||value.automatic===false)this.cancelAutoSet()
   // Once scheduled, the shared clock finishes that handoff. New preferences
   // apply to the following song; never stop A or partially replace automation.
   if(this.player?.transition||this.player?.continuation){this.notice='当前交接完成后采用新的音乐方向';this.update();return}
@@ -310,7 +352,7 @@ export class MetricRun {
   const valid=()=>this.alive&&token===this.revision&&p.current?.id===a.id
   this.working=true;this.phase='selecting';this.notice='正在按风格、能量和接点比较下一首';this.update()
   try{
-   const search=candidateStages(this.activity?this.index.tracks.filter(t=>this.activity!.ids.has(t.id)):this.index.tracks,entry,this.targetStyle,this.recent,this.excludedTracks,intent?null:this.explicit,intent?.preferred)
+   const search=candidateStages(this.playbackEntries(),entry,this.targetStyle,this.recent,this.excludedTracks,intent?null:this.explicit,intent?.preferred)
    const selection:NonNullable<MetricRun['selection']>={...search.counts,checked:0,metadataFailed:0,qualified:0,stage:null,usedRecent:false}
    this.selection=selection
    if(entry.mixStatus!=='ready')throw Error('当前歌曲的混音资料尚未发布，播完后将按方向续播原曲')
@@ -323,6 +365,16 @@ export class MetricRun {
     const qualified=new Set<string>()
     const compare=(x:SmartChoice,y:SmartChoice)=>(stage.kind==='recent'?this.recent.lastIndexOf(x.track.id)-this.recent.lastIndexOf(y.track.id):0)||
      (intent?(x.nearbyBudget??60)-(y.nearbyBudget??60)||y.score-x.score||x.plan.start-y.plan.start:y.score-x.score||y.plan.end-x.plan.end)||x.plan.id.localeCompare(y.plan.id)
+    // Use the prepared, source-verified cloud candidates in automatic mode.
+    // Ranking an unrelated fresh cue would throw away all precomputed approvals.
+    if(!intent){
+     const allowed=new Set(stage.entries.map(t=>t.id))
+     choices=(this.activity?.approvedCandidates?.(a,p.position+12,energy)??[])
+      .filter(c=>allowed.has(c.track.id)&&!this.excludedPlans.has(c.plan.id))
+      .map(c=>choiceForPlan(a,c.track,c.plan,energy)).filter((c):c is SmartChoice=>!!c)
+      .sort((x,y)=>x.plan.start-y.plan.start||compare(x,y)).slice(0,3)
+     if(choices.length){selection.checked=choices.length;selection.qualified=choices.length;break}
+    }
     // Rank and release each eight-track batch. Keep only the three render
     // attempts, rather than holding every track's full analysis in memory.
     for(let batch=0;batch<stage.entries.length;batch+=8){
@@ -410,6 +462,7 @@ export class MetricRun {
  /** Roll a small device-ready horizon. This timer only prepares immutable
   * plans; the common audio clock still schedules every accepted handoff. */
  private warmNearby(){
+  if((this.cloudPreparing||this.autoDownloading)&&!this.automaticSet)return
   const p=this.player,a=p?.current
   const key=this.alive&&p?.playing&&this.index.tracks.find(t=>t.id===a?.id)?.mixStatus==='ready'&&!p.continuation&&!p.paused&&!p.busy&&!p.transition&&a?[a.id,this.targetStyle,this.energyLevel,this.explicit??'',this.activity?.packId??''].join(':'):''
   if(key!==this.warmKey){this.resetWarm();this.warmKey=key}
@@ -419,14 +472,14 @@ export class MetricRun {
   void (async()=>{
    if(!p.localExecution){const id=this.selected;if(!id)return;const b=await abortable(this.library.load(id),controller.signal),plan=nearbyPlan(a,b,p.position);if(plan)await preloadOriginal(p,a,b,plan,controller.signal);return}
    const entry=this.index.tracks.find(t=>t.id===a.id);if(!entry)return
-   const search=candidateStages(this.activity?this.index.tracks.filter(t=>this.activity!.ids.has(t.id)):this.index.tracks,entry,this.targetStyle,this.recent,this.excludedTracks,this.explicit,this.selected)
+   const search=candidateStages(this.playbackEntries(),entry,this.targetStyle,this.recent,this.excludedTracks,this.explicit,this.selected)
    const allowed=new Set(search.stages.flatMap(s=>s.entries.map(t=>t.id)))
    const session=this.activity as (ActivitySession&{candidates?:(a:Track,position:number,energy:number)=>{track:Track;plan:Plan}[]})|null
    const tracks:Track[]=[]
    // Use every retained reservation track when selecting the live nearest
    // material. Sparse cloud coverage is useful backup evidence, but cannot
    // substitute its sampled point for the point a click would choose now.
-   const retained=session?.tracks?.filter(t=>allowed.has(t.id)&&Array.isArray(t.windows))??[]
+   const retained=session?.ids.has(a.id)?session.tracks?.filter(t=>allowed.has(t.id)&&Array.isArray(t.windows))??[]:[]
    if(retained.length)tracks.push(...retained)
    else for(const id of [...allowed].slice(0,8)){controller.signal.throwIfAborted();try{tracks.push(await abortable(this.library.load(id),controller.signal))}catch(error){controller.signal.throwIfAborted()}}
    let primary:{track:Track;plan:Plan}[]=[]
@@ -458,12 +511,19 @@ export class MetricRun {
  }
  tick(){
   const p=this.player
-  if(this.automatic&&p?.playing&&!p.paused&&!p.transition&&!p.continuation&&!this.working&&!this.autoTask&&!this.nearbyTask&&this.phase==='no_match'&&p.current&&p.current.duration-p.position<=30&&Date.now()>=this.nativeRetryAt){
+  if(this.pendingAutoSet&&!p?.transition&&!p?.continuation&&!p?.busy&&!this.working&&!this.autoTask&&!this.nearbyTask){
+   this.resetWarm(true);this.invalidate();this.activity=this.pendingAutoSet;this.pendingAutoSet=null;this.automaticSet=true
+   this.autoPreparation={state:'ready',message:`分轨已下载 · ${this.activity.ids.size} 首音乐自动接续`}
+   p?.logs.push({kind:'automatic_set_attached',at:new Date().toISOString(),packId:this.activity.packId,current:p.current?.id,position:p.position})
+   this.update()
+  }
+  if(this.automatic&&p?.playing&&!p.paused&&!p.transition&&!p.continuation&&!this.working&&!this.autoTask&&!this.nearbyTask&&['no_match','waiting_assets'].includes(this.phase)&&p.current&&p.current.duration-p.position<=30&&Date.now()>=this.nativeRetryAt){
    const task=this.queueNativeContinuation().finally(()=>{if(this.autoTask===task)this.autoTask=null});this.autoTask=task;return
   }
   if(p?.continuation)return
   this.warmNearby()
   if(!this.alive||!p?.playing||p.continuation||p.paused||p.busy||p.buffering||p.transition||this.working||this.autoTask||this.nearbyTask)return
+  if((this.cloudPreparing||this.autoDownloading)&&!this.automaticSet&&!this.result){this.phase='waiting_assets';this.notice='后台正在准备下一组分轨，当前歌曲继续播放';return}
   if(this.userIntent){
    const intent=this.userIntent;this.userIntent=null
    const task=this.recommend(intent).finally(()=>{if(this.autoTask===task)this.autoTask=null})
@@ -486,7 +546,7 @@ export class MetricRun {
   this.autoTask=task
  }
  private nativeCandidates(entry:LibraryEntry){
-  const rows=(this.activity?this.index.tracks.filter(t=>this.activity!.ids.has(t.id)):this.index.tracks).filter(t=>t.id!==entry.id&&t.playStatus==='ready'&&styleMatches(t.styleLabels,this.targetStyle))
+  const rows=this.playbackEntries().filter(t=>t.id!==entry.id&&t.playStatus==='ready'&&styleMatches(t.styleLabels,this.targetStyle))
   const search=candidateStages(rows.map(t=>({...t,mixStatus:'ready' as const})),entry,this.targetStyle,this.recent,new Set(),this.explicit)
   const ordered=search.stages.flatMap(s=>s.entries)
   return [...ordered,...rows.filter(t=>!ordered.some(x=>x.id===t.id))].slice(0,3)
@@ -546,6 +606,7 @@ export class MetricRun {
  }
  pause(){this.resetWarm();this.userIntent=null;this.invalidate(false);this.player?.pause();this.phase=this.result?'ready':'idle';this.notice='已暂停，继续播放后按你的方向自动推荐';this.save();this.update()}
  async resume(){
+  if(this.autoManifest&&!this.autoDownloading&&this.autoPreparation?.state==='partial')void this.prepareAutoSet(this.autoManifest,this.autoName)
   const p=await this.ensure(),a=p.current
   if(a&&p.position>=a.duration-.1){
    const entry=this.index.tracks.find(t=>t.id===a.id),next=this.automatic&&entry?this.nativeCandidates(entry)[0]:null
@@ -563,7 +624,7 @@ export class MetricRun {
  filters(value:{label?:string;query?:string}){this.label=value.label??this.label;this.query=value.query??this.query;this.update()}
  export(){return {...this.player?.export(),schema:'harbeat.metric-mix-session.v1',release:METRIC_RELEASE,automaticPolicy:SMART_POLICY,direction:{style:this.targetStyle,energy:this.energyLevel,automatic:this.automatic},history:this.history,selectedResult:this.result??this.lastResult,selectedMethod:this.method,selection:this.selection,exportedAt:new Date().toISOString()}}
  save(){if(this.player)this.host?.saveSession(JSON.stringify(this.export()))}
- dispose(){this.setCacheController?.abort();this.resetWarm(true);this.alive=false;this.invalidate();this.save();this.player?.dispose()}
+ dispose(){this.cancelAutoSet();this.setCacheController?.abort();this.resetWarm(true);this.alive=false;this.invalidate();this.save();this.player?.dispose()}
  snapshot(){const p=this.player,r=this.result,ready=[...new Map([...this.preparedPool.entries().map(e=>e.value),...(r?[r]:[])].filter(value=>hasDevicePCM(value)&&value.plan.from===p?.current?.id&&canArm(value.plan,p.current!.id,p.position)).map(value=>[value.id,value])).values()];return {activitySet:this.activity?{packId:this.activity.packId,name:this.activity.name,trackCount:this.activity.ids.size,prepared:this.activity.strategyVersion?this.activity.strategyCount:this.activity.candidateCount??this.activity.results.length,strategyVersion:this.activity.strategyVersion,approved:this.activity.strategyCount??0,candidates:this.activity.candidateCount??this.activity.results.length,cloudCoverage:this.activity.cloudCoverage,cache:this.cachePackId===this.activity.packId?this.setCache:null}:null,cache:this.setCache?{packId:this.cachePackId,...this.setCache}:null,release:METRIC_RELEASE,selected:this.selected,label:this.label,query:this.query,volume:this.volume,working:this.working,notice:this.error||this.notice,canArm:!!r&&hasDevicePCM(r)&&canArm(r.plan,p?.current?.id??null,p?.position??0)&&!p?.transition,
   automatic:this.automatic,energyLevel:this.energyLevel,targetStyle:this.targetStyle,phase:this.phase,nearbyWorking:!!this.nearbyTask,recommendation:this.recommendation,selection:this.selection,
   warm:{state:this.warmRunning?'preparing':ready.length?'ready':'idle',preparing:this.warmPreparing,ready:ready.map(value=>({from:value.plan.from,to:value.plan.to,start:value.plan.start,end:value.plan.end,method:value.decision.recommended})),sourcePosition:p?.position??0,limit:3,...deviceBufferUsage()},

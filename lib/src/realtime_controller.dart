@@ -190,6 +190,7 @@ extension RealtimeFlow on AppController {
 
   Future<void> disableV3() async {
     if (!v3Active || v3Loading) return;
+    _autoMixPreparation?.cancel();
     v3Loading = true;
     v3Error = null;
     try {
@@ -241,12 +242,14 @@ extension RealtimeFlow on AppController {
       await _v3Command('pause');
     } else if (v3State['current'] != null) {
       await _v3Command('resume');
+      prepareAutomaticMusic();
     } else if (nowPlaying != null) {
       if (danceRunning) {
         await startDance();
         return;
       }
       await _v3Command('start', {'trackId': nowPlaying!.id.substring(4)});
+      prepareAutomaticMusic();
     }
   }
 

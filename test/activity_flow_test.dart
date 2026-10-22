@@ -215,7 +215,9 @@ void main() {
     expect(c.activeActivityName, '周末练习');
     expect(c.tab, 0);
     await c.exitActivity();
-    expect(engine.calls.last, 'clearSet');
+    expect(engine.calls, contains('clearSet'));
+    expect(engine.arguments.lastWhere((a) => a['method'] == 'autoPreparation'),
+        {'method': 'autoPreparation', 'pending': true});
     expect(c.activeActivityName, isNull);
   });
   test(

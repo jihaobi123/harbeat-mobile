@@ -177,12 +177,14 @@ void main() {
     expect(engine.calls.where((m) => m == 'start'), hasLength(1));
     expect(audio.actions.where((m) => m.startsWith('play:')), isEmpty);
     await c.setSmartDirection(level: 5, style: 'Grime');
-    expect(engine.arguments.last, {
+    expect(engine.arguments.lastWhere((a) => a['method'] == 'direction'), {
       'method': 'direction',
       'style': 'Grime',
       'energy': 5,
       'automatic': true
     });
+    expect(engine.arguments.lastWhere((a) => a['method'] == 'autoPreparation'),
+        {'method': 'autoPreparation', 'pending': true});
     expect(engine.calls.where((m) => m == 'start'), hasLength(1));
     await c.setSmartDirection(automatic: false);
     expect(c.smartAutomatic, false);

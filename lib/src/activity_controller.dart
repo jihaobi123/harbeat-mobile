@@ -121,6 +121,7 @@ extension ActivityFlow on AppController {
 
   Future<bool> openActivity(ActivityReservation reservation) async {
     if (activityBusy || !reservation.playable) return false;
+    _autoMixPreparation?.cancel();
     activityBusy = true;
     activityError = null;
     _changed();
@@ -213,6 +214,7 @@ extension ActivityFlow on AppController {
     }
     activeActivityId = null;
     activeActivityName = null;
+    prepareAutomaticMusic(retry: true);
     _changed();
   }
 

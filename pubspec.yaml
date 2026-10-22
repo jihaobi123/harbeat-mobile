@@ -1,7 +1,7 @@
 name: harbeat
 description: HarBeat mobile client — music preparation and RK3588 companion.
 publish_to: none
-version: 0.3.0+17
+version: 0.3.1+19
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
