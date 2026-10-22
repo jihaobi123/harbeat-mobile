@@ -11,5 +11,6 @@
   ],
   "installedOnPhone": false,
   "reason": "User requested Windows-only validation before taking the phone to user research.",
-  "signerSha256": "77992ac3567232a4b8d3f9a96e581fced60311e93aa9b1c4765f50207acc1337"
+  "signerSha256": "77992ac3567232a4b8d3f9a96e581fced60311e93aa9b1c4765f50207acc1337",
+  "sourceCommit": "9a400492038c531eaad8dcdbefba7f4fc90f9d93"
 }

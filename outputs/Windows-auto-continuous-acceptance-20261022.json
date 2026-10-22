@@ -1,0 +1,134 @@
+{
+  "schema": "harbeat.windows-auto-continuous-acceptance.v1",
+  "sourceCommit": "9a400492038c531eaad8dcdbefba7f4fc90f9d93",
+  "runtimeFile": "metric-engine-CnruwNHr.js",
+  "runtimeSha256": "6f7d9f7a601b280bc83d02e324e154601dd21497f965e497452d0ca7e79bafcd",
+  "apkVersion": "0.3.1+19",
+  "phoneUsed": false,
+  "sessionSha256": "eeea804c45cad2e3dc41cc77d00f1eda79e9620970ea9d223c5f9db2945a9a53",
+  "sessionBytes": 511864,
+  "cache": {
+    "state": "ready",
+    "completed": 336,
+    "total": 336,
+    "bytes": 466683736
+  },
+  "startedAt": "2026-10-22T06:06:01.246Z",
+  "pausedAt": "2026-10-22T06:08:39.136Z",
+  "elapsedSeconds": 157.89,
+  "trackStarts": 1,
+  "resumes": 0,
+  "stops": 0,
+  "sequentialFallbacks": 0,
+  "direction": {
+    "style": "boombap",
+    "energy": 3,
+    "automatic": true
+  },
+  "arrivals": [
+    {
+      "id": "track-afc2c5c171a1fce80ef0",
+      "title": "Luv(sic.) Part 3 (feat. Shing02)",
+      "at": "2026-10-22T06:06:01.246Z",
+      "position": 0
+    },
+    {
+      "id": "track-8978aa380e85155e8a2d",
+      "title": "Lonely & Cold",
+      "at": "2026-10-22T06:06:54.098Z",
+      "position": 57.59002040816327
+    },
+    {
+      "id": "track-042c62464b524ce46103",
+      "title": "What I'm After",
+      "at": "2026-10-22T06:07:14.094Z",
+      "position": 55.66049886621315
+    },
+    {
+      "id": "track-8978aa380e85155e8a2d",
+      "title": "Lonely & Cold",
+      "at": "2026-10-22T06:08:09.127Z",
+      "position": 57.59649886621314
+    },
+    {
+      "id": "track-afc2c5c171a1fce80ef0",
+      "title": "Luv(sic.) Part 3 (feat. Shing02)",
+      "at": "2026-10-22T06:08:29.131Z",
+      "position": 35.726587301587244
+    }
+  ],
+  "handoffCount": 4,
+  "handoffs": [
+    {
+      "kind": "handoff_complete",
+      "at": "2026-10-22T06:06:54.096Z",
+      "context": 50.991020408163266,
+      "track": "track-8978aa380e85155e8a2d",
+      "sourceOffset": 57.59002040816327,
+      "method": "bass"
+    },
+    {
+      "kind": "handoff_complete",
+      "at": "2026-10-22T06:07:14.092Z",
+      "context": 70.98049886621315,
+      "track": "track-042c62464b524ce46103",
+      "sourceOffset": 55.66049886621315,
+      "method": "bass_filter"
+    },
+    {
+      "kind": "handoff_complete",
+      "at": "2026-10-22T06:08:09.125Z",
+      "context": 126.02049886621315,
+      "track": "track-8978aa380e85155e8a2d",
+      "sourceOffset": 57.59649886621314,
+      "method": "filter"
+    },
+    {
+      "kind": "handoff_complete",
+      "at": "2026-10-22T06:08:29.130Z",
+      "context": 146.0215873015873,
+      "track": "track-afc2c5c171a1fce80ef0",
+      "sourceOffset": 35.726587301587244,
+      "method": "filter"
+    }
+  ],
+  "scheduledMethods": {
+    "bass": 1,
+    "bass_filter": 1,
+    "filter": 2
+  },
+  "originalFallbackCount": 0,
+  "bufferingCount": 0,
+  "audioOutputWindows": 31,
+  "zeroOutputWindows": 0,
+  "minimumWindowRms": 0.07871340641437709,
+  "audioObservationCount": 8,
+  "lateObservations": 0,
+  "secondsAfterThirdHandoff": 30.011791383219972,
+  "finalTransport": {
+    "track": "track-afc2c5c171a1fce80ef0",
+    "position": 45.73729024943307,
+    "duration": 336.8666666666667,
+    "state": "suspended",
+    "paused": true,
+    "buffering": false,
+    "status": "复用已就绪音频",
+    "streams": [
+      {
+        "track": "track-afc2c5c171a1fce80ef0",
+        "offset": 35.66,
+        "at": 145.95500000000004,
+        "deadline": 200.29500000000004,
+        "coveredSourceEnd": 90,
+        "error": null,
+        "late": false
+      }
+    ]
+  },
+  "limitations": [
+    "Windows Chromium engine test, not Android hardware acceptance.",
+    "One continuous run after complete real-source caching. A preliminary setup run was reloaded and is excluded.",
+    "Digital output measurements do not prove subjective listening quality or speaker/Bluetooth latency.",
+    "The test harness requested the only pause automatically, 30 seconds after the fourth arrival."
+  ]
+}

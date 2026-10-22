@@ -54,6 +54,8 @@ python tools/serve_preview.py --port 8766
 
 ### Android 测试安装包
 
+当前测试包：[下载 0.3.1+19 ARM64 APK](https://github.com/jihaobi123/harbeat-mobile/releases/download/v0.3.1-preview-20261022/HarBeat-Preview-0.3.1-19-20261022-AutoPrepare-arm64.apk)，[发布说明与 SHA-256](https://github.com/jihaobi123/harbeat-mobile/releases/tag/v0.3.1-preview-20261022)。Windows 已验证自动下载 336 个片段和 4 次真实分轨交接；按用户要求未安装最终 +19 到手机，手机停止操作前为第一轮 +18。详细范围见 [自动准备验收](docs/automatic-preparation-20261022.md)。
+
 历史安装包：[下载 Android ARM64 APK 0.1.12 (14)](https://github.com/jihaobi123/harbeat-mobile/releases/download/v0.1.12-preview-20261020/HarBeat-Preview-20261020-UnifiedAuto-arm64.apk)，[预览版本发布页](https://github.com/jihaobi123/harbeat-mobile/releases/tag/v0.1.12-preview-20261020)提供安装包与 SHA-256 校验文件。该 APK 固定于源码 `406525a`，对应旧执行方式，不包含后续最近接点修复及本机分轨执行；历史构建结果见 [交付说明](docs/unified-playback-20261020.md)。
 
 此前 **0.2.1+16**、**0.3.0+17** 及第一轮 **0.3.1+18** 已在 Windows 构建并保留数据安装。最终 **0.3.1+19** 为用户要求改在电脑完成验证的修正版，不代表手机已经升级。应用名 **HarBeat Preview**、包名 `com.example.harbeat.preview`，与原应用并存；安装时使用保留数据的安全安装器。APK 不存入 Git，上方历史 Release 附件也不包含本轮更新。

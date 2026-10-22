@@ -1,0 +1,19 @@
+{
+  "schema": "harbeat.windows-auto-cache-acceptance.v1",
+  "sourceCommit": "9a400492038c531eaad8dcdbefba7f4fc90f9d93",
+  "runtimeFile": "metric-engine-CnruwNHr.js",
+  "runtimeSha256": "6f7d9f7a601b280bc83d02e324e154601dd21497f965e497452d0ca7e79bafcd",
+  "browser": "ChatGPT in-app Chromium browser on Windows",
+  "playbackHarness": "Loopback page driving the production metric engine through its normal iframe message bridge",
+  "cloudPackId": "03697744ed284b8ba43dc04e4b946a2c",
+  "cache": {
+    "state": "ready",
+    "completed": 336,
+    "total": 336,
+    "bytes": 466683736
+  },
+  "reusedAfterReload": true,
+  "uiMessage": "分轨已下载 · 4 首音乐自动接续",
+  "phoneUsed": false,
+  "apkSha256": "3b7997bf41c72dfd00d564a85ab2613bb18f7082349225069da3f9f1f147c4b8"
+}

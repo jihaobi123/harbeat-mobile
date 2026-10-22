@@ -29,6 +29,26 @@ Android Preview **0.3.1+19**。在播放页选择风格、能量并开启自动�
 
 最终构建指纹、Windows 实际音频验证及 APK 下载见本目录后续验收记录和项目 README。原始测试工作区凭据、完整播放日志和临时验证页面均留在本机，不提交仓库。
 
+## Windows 实际运行结果
+
+使用与最终 APK 相同的 `metric-engine-CnruwNHr.js`，通过产品原有的 iframe 消息桥载入真实准备清单。Windows 浏览器自动下载、逐个核验并保存 **336/336 个片段、466,683,736 字节**；重载页面后重新核验并复用同一批缓存。摘要见 `outputs/Windows-auto-cache-acceptance-20261022.json`。
+
+最终运行从头启动一次，没有手动切歌、拖动进度或恢复操作，持续 **157.890 秒**，完成 **4 次真实分轨交接，5 个曲次、3 首不同歌曲**：
+
+| 到达 | 歌曲 | 进入方式 |
+| --- | --- | --- |
+| 1 | Luv(sic.) Part 3 (feat. Shing02) | 从头启动 |
+| 2 | Lonely & Cold | bass 贝斯交接 |
+| 3 | What I'm After | bass_filter 贝斯交接＋旋律滤波 |
+| 4 | Lonely & Cold | filter 旋律滤波 |
+| 5 | Luv(sic.) Part 3 (feat. Shing02) | filter 旋律滤波 |
+
+四次均为端侧实时音频图，`renderRequested=false`；没有分轨不可用回退、原曲顺序续播、缓冲或停止。31 个连续五秒数字输出窗口 RMS 均非零，8 个音频线程观测全部 late=0。测试页在第三次交接完成后继续运行 30.012 秒，再通过普通暂停操作自动收尾；这段时间又完成了第四次交接并播放其正文约 10 秒。唯一 pause 是测试收尾。Rump Shaker 也完整下载，但未在本次短时运行中播放，不能把缓存数量当作实际播放数量。
+
+原始记录只留本机；可审阅摘要为 `outputs/Windows-auto-continuous-acceptance-20261022.json`，现场截图为 `outputs/Windows-auto-mix-proof-20261022.png`。本次验收针对电脑浏览器的实际音频执行，不替代安卓硬件性能、主观听感或蓝牙延迟测试。
+
+最终 ARM64 APK 为 `HarBeat-Preview-0.3.1-19-20261022-AutoPrepare-arm64.apk`，333,263,487 字节；261 个 APK 资源和 165 个输入指纹逐一核对。包名 `com.example.harbeat.preview`，versionCode=19，保持既有预览签名。SHA-256：`3b7997bf41c72dfd00d564a85ab2613bb18f7082349225069da3f9f1f147c4b8`。完整构建摘要见 `outputs/Android-0.3.1-19-build-20261022.json`。
+
 ## 手机交付范围
 
 用户离开前曾保留数据安装第一轮 **0.3.1+18**，并在手机播放页看到了真实云端准备进度。当用户要求携手机外出后，已停止继续操作手机。**本次最终 0.3.1+19 仅进行 Windows 构建和电脑验证，没有安装或完成新版真机连续分轨验收**。此前 0.3.0 的六首连续续播、以及单次 bass_filter 真机记录只作为历史证据，不能当作本次新流程的手机验收。
