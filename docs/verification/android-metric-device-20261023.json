@@ -1,0 +1,116 @@
+{
+  "schema": "harbeat.android-real-metric-verification.v1",
+  "device": {
+    "model": "Xiaomi MIX 4",
+    "android": 12
+  },
+  "package": "com.example.harbeat.nativeqa",
+  "version": "0.3.1+20",
+  "probeBuildMode": "debug",
+  "releaseGuiEngineMatched": true,
+  "engine": "metric-engine-Cji6KGkj.js",
+  "pair": [
+    "HIPHOP",
+    "Make It Right"
+  ],
+  "policyVersion": "jetson-decision-v1",
+  "method": "bass_filter",
+  "plan": {
+    "from": "track-d2d58531421de0eb9690",
+    "to": "track-831997216a86a4914ef9",
+    "windowId": "w24-4",
+    "start": 63.49437641723356,
+    "end": 72.5,
+    "duration": 9.00562358276644,
+    "rate": 1.0038166666666666,
+    "bStart": 63.62,
+    "bEnd": 72.66,
+    "beatErrorMs": 54.37641723356279
+  },
+  "cold": {
+    "preparationSeconds": 63.147,
+    "snapshotCount": 943,
+    "bufferingObserved": false,
+    "bodyAdvanceSeconds": 8.1966439909297,
+    "audioObservations": [
+      {
+        "name": "本机声部交接开始",
+        "lateFrames": 0,
+        "frame": 1912686,
+        "observedFrame": 1912704
+      },
+      {
+        "name": "B正文接管",
+        "lateFrames": 0,
+        "frame": 2309834,
+        "observedFrame": 2309888
+      }
+    ],
+    "renderRequested": false,
+    "rendered": false,
+    "preparation": "device-shared-source-wsola-v1",
+    "handoffCompletions": 1,
+    "eventCounts": {
+      "audio_context_state": 5,
+      "native_chunk": 6,
+      "track_start": 2,
+      "pause": 3,
+      "jetson_plan_requested": 1,
+      "jetson_plan_approved": 1,
+      "device_plan_ready": 1,
+      "device_plan_scheduled": 1,
+      "resume": 1,
+      "audio_health": 12,
+      "audio_observation": 2,
+      "handoff_complete": 1
+    },
+    "probeSha256": "1fefa33ea6262b0bd60fe0d26b534c18bcd368be83338ad0cf5a60034b5d2eb7",
+    "sessionSha256": "d23dbcb31e56834b826ad74da8826ca1fddb6057db271a5a339eb10876a22f8a"
+  },
+  "limitations": [
+    "One pair, paused during preparation; no claim that cold live preparation always meets a cue deadline.",
+    "Instrumentation probes the shared production audio engine, not all normal UI paths or automatic cached-cue ranking.",
+    "Digital output checks do not establish subjective sound quality.",
+    "Cold/warm timings include metadata, approval, source loading and local preparation; this test does not isolate network bandwidth."
+  ],
+  "warm": {
+    "preparationSeconds": 2.699,
+    "snapshotCount": 944,
+    "bufferingObserved": false,
+    "bodyAdvanceSeconds": 8.185034013605446,
+    "audioObservations": [
+      {
+        "name": "本机声部交接开始",
+        "lateFrames": 0,
+        "frame": 1726702,
+        "observedFrame": 1726720
+      },
+      {
+        "name": "B正文接管",
+        "lateFrames": 0,
+        "frame": 2123850,
+        "observedFrame": 2123904
+      }
+    ],
+    "renderRequested": false,
+    "rendered": false,
+    "preparation": "device-shared-source-wsola-v1",
+    "handoffCompletions": 1,
+    "eventCounts": {
+      "audio_context_state": 5,
+      "native_chunk": 7,
+      "track_start": 2,
+      "pause": 3,
+      "jetson_plan_requested": 1,
+      "jetson_plan_approved": 1,
+      "device_plan_ready": 1,
+      "device_plan_scheduled": 1,
+      "resume": 1,
+      "audio_health": 11,
+      "audio_observation": 2,
+      "handoff_complete": 1
+    },
+    "probeSha256": "2b368c41037ad5483e46d3c64772f394efcb4040647a861d36560c39e6acf232",
+    "sessionSha256": "3c2ac083727a77e4bc4de6555f09bbb5a05bfd47e4e768baf3c88ceb527d03d5"
+  }
+}
