@@ -6,6 +6,7 @@ import 'package:flutter/material.dart' show Color;
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
+import 'cloud_endpoints.dart';
 import 'repository.dart';
 
 enum BackendApi { legacy, v2 }
@@ -21,8 +22,7 @@ class BackendException implements Exception {
 }
 
 class BackendConfig {
-  static const defaultAddress = String.fromEnvironment('HARBEAT_API_BASE_URL',
-      defaultValue: 'https://8.136.120.255');
+  static const defaultAddress = CloudEndpoints.publicAddress;
   BackendConfig(String address,
       {this.api = BackendApi.legacy,
       String token = '',

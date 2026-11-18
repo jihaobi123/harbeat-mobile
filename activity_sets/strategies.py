@@ -15,8 +15,12 @@ def signature(value):
 
 def validate_strategy(result,edge,pack,execution_tracks):
     if (not isinstance(result,dict) or result.get('schema')!='harbeat.jetson-mix-plan.v1'
-        or result.get('status')!='ready' or result.get('producer')!='jetson' or result.get('analysisVersion')!=VERSION
+        or result.get('status')!='ready' or result.get('producer')!='jetson' or result.get('analysisVersion') not in (VERSION,'jetson-decision-v2','jetson-decision-v3')
         or any(not HASH.fullmatch(str(result.get(k,''))) for k in ('id','algorithmSha256','analysisSha256'))):raise PreparationError('invalid_jetson_strategy')
+    arrangement=result.get('stemArrangement')
+    if result.get('analysisVersion') in ('jetson-decision-v2','jetson-decision-v3'):
+        if not isinstance(arrangement,dict) or arrangement.get('schema')!='harbeat.stem-arrangement.v1' or type(arrangement.get('eligible')) is not bool or type(arrangement.get('recommended')) is not bool:raise PreparationError('invalid_jetson_timeline')
+    elif arrangement is not None:raise PreparationError('invalid_jetson_timeline')
     plan=result.get('plan',{})
     if not isinstance(plan,dict) or any(plan.get(k)!=edge.get(k) for k in ('from','to','windowId')):raise PreparationError('jetson_plan_mismatch')
     for key in ('start','end','duration','rate','bStart','bEnd'):

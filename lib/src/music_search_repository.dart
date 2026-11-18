@@ -22,13 +22,14 @@ class MusicHit {
       this.coverUrl,
       this.trackId,
       this.discoveryId,
+      this.discoveryReason,
       this.isLibrary = false,
       this.playable = false,
       this.mixReady = false,
       this.remoteTrack});
   final String id, title, artist, provider, style;
   final num? bpm, durationSeconds;
-  final String? coverUrl, trackId, discoveryId;
+  final String? coverUrl, trackId, discoveryId, discoveryReason;
   final bool isLibrary, playable, mixReady;
   final Track? remoteTrack;
 }
@@ -85,11 +86,13 @@ class MusicSearchResult {
       this.semanticMessage,
       this.covered,
       this.total,
+      this.spotifySearchUrl,
       this.title});
   final List<MusicHit> hits;
   final String scope;
   final String? semanticStatus, semanticMessage, title;
   final int? covered, total;
+  final Uri? spotifySearchUrl;
 }
 
 class MusicSearchRepository {
@@ -135,6 +138,7 @@ class MusicSearchRepository {
         coverUrl: _cover(v['coverUrl']),
         trackId: trackId,
         discoveryId: discovery,
+        discoveryReason: library ? null : _text(v['reason']),
         isLibrary: library,
         playable: trackId != null && v['playStatus'] == 'ready',
         mixReady: trackId != null && v['mixStatus'] == 'ready');
@@ -149,11 +153,35 @@ class MusicSearchRepository {
             .where((v) => v.id.isNotEmpty)
             .toList(),
         scope: scope,
+        spotifySearchUrl:
+            scope == 'discover' ? _spotifySearchUrl(data['links']) : null,
         semanticStatus: data['mode'] as String?,
         semanticMessage: data['message'] as String?,
         covered: _number(coverage['indexed'])?.toInt(),
         total: _number(coverage['total'])?.toInt(),
         title: data['title'] as String?);
+  }
+
+  Uri? _spotifySearchUrl(dynamic links) {
+    if (links is! List) return null;
+    for (final raw in links.take(8)) {
+      final link = _map(raw);
+      if (link['provider'] != 'spotify') continue;
+      final uri = Uri.tryParse(_text(link['url']));
+      if (uri != null &&
+          uri.scheme == 'https' &&
+          uri.host == 'open.spotify.com' &&
+          uri.port == 443 &&
+          uri.userInfo.isEmpty &&
+          !uri.hasQuery &&
+          !uri.hasFragment &&
+          uri.pathSegments.length == 2 &&
+          uri.pathSegments.first == 'search' &&
+          uri.pathSegments.last.isNotEmpty) {
+        return uri;
+      }
+    }
+    return null;
   }
 
   Future<MusicSearchResult> search(String query, String scope) async {

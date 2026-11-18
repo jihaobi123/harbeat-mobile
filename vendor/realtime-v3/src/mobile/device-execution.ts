@@ -1,4 +1,5 @@
 import type {Asset,Track,Plan} from '../metric-upstream/realtime/planner'
+import type {StemArrangement} from './stem-arrangement'
 import type {Prepared,Method} from '../metric-upstream/metric-mix/types'
 export type Segment={start:number;end:number;startFrame?:number;endFrame?:number;asset:Asset&{sampleRate?:number;channels?:number;frames?:number}}
 export type ExecutionTrack={schema:'harbeat.execution-track.v1';trackId:string;runId:string;manifestSha256:string;sourceSha256:string;reportSha256:string;sampleRate:number;channels:number;duration:number;frames:number;sourceTimeOrigin:'master_audio_start';profile:{sha256:string;url:string;bytes:number};stems:Partial<Record<'drums'|'bass'|'other'|'vocals',{sourceSha256:string;segments:Segment[]}>>}
@@ -30,9 +31,10 @@ export function stemCurves(method:Method,p:Controls){
  return result
 }
 export const EXECUTION_VERSION='device-source-execution-v1'
-export type DevicePrepared=Prepared&{execution:{schema:'harbeat.device-execution-plan.v1';plan:Plan;controls:Controls;sourceFingerprints:{a:unknown;b:unknown};sourceBindings?:unknown;preservePitch:true;tempoAfterTakeover:'native';preparation:'device-shared-source-wsola-v1'}}
+export type ExecutionMethod=Method|'stem-handover'
+export type DevicePrepared=Prepared&{execution:{arrangement?:StemArrangement;schema:'harbeat.device-execution-plan.v1';plan:Plan;controls:Controls;sourceFingerprints:{a:unknown;b:unknown};sourceBindings?:unknown;preservePitch:true;tempoAfterTakeover:'native';preparation:'device-shared-source-wsola-v1'}}
 export function isDevicePrepared(result:Prepared):result is DevicePrepared{return (result as DevicePrepared).execution?.schema==='harbeat.device-execution-plan.v1'}
-export const hasMethod=(result:Prepared,method:Method)=>result.decision.methods[method]?.eligible===true&&(isDevicePrepared(result)||!!result.assets[method])
+export const hasMethod=(result:Prepared,method:ExecutionMethod)=>method==='stem-handover'?isDevicePrepared(result)&&result.execution.arrangement?.eligible===true&&result.execution.arrangement.recommended===true:result.decision.methods[method]?.eligible===true&&(isDevicePrepared(result)||!!result.assets[method])
 
 export type PreparedDrumAssets={a:Record<string,Pick<Asset,'sha256'|'bytes'|'duration'>>;b:Record<string,Pick<Asset,'sha256'|'bytes'|'duration'>>}
 export type DrumPreludeApproval={schema:'harbeat.drum-prelude.v1';scope:'audition-only';authority:'jetson';approved:true;planId:string;proofSha256:string;sourceFingerprints:{a:unknown;b:unknown};preparedAssets:PreparedDrumAssets;takeoverAsset:Pick<Asset,'sha256'|'bytes'|'duration'>&{sourceStart:number};leadSeconds:number;fadeInSeconds:number;holdSeconds:number;maxGain:.25;sourceWindow:{aStart:number;aEnd:number;bStart:number;bEnd:number;effectiveBEnd?:number;rate:number};checks:{sourceAligned:true;beatAligned:true;vocalSafe:true;drumCompatible:true;headroomSafe:true};basis?:Record<string,unknown>;limits?:Record<string,unknown>;rejectionReasons?:string[]}

@@ -55,6 +55,7 @@ tasks.named("preBuild").configure { dependsOn(verifyRealtimeAssets) }
 // Install a locally signed preview alongside an existing differently signed APK.
 // Local builds default to a separate package. Production requires an explicit
 // -PharbeatPreview=false; Flutter's installer may uninstall a conflicting ID.
+val isLongmixLabBuild = providers.gradleProperty("harbeatLongmixLab").orNull == "true"
 val isPreviewBuild = providers.gradleProperty("harbeatPreview").orElse("true").get() != "false"
 val isQaBuild = providers.gradleProperty("harbeatQa").orNull == "true" ||
     providers.gradleProperty("target").orNull?.replace('\\', '/')?.contains("integration_test/") == true
@@ -72,9 +73,10 @@ android {
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.example.harbeat"
-        if (isQaBuild) applicationIdSuffix = ".nativeqa"
+        if (isLongmixLabBuild) applicationIdSuffix = ".longmixlab"
+        else if (isQaBuild) applicationIdSuffix = ".nativeqa"
         else if (isPreviewBuild) applicationIdSuffix = ".preview"
-        manifestPlaceholders["appLabel"] = if (isQaBuild) "HarBeat Native QA" else if (isPreviewBuild) "HarBeat Preview" else "harbeat"
+        manifestPlaceholders["appLabel"] = if (isLongmixLabBuild) "HarBeat 长混试验" else if (isQaBuild) "HarBeat Native QA" else if (isPreviewBuild) "HarBeat Preview" else "harbeat"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
@@ -108,6 +110,7 @@ flutter {
 
 dependencies {
     implementation("androidx.webkit:webkit:1.15.0")
+    testImplementation("junit:junit:4.13.2")
 }
 
 android.androidResources.noCompress += "flac"

@@ -1,0 +1,35 @@
+import {renderExitExperiment,exitNames,type ExitExperiment} from '../src/mobile/competition/exit-experiments'
+import {scheduleNativeGraph} from '../src/mobile/competition/native-graph'
+import {planLoopRamp,sourceBeatAt} from '../src/mobile/crossgenre/bridge'
+const SR=44100,put=async(file:string,body:BodyInit)=>{const r=await fetch('/qa-output/'+file,{method:'POST',body});if(!r.ok)throw Error('Save failed '+file)}
+function wav(b:AudioBuffer){const raw=new ArrayBuffer(44+b.length*4),v=new DataView(raw),txt=(i:number,s:string)=>[...s].forEach((c,n)=>v.setUint8(i+n,c.charCodeAt(0)));txt(0,'RIFF');v.setUint32(4,raw.byteLength-8,true);txt(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,2,true);v.setUint32(24,SR,true);v.setUint32(28,SR*4,true);v.setUint16(32,4,true);v.setUint16(34,16,true);txt(36,'data');v.setUint32(40,b.length*4,true);for(let i=0;i<b.length;i++)for(let c=0;c<2;c++)v.setInt16(44+4*i+2*c,Math.round(Math.max(-1,Math.min(1,b.getChannelData(c)[i]))*32767),true);return raw}
+async function decode(ctx:BaseAudioContext,asset:any,base='/qa-data/'){const r=await fetch(base+asset.url);if(!r.ok)throw Error('Missing '+asset.url);const raw=await r.arrayBuffer(),h=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',raw))).map(v=>v.toString(16).padStart(2,'0')).join('');if(h!==asset.sha256)throw Error('Source hash mismatch');return ctx.decodeAudioData(raw)}
+function stats(b:AudioBuffer,at:number){let peak=0,jump=0;for(let c=0;c<b.numberOfChannels;c++){const x=b.getChannelData(c);for(let i=0;i<x.length;i++){if(!Number.isFinite(x[i]))throw Error('Nonfinite audio');peak=Math.max(peak,Math.abs(x[i]));if(i>0&&Math.abs(i-at*SR)<.012*SR)jump=Math.max(jump,Math.abs(x[i]-x[i-1]))}}return{peak,boundaryMaxSampleStep:jump,clipFree:peak<.98,postLimiter:false}}
+async function bridgeCheck(material:any,cancel:boolean,ramp:boolean){
+ const decoder=new OfflineAudioContext(2,1,SR),buf=await decode(decoder,material.asset,'/transition-materials/'),p=planLoopRamp(material,material.bpm*(ramp?.9:1),material.bpm*(ramp?1.1:1),2),begin=2,handoff=begin+p.duration,ctx=new OfflineAudioContext(2,Math.ceil((handoff+1)*SR),SR)
+ const tone=(hz:number)=>{const b=ctx.createBuffer(2,Math.ceil((handoff+1)*SR),SR);for(let c=0;c<2;c++)for(let i=0;i<b.length;i++)b.getChannelData(c)[i]=.1*Math.sin(2*Math.PI*hz*i/SR);return b}
+ const a=ctx.createGain(),b=ctx.createGain(),as=ctx.createBufferSource(),bs=ctx.createBufferSource();a.gain.value=.76;b.gain.value=0;a.connect(ctx.destination);b.connect(ctx.destination);as.buffer=tone(220);bs.buffer=tone(880);as.connect(a);bs.connect(b);as.start(0);bs.start(handoff)
+ const plan:any={family:ramp?'loop-ramp':'drum-bridge',exit:begin,end:handoff,peakBound:.8,bridge:{material,ramp:p},echo:null}
+ const graph=scheduleNativeGraph(ctx,as,a.gain,b.gain,ctx.destination,plan,handoff,buf)
+ if(cancel)void ctx.suspend(.5).then(()=>{graph.cancel();void ctx.resume()})
+ const audio=await ctx.startRendering();graph.dispose();const x=audio.getChannelData(0);let afterError=0
+ for(let i=Math.ceil((handoff+.03)*SR);i<x.length;i++){const reference=.076*Math.sin(2*Math.PI*(cancel?220:880)*(cancel?i/SR:i/SR-handoff));afterError=Math.max(afterError,Math.abs(x[i]-reference))}
+ const result={material:material.id,ramp,cancel,...stats(audio,handoff),nativeAfterError:afterError,beatError:Math.abs(sourceBeatAt(p,p.duration)-p.beats),begin,handoff,scope:'product native bridge graph; synthetic A/B and verified real percussion'}
+ if(!result.clipFree||afterError>.0001||result.beatError>1e-7)throw Error('Bridge boundary failed '+JSON.stringify(result));return result
+}
+async function run(){const status=document.querySelector('#status')!;const corpus=await fetch('/qa-data/corpus-audio.json').then(r=>r.json()),selected:any[]=[],counts=new Map<string,number>()
+ for(const pair of corpus.pairs)if((counts.get(pair.cohort)??0)<2){counts.set(pair.cohort,(counts.get(pair.cohort)??0)+1);selected.push(pair)}
+ const results=[],materials=await fetch('/transition-materials/index.json').then(r=>r.json());let realBridges=0
+ for(const pair of selected){const ctx=new OfflineAudioContext(2,1,SR),input=pair.inputs.structural,a=await decode(ctx,input.a),b=await decode(ctx,input.b),methods=[]
+  for(const method of Object.keys(exitNames) as ExitExperiment[]){status.textContent=`${pair.id} / ${exitNames[method]}`;const rendered=renderExitExperiment(method,[a.getChannelData(0),a.getChannelData(1)],[b.getChannelData(0),b.getChannelData(1)],SR,pair.a.bpm),audio=ctx.createBuffer(2,rendered.channels[0].length,SR);rendered.channels.forEach((v,c)=>audio.copyToChannel(v,c));const metrics=stats(audio,rendered.handoffFrame/SR);if(!metrics.clipFree)throw Error('Unprotected clipping '+pair.id+method);const file=pair.id+'-'+method+'.wav';await put(file,wav(audio));methods.push({method,name:exitNames[method],file,...metrics,scope:rendered.scope,handoff:rendered.handoffFrame/SR,nativeIncomingRate:1,subjectiveListening:'unscored'})}
+  if(realBridges<4){const material=materials.materials[0];if([pair.a.bpm,pair.b.bpm].every(v=>v/material.bpm>=.8&&v/material.bpm<=1.2))for(const ramp of [false,true]){
+   const middle=(pair.a.bpm+pair.b.bpm)/2,p=planLoopRamp(material,ramp?pair.a.bpm:middle,ramp?pair.b.bpm:middle,1),handoff=a.duration+p.duration,render=new OfflineAudioContext(2,Math.ceil((handoff+b.duration)*SR),SR),ag=render.createGain(),bg=render.createGain(),as=render.createBufferSource(),bs=render.createBufferSource(),monitor=render.createGain();monitor.gain.value=.85;monitor.connect(render.destination);ag.gain.value=.76;bg.gain.value=0;as.buffer=a;bs.buffer=b;as.connect(ag);bs.connect(bg);ag.connect(monitor);bg.connect(monitor);as.start(0);bs.start(handoff)
+   const plan:any={...pair.structural,family:ramp?'loop-ramp':'drum-bridge',exit:a.duration,end:handoff,bridge:{material,ramp:p},echo:null},buffer=await decode(render,material.asset,'/transition-materials/'),graph=scheduleNativeGraph(render,as,ag.gain,bg.gain,monitor,plan,handoff,buffer),audio=await render.startRendering();graph.dispose();const metrics=stats(audio,handoff),file=pair.id+'-'+plan.family+'.wav';if(!metrics.clipFree)throw Error('Bridge clip');await put(file,wav(audio));methods.push({method:plan.family,name:ramp?'鼓桥连续变速':'鼓桥接歌',file,...metrics,scope:'experimental-phone-graph',handoff,nativeIncomingRate:1,subjectiveListening:'unscored'});realBridges++
+  }}
+  results.push({id:pair.id,cohort:pair.cohort,a:pair.a,b:pair.b,inputs:input,methods})
+ }
+ const bridge=[]
+ for(const m of materials.materials)for(const ramp of [false,true])for(const cancel of [false,true])bridge.push(await bridgeCheck(m,cancel,ramp))
+ const result={complete:true,scope:'desktop new effects plus phone bridge graph',pairs:results,bridge,subjectiveListening:'unscored'};await put('new-effects.json',JSON.stringify(result,null,2));status.textContent=JSON.stringify({pairs:results.length,renders:results.flatMap(r=>r.methods).length,bridgeChecks:bridge.length,pass:true},null,2)
+}
+document.querySelector('#run')!.addEventListener('click',()=>void run().catch(e=>document.querySelector('#status')!.textContent=String(e)))

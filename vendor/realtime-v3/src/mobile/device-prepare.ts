@@ -4,7 +4,8 @@ import {nativeSegments,nativeSegment} from '../metric-upstream/continuous/segmen
 import {originalInputs} from './local-original'
 import {EXECUTION_VERSION,validateExecutionTrack,isDevicePrepared,type ExecutionTrack,type DevicePrepared,type Segment} from './device-execution'
 import type {MetricTransport} from './device-transport'
-import {requestJetsonPlan} from './jetson-client'
+export type DevicePreparationPort={ctx:AudioContext;cache:Pick<MetricTransport['cache'],'load'>;position:number;logs:Pick<MetricTransport['logs'],'push'>}
+import {requestJetsonPlan,rememberJetsonExecutionVersion} from './jetson-client'
 import type {JetsonDecision} from './jetson-contract'
 export {pitchDifferences} from './device-feature-compat'
 
@@ -44,15 +45,15 @@ export async function verifyExecutionProfile(manifest:ExecutionTrack,base:URL,si
  signal.throwIfAborted();profiles.add(entry.sha256)
  if(!cached&&cache)try{await cache.put(url.href,new Response(bytes,{headers:{'Content-Type':'application/json'}}))}catch{}
 }
-export function rememberExecutionTrack(value:ExecutionTrack,t:Track){const v=validateExecutionTrack(value,t);manifests.set(t.id+':'+v.sourceSha256+':'+v.reportSha256,v);executionIdentities.set(t.id,identityFor(v));executionVersions.set(t.id,v.manifestSha256+':'+v.profile.sha256)}
+export function rememberExecutionTrack(value:ExecutionTrack,t:Track){const v=validateExecutionTrack(value,t);rememberJetsonExecutionVersion(t.id,{manifestSha256:v.manifestSha256,profileSha256:v.profile.sha256,stemSha256:Object.fromEntries(Object.entries(v.stems).map(([k,s])=>[k,s?.sourceSha256]))});manifests.set(t.id+':'+v.sourceSha256+':'+v.reportSha256,v);executionIdentities.set(t.id,identityFor(v));executionVersions.set(t.id,v.manifestSha256+':'+v.profile.sha256)}
 export function getDevicePCM(result:Prepared){const value=pcm.get(result.id);if(!value||!hasDevicePCM(result))throw Error('本机分轨缓冲已释放或分析版本已变化，请重新准备当前接点');pcm.delete(result.id);pcm.set(result.id,value);return value}
-export async function loadPrepared(p:MetricTransport,result:Prepared,b:Track,signal:AbortSignal){if(isDevicePrepared(result)){getDevicePCM(result);await p.cache.load(nativeSegment(b,result.plan.bEnd).asset,signal);return}await Promise.all([p.cache.load(result.assets[result.decision.recommended]!,signal),p.cache.load(nativeSegment(b,result.plan.bEnd).asset,signal)])}
+export async function loadPrepared(p:DevicePreparationPort,result:Prepared,b:Track,signal:AbortSignal){if(isDevicePrepared(result)){getDevicePCM(result);await p.cache.load(nativeSegment(b,result.plan.bEnd).asset,signal);return}await Promise.all([p.cache.load(result.assets[result.decision.recommended]!,signal),p.cache.load(nativeSegment(b,result.plan.bEnd).asset,signal)])}
 async function manifest(t:Track,base:URL,signal:AbortSignal){
  const key=t.id+':'+t.provenance?.masterSha256+':'+t.provenance?.reportSha256,hit=manifests.get(key);if(hit)return hit
  const controller=new AbortController(),cancel=()=>controller.abort(signal.reason);signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel();const timer=setTimeout(()=>controller.abort(),8000)
  try{const response=await fetch(new URL('/listen/execution/tracks/'+t.id+'.json',base),{signal:controller.signal});if(!response.ok)throw Error('分轨目录尚未发布 '+response.status);const value=validateExecutionTrack(await response.json(),t);rememberExecutionTrack(value,t);return value}finally{clearTimeout(timer);signal.removeEventListener('abort',cancel)}
 }
-async function slice(p:MetricTransport,segments:Segment[],start:number,duration:number,signal:AbortSignal){
+async function slice(p:DevicePreparationPort,segments:Segment[],start:number,duration:number,signal:AbortSignal){
  const end=start+duration,selected=segments.filter(s=>s.end>start&&s.start<end),sr=p.ctx.sampleRate,n=Math.round(duration*sr),out=p.ctx.createBuffer(2,n,sr)
  if(!selected.length||selected[0].start>start+.0001||selected.at(-1)!.end<end-.0001)throw Error('音频片段未覆盖本次源区间')
  let cursor=start
@@ -64,7 +65,7 @@ async function slice(p:MetricTransport,segments:Segment[],start:number,duration:
  return out
 }
 export function assertDecodedCoverage(buffer:Pick<AudioBuffer,'numberOfChannels'|'length'>,offset:number,count:number){if(buffer.numberOfChannels!==2||buffer.length<offset+count)throw Error('已解码音频的声道或样本覆盖不足，不能补零作为合格素材')}
-function workerStretch(input:Record<string,AudioBuffer>,p:MetricTransport,rate:number,frames:number,signal:AbortSignal){
+function workerStretch(input:Record<string,AudioBuffer>,p:DevicePreparationPort,rate:number,frames:number,signal:AbortSignal){
  if(Math.abs(rate-1)<1e-10)return Promise.resolve(Object.fromEntries(Object.entries(input).map(([k,b])=>{const o=p.ctx.createBuffer(2,frames,p.ctx.sampleRate);for(let c=0;c<2;c++)o.copyToChannel(b.getChannelData(c).subarray(0,frames),c);return[k,o]})))
  return new Promise<Record<string,AudioBuffer>>((resolve,reject)=>{
   const worker=new Worker(new URL('./stretch-worker.ts',import.meta.url),{type:'module'}),timer=setTimeout(()=>finish(Error('本机保调变速准备超时')),30000)
@@ -79,11 +80,13 @@ function workerStretch(input:Record<string,AudioBuffer>,p:MetricTransport,rate:n
 function assertApprovedManifest(value:ExecutionTrack,proof:JetsonDecision['sourceProof']['a']){
  if(value.manifestSha256!==proof.manifestSha256||value.profile.sha256!==proof.profileSha256||Object.entries(value.stems).some(([stem,s])=>s&&s.sourceSha256!==proof.stemSha256[stem as keyof typeof proof.stemSha256]))throw Object.assign(Error('Jetson 批准的分轨分析版本与本机目录不一致'),{code:'source_version_changed'})
 }
-export async function preloadDevice(p:MetricTransport,a:Track,b:Track,plan:Plan,signal:AbortSignal){const inputs=originalInputs(a,b,plan);await Promise.all([p.cache.load(nativeSegment(b,plan.window.start).asset,signal),p.cache.load(inputs.body.asset,signal)]);return inputs}
-export async function prepareDevice(p:MetricTransport,a:Track,b:Track,plan:Plan,base:URL,signal:AbortSignal):Promise<DevicePrepared>{
+export async function preloadDevice(p:DevicePreparationPort,a:Track,b:Track,plan:Plan,signal:AbortSignal){const inputs=originalInputs(a,b,plan);await Promise.all([p.cache.load(nativeSegment(b,plan.window.start).asset,signal),p.cache.load(inputs.body.asset,signal)]);return inputs}
+export async function prepareDevice(p:DevicePreparationPort,a:Track,b:Track,plan:Plan,base:URL,signal:AbortSignal,options:{cachedApprovalOnly?:boolean}={}):Promise<DevicePrepared>{
  signal.throwIfAborted()
  p.logs.push({kind:'jetson_plan_requested',from:a.id,to:b.id,windowId:plan.window.id,start:plan.start,sourcePosition:p.position,renderRequested:false})
- const approved=await requestJetsonPlan(a,b,plan,base,signal,()=>p.position)
+ const approved=await requestJetsonPlan(a,b,plan,base,signal,()=>p.position,{cachedOnly:options.cachedApprovalOnly,
+  timelineVersion:'stem-timeline-v2',onCacheHit:source=>p.logs.push({kind:'jetson_plan_cache_hit',source,from:a.id,to:b.id,start:plan.start}),
+  onNetworkRequest:method=>p.logs.push({kind:'jetson_plan_network_request',method,from:a.id,to:b.id,start:plan.start})})
  signal.throwIfAborted()
  // Musical analysis and method eligibility belong to the approved Jetson
  // decision. The device only validates, loads, time-stretches and executes.
@@ -123,6 +126,6 @@ export async function prepareDevice(p:MetricTransport,a:Track,b:Track,plan:Plan,
  const controls=approved.controls,metrics=approved.metrics,recommended=decision.recommended
  if(bindings&&(bindings[0]!==executionTrackIdentity(a.id)||bindings[1]!==executionTrackIdentity(b.id)))throw Error('准备期间分轨分析版本已更新，请重新准备当前接点')
  const raw=new TextEncoder().encode(JSON.stringify({version:EXECUTION_VERSION,approval:approved.id,analysisSha256:approved.analysisSha256,bindings,fallback:!available,sampleRate:p.ctx.sampleRate})),id=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',raw))).map(x=>x.toString(16).padStart(2,'0')).join('')
- const result:DevicePrepared={schema:'harbeat.device-execution-plan.v1',id,status:'ready',policyVersion:approved.analysisVersion,codeVersion:approved.algorithmSha256,plan:approved.plan,metrics,decision,assets:{},sourceProof:{a:a.provenance,b:b.provenance,stemsAvailable:available},stats:{rendered:false,approvedPlanId:approved.id,analysisSha256:approved.analysisSha256},execution:{schema:'harbeat.device-execution-plan.v1',plan:executionPlan,controls,sourceFingerprints:{a:a.provenance,b:b.provenance},sourceBindings:approved.sourceProof,preservePitch:true,tempoAfterTakeover:'native',preparation:'device-shared-source-wsola-v1'}}
- keepPCM(result,buffers);pcmApprovals.set(result.id,approved.sourceProof);if(bindings)pcmBindings.set(result.id,bindings);await p.cache.load(inputs.body.asset,signal);p.logs.push({kind:'device_plan_ready',planId:id,approvedPlanId:approved.id,method:recommended,renderRequested:false,musicAnalysis:'jetson',preservePitch:true,sourceCacheHit:!!hit,bufferBytes:byteSize(buffers.a)+byteSize(buffers.b),at:new Date().toISOString()});return result
+ const result:DevicePrepared={schema:'harbeat.device-execution-plan.v1',id,status:'ready',policyVersion:approved.analysisVersion,codeVersion:approved.algorithmSha256,plan:approved.plan,metrics,decision,assets:{},sourceProof:{a:a.provenance,b:b.provenance,stemsAvailable:available},stats:{rendered:false,approvedPlanId:approved.id,analysisSha256:approved.analysisSha256},execution:{schema:'harbeat.device-execution-plan.v1',arrangement:available?approved.stemArrangement:undefined,plan:executionPlan,controls,sourceFingerprints:{a:a.provenance,b:b.provenance},sourceBindings:approved.sourceProof,preservePitch:true,tempoAfterTakeover:'native',preparation:'device-shared-source-wsola-v1'}}
+ keepPCM(result,buffers);pcmApprovals.set(result.id,approved.sourceProof);if(bindings)pcmBindings.set(result.id,bindings);await p.cache.load(inputs.body.asset,signal);p.logs.push({kind:'device_plan_ready',planId:id,approvedPlanId:approved.id,method:available&&approved.stemArrangement?.recommended?'stem-handover':recommended,renderRequested:false,musicAnalysis:'jetson',preservePitch:true,sourceCacheHit:!!hit,bufferBytes:byteSize(buffers.a)+byteSize(buffers.b),at:new Date().toISOString()});return result
 }

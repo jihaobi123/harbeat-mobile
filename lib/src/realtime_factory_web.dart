@@ -97,7 +97,8 @@ class WebMetricEngine extends RealtimeEngine {
   Future<Map<String, dynamic>> command(String method,
       [Map<String, dynamic> args = const {}]) async {
     if (_disposed) throw StateError('混音引擎已关闭');
-    if (method == 'prepare' && args['mode'] != 'metric') {
+    if (method == 'prepare' &&
+        !const ['metric', 'dj-reference'].contains(args['mode'])) {
       throw StateError('网页当前支持智能分轨；连续混音和定时舞程请使用 Android');
     }
     _initialize();

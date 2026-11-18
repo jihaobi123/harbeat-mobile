@@ -1,11 +1,11 @@
 import {it,expect,vi,afterEach} from 'vitest'
 import {MetricTransport} from './device-transport'
 vi.mock('./reservation-cache',()=>({ReservationAudioCache:class{protected=new Set();sizeMB=0;load=vi.fn(async()=>({}));dispose=vi.fn()}}))
-const param=()=>({value:0,setTargetAtTime:vi.fn(),setValueAtTime:vi.fn(),linearRampToValueAtTime:vi.fn()})
-const node=()=>({gain:param(),threshold:param(),knee:param(),ratio:param(),attack:param(),release:param(),connect:vi.fn(),disconnect:vi.fn(),start:vi.fn(),stop:vi.fn()})
+const param=()=>({value:0,cancelAndHoldAtTime:vi.fn(),cancelScheduledValues:vi.fn(),setTargetAtTime:vi.fn(),setValueAtTime:vi.fn(),linearRampToValueAtTime:vi.fn()})
+const node=()=>({gain:param(),frequency:param(),Q:param(),threshold:param(),knee:param(),ratio:param(),attack:param(),release:param(),connect:vi.fn(),disconnect:vi.fn(),start:vi.fn(),stop:vi.fn()})
 function fixture(){
  vi.useFakeTimers();vi.stubGlobal('window',globalThis)
- class Context extends EventTarget{currentTime=0;state='suspended';sampleRate=44100;destination=node();audioWorklet={addModule:async()=>{}};createGain=node;createDynamicsCompressor=node;createBufferSource=node;resume=async()=>{this.state='running'};suspend=async()=>{this.state='suspended'};close=async()=>{this.state='closed'}}
+ class Context extends EventTarget{currentTime=0;state='suspended';sampleRate=44100;destination=node();audioWorklet={addModule:async()=>{}};createGain=node;createBiquadFilter=node;createDynamicsCompressor=node;createBufferSource=node;resume=async()=>{this.state='running'};suspend=async()=>{this.state='suspended'};close=async()=>{this.state='closed'}}
  vi.stubGlobal('AudioContext',Context);vi.stubGlobal('AudioWorkletNode',class{port={postMessage:vi.fn(),onmessage:null};connect=vi.fn();disconnect=vi.fn()})
  return new MetricTransport(new URL('https://example.test/'),()=>{})
 }

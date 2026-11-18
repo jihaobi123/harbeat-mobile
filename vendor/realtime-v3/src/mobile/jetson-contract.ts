@@ -1,8 +1,10 @@
 import type {Track,Plan} from '../metric-upstream/realtime/planner'
 import type {Prepared} from '../metric-upstream/metric-mix/types'
+import {validateStemArrangement} from './stem-arrangement-contract'
+import type {StemArrangement} from './stem-arrangement'
 import type {Controls} from './device-execution'
 export type SourceBinding={trackId:string;runId:string;masterSha256:string;reportSha256:string;vocalSha256:string;manifestSha256:string;profileSha256:string;stemSha256:Record<'bass'|'other'|'vocals'|'drums',string>}
-export type JetsonDecision={schema:'harbeat.jetson-mix-plan.v1';id:string;status:'ready';producer:'jetson';analysisVersion:'jetson-decision-v1';algorithmSha256:string;plan:Prepared['plan'];sourceProof:{a:SourceBinding;b:SourceBinding};controls:Controls;metrics:Prepared['metrics'];decision:Prepared['decision'];eq:Plan['v30Eq'];restore:number;requiredStems:string[];analysisSha256:string;drumPrelude?:unknown}
+export type JetsonDecision={schema:'harbeat.jetson-mix-plan.v1';id:string;status:'ready';producer:'jetson';analysisVersion:'jetson-decision-v1'|'jetson-decision-v2'|'jetson-decision-v3';stemArrangement?:StemArrangement;algorithmSha256:string;plan:Prepared['plan'];sourceProof:{a:SourceBinding;b:SourceBinding};controls:Controls;metrics:Prepared['metrics'];decision:Prepared['decision'];eq:Plan['v30Eq'];restore:number;requiredStems:string[];analysisSha256:string;drumPrelude?:unknown}
 const hash=/^[a-f0-9]{64}$/,methods=['original','bass','filter','yield','vocal','bass_filter'],stems=['bass','other','vocals','drums']
 const near=(a:unknown,b:unknown,tol=.002)=>typeof a==='number'&&typeof b==='number'&&Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a-b)<tol
 export function canonicalJson(value:any):string{
@@ -23,7 +25,7 @@ export async function sealJetsonDecision(value:JetsonDecision):Promise<JetsonDec
 export async function verifyJetsonDecision(value:any,a:Track,b:Track,p:Plan):Promise<JetsonDecision>{
  let stage='identity'
  const fail=()=>{throw Error('Jetson 编排来源、接点或控制范围不一致: '+stage)}
- if(!value||value.schema!=='harbeat.jetson-mix-plan.v1'||value.status!=='ready'||value.producer!=='jetson'||value.analysisVersion!=='jetson-decision-v1'||!hash.test(value.id)||!hash.test(value.algorithmSha256)||!hash.test(value.analysisSha256))fail()
+ if(!value||value.schema!=='harbeat.jetson-mix-plan.v1'||value.status!=='ready'||value.producer!=='jetson'||!['jetson-decision-v1','jetson-decision-v2','jetson-decision-v3'].includes(value.analysisVersion)||!hash.test(value.id)||!hash.test(value.algorithmSha256)||!hash.test(value.analysisSha256))fail()
  stage='fingerprint';const {analysisSha256,...body}=value;if(await jsonFingerprint(body)!==analysisSha256)fail()
  stage='geometry';const g=value.plan
  if(!g||g.from!==a.id||g.to!==b.id||g.windowId!==p.window.id||!near(g.start,p.start)||!near(g.end,p.end)||!near(g.duration,p.duration)||!near(g.rate,p.rate,.000001)||!near(g.bStart,p.window.start)||!near(g.bEnd,p.window.end)||g.duration<1||g.duration>32||g.rate<.95||g.rate>1.05||!Number.isFinite(g.beatErrorMs)||g.beatErrorMs<0||g.beatErrorMs>65||!near(value.restore,p.restore))fail()
@@ -37,5 +39,6 @@ export async function verifyJetsonDecision(value:any,a:Track,b:Track,p:Plan):Pro
  if(d.methods.vocal.eligible&&(!v||m.vocalSafe!==true||m.vocalBenefit<.2))fail()
  stage='stems';if(!Array.isArray(value.requiredStems)||new Set(value.requiredStems).size!==value.requiredStems.length||!value.requiredStems.every((s:any)=>stems.includes(s)))fail()
  const required=new Set<string>();for(const [method,ss] of [['bass',['bass']],['filter',['other']],['yield',['other']],['vocal',['vocals']],['bass_filter',['bass','other']]] as [string,string[]][]){if(d.methods[method].eligible)ss.forEach(s=>required.add(s))}if([...required].some(s=>!value.requiredStems.includes(s)))fail()
+ stage='stem-timeline';if(value.analysisVersion!=='jetson-decision-v1'){const arrangement=validateStemArrangement(value.stemArrangement,a,b,p,value.analysisVersion==='jetson-decision-v3');if(arrangement.requiredStems.some(s=>!value.requiredStems.includes(s)))fail()}else if(value.stemArrangement!==undefined)fail()
  return value as JetsonDecision
 }

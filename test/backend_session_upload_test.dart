@@ -16,6 +16,41 @@ http.Response reply(Map<String, dynamic> data) =>
         headers: {'content-type': 'application/json; charset=utf-8'});
 
 void main() {
+  for (final address in [
+    'https://8.136.120.255',
+    'https://custom.example:8443'
+  ]) {
+    test('candidate upgrade preserves saved API address and session: $address',
+        () async {
+      final sessions = MemorySessionStore()
+        ..value =
+            BackendConfig(address, token: 'saved-session', username: 'qa');
+      final store = MemoryLocalStore();
+      await store.write({'backend': sessions.value!.toJson()});
+      final seen = <String>[];
+      final c = AppController(MockHarBeatRepository(),
+          audio: MemoryAudioService(),
+          localStore: store,
+          sessionStore: sessions,
+          backendFactory: (config) => RemoteHarBeatRepository(config,
+                  client: MockClient((request) async {
+                seen.add(request.url.origin);
+                expect(
+                    request.headers['Authorization'], 'Bearer saved-session');
+                return reply(request.url.path.endsWith('/me')
+                    ? {'id': 10, 'username': 'qa'}
+                    : {'songs': []});
+              })));
+      addTearDown(c.dispose);
+      await c.initialize();
+      expect(c.remoteRepository!.config.baseUri.origin, address);
+      expect(c.hasBackendSession, isTrue);
+      expect(seen, isNotEmpty);
+      expect(seen.toSet(), {address});
+      expect((await store.read())['backend']['url'], address);
+    });
+  }
+
   test('concurrent 401 requests share one refresh and persist rotated tokens',
       () async {
     var refreshes = 0;

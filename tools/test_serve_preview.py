@@ -22,6 +22,32 @@ class ProxyTest(unittest.TestCase):
         cls.server.server_close()
         cls.thread.join()
 
+    def test_staged_gateway_uses_configured_origin_and_can_block_writes(self):
+        self.server.upstream = 'https://47.108.118.177'
+        self.server.allow_writes = False
+        upstream = MagicMock(status_code=200, headers={'Content-Type': 'application/json'})
+        upstream.__enter__.return_value = upstream
+        upstream.iter_content.return_value = [b'{"tracks":[]}']
+        try:
+            with patch('serve_preview.requests.get', return_value=upstream) as get:
+                response = requests.Session().get(self.base + '/listen/library.json')
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(get.call_args.args[0], 'https://47.108.118.177/listen/library.json')
+            with patch('serve_preview.requests.post') as post:
+                response = requests.Session().post(self.base + '/listen/smart-api/plans',
+                    json={'from':'a','to':'b','windowId':'w1','start':1}, headers={'Origin':self.base})
+                self.assertEqual(response.status_code, 503)
+                post.assert_not_called()
+            self.server.allow_writes = True
+            with patch('serve_preview.requests.post', return_value=MagicMock(status_code=202, content=b'{}')) as post:
+                requests.Session().post(self.base + '/listen/smart-api/plans',
+                    json={'from':'a','to':'b','windowId':'w1','start':1}, headers={'Origin':self.base})
+                self.assertEqual(post.call_args.args[0], 'https://47.108.118.177/listen/smart-api/plans')
+                self.assertEqual(post.call_args.kwargs['headers']['Origin'], 'https://47.108.118.177')
+        finally:
+            del self.server.upstream
+            del self.server.allow_writes
+
     def test_metadata_proxy_does_not_forward_credentials(self):
         upstream = MagicMock(status_code=200, headers={'Content-Type': 'application/json'})
         upstream.__enter__.return_value = upstream

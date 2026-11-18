@@ -27,6 +27,15 @@ class PreviewHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
+    @property
+    def upstream(self):
+        # Existing local previews stay on the old cloud until explicitly started
+        # with --upstream. No browser request can select the destination.
+        return getattr(self.server, 'upstream', 'https://8.136.120.255')
+
+    def writes_enabled(self):
+        return getattr(self.server, 'allow_writes', True)
+
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
         super().end_headers()
@@ -50,7 +59,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
         is_get=parsed.path in ('/listen/set-api/music/search','/listen/set-api/music/jobs','/listen/set-api/music/covers') or parsed.path.endswith('/health') or parsed.path.endswith('/manifest') or re.fullmatch(r'/listen/set-api/reservations(?:/[a-f0-9]{32})?',parsed.path)
         is_post=bool(re.fullmatch(r'/listen/set-api/music/(?:matches|download|playlist|upload|jobs/[a-f0-9]{32}/retry)',parsed.path)) or parsed.path.endswith('/workspaces') or parsed.path.endswith('/reuse') or parsed.path.endswith('/prepare') or parsed.path=='/listen/set-api/reservations'
         if not (self.command=='GET' and is_get or self.command=='POST' and is_post):return self.send_error(404)
-        headers={'Origin':'https://8.136.120.255','Content-Type':'application/json','Accept':'application/json'}
+        headers={'Origin':self.upstream,'Content-Type':'application/json','Accept':'application/json'}
         bearer=self.headers.get('Authorization','')
         if bearer:
             if not re.fullmatch(r'Bearer [A-Za-z0-9_-]{43}',bearer):return self.send_error(401)
@@ -67,7 +76,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             else:
                 body=self.rfile.read(size) if self.command=='POST' else None
                 if body:json.loads(body)
-            response=requests.request(self.command,'https://8.136.120.255'+self.path,headers=headers,data=body,timeout=(12,180 if upload else 75 if '/music/' in parsed.path else 35),allow_redirects=False)
+            response=requests.request(self.command,self.upstream+self.path,headers=headers,data=body,timeout=(12,180 if upload else 75 if '/music/' in parsed.path else 35),allow_redirects=False)
             self.send_response(response.status_code)
             self.send_header('Content-Type','application/json; charset=utf-8')
             self.end_headers();self.wfile.write(response.content)
@@ -97,7 +106,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
         if value and re.fullmatch(r'bytes=\d*-\d*',value):headers['Range']=value
         started=False
         try:
-            with requests.get('https://8.136.120.255'+self.path,headers=headers,stream=True,timeout=(12,40),allow_redirects=False) as response:
+            with requests.get(self.upstream+self.path,headers=headers,stream=True,timeout=(12,40),allow_redirects=False) as response:
                 self.send_response(response.status_code)
                 started=True
                 for key in ['Content-Type','Content-Length','Content-Range','Accept-Ranges']:
@@ -111,6 +120,7 @@ class PreviewHandler(SimpleHTTPRequestHandler):
             self.close_connection=True
 
     def do_POST(self):
+        if not self.writes_enabled(): return self.send_error(503, 'Migration preview is read-only until cutover')
         if self.path.startswith('/listen/set-api/'):return self.activity_api()
         # Explicit, bounded plan or legacy render preparation only.
         if self.path not in ('/listen/smart-api/jobs', '/listen/smart-api/plans'):
@@ -126,8 +136,8 @@ class PreviewHandler(SimpleHTTPRequestHandler):
                 return self.send_error(422)
             if any(not isinstance(body[k], str) or not re.fullmatch('[A-Za-z0-9_-]{1,160}', body[k]) for k in ('from','to','windowId')) or body['from'] == body['to'] or type(body['start']) not in (int,float) or not math.isfinite(body['start']) or not 0 <= body['start'] <= 86400:
                 return self.send_error(422)
-            response = requests.post('https://8.136.120.255'+self.path,
-                json=body, headers={'Origin': 'https://8.136.120.255'},
+            response = requests.post(self.upstream+self.path,
+                json=body, headers={'Origin': self.upstream},
                 timeout=(12, 35), allow_redirects=False)
             self.send_response(response.status_code)
             self.send_header('Content-Type', 'application/json; charset=utf-8')
@@ -142,5 +152,14 @@ class PreviewHandler(SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=8765)
+    parser.add_argument('--upstream', default='https://8.136.120.255', help='Explicit cloud root, without /api; changing this does not change another running preview')
+    parser.add_argument('--enable-writes', action='store_true', help='Enable new-cloud business writes only after the cutover notice')
     args = parser.parse_args()
-    ThreadingHTTPServer(("127.0.0.1", args.port), PreviewHandler).serve_forever()
+    target = urlsplit(args.upstream)
+    if target.scheme != 'https' or not target.hostname or target.username or target.password or target.query or target.fragment or target.path not in ('', '/'):
+        parser.error('--upstream must be an HTTPS origin without /api')
+    server = ThreadingHTTPServer(("127.0.0.1", args.port), PreviewHandler)
+    server.upstream = args.upstream.rstrip('/')
+    server.allow_writes = args.enable_writes or server.upstream == 'https://8.136.120.255'
+    print(f'Preview 127.0.0.1:{args.port} -> {server.upstream}; business writes={server.allow_writes}', flush=True)
+    server.serve_forever()

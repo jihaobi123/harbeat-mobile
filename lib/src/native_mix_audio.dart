@@ -19,7 +19,7 @@ class _Deck {
 
 /// Two native voices share SoLoud's sample clock. Dart only polls UI state;
 /// scheduled starts and gain envelopes execute in the C++ audio callback.
-class NativeMixAudio implements MixingAudioService {
+class NativeMixAudio implements MixingAudioService, PlaybackOverlap {
   final sl.SoLoud _engine = sl.SoLoud.instance;
   final _positions = StreamController<Duration>.broadcast();
   final _durations = StreamController<Duration>.broadcast();
@@ -32,7 +32,7 @@ class NativeMixAudio implements MixingAudioService {
   ja.AudioPlayer? _fallback;
   final Set<Future<void>> _retirements = {};
   Completer<bool>? _mixDone;
-  Duration? _mixEnd;
+  Duration? _mixStart, _mixEnd;
   Timer? _poll;
   bool _playing = false, _disposed = false, _resumeAfterInterruption = false;
   bool _loop = false;
@@ -85,6 +85,21 @@ class NativeMixAudio implements MixingAudioService {
       (_valid(_current)
           ? _engine.getPosition(_current!.handle!)
           : Duration.zero);
+
+  @override
+  double? get incomingProgress {
+    final deck = _incoming;
+    final start = _mixStart;
+    if (!_playing ||
+        start == null ||
+        !_valid(deck) ||
+        _engine.getEngineTime() < start) {
+      return null;
+    }
+    final length = _engine.getLength(deck!.source).inMicroseconds;
+    if (length <= 0) return 0;
+    return _engine.getPosition(deck.handle!).inMicroseconds / length;
+  }
 
   Future<_Deck> _open(
       String? path, String title, Map<String, String>? headers) async {
@@ -280,6 +295,7 @@ class NativeMixAudio implements MixingAudioService {
       }
       _incoming = next;
       _mixDone = Completer<bool>();
+      _mixStart = start;
       _mixEnd = start + length;
       // No thenStop: cancellation must be able to keep the outgoing voice.
       _engine.fadeScheduled(_current!.handle!, start, 0, length);
@@ -312,6 +328,7 @@ class NativeMixAudio implements MixingAudioService {
       final old = _current;
       _current = _incoming;
       _incoming = null;
+      _mixStart = null;
       _mixEnd = null;
       // v4 restores original tempo after the incoming overlap segment.
       if (_valid(_current)) {
@@ -355,6 +372,7 @@ class NativeMixAudio implements MixingAudioService {
     _generation++;
     final next = _incoming;
     _incoming = null;
+    _mixStart = null;
     _mixEnd = null;
     if (_valid(_current)) {
       _engine.setVolume(_current!.handle!, gain); // cancels native fader

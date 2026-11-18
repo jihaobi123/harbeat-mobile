@@ -1,0 +1,6 @@
+import {it,expect,vi} from 'vitest'
+import {MultiGraph} from './multi-graph'
+import {liveFixture} from './live-fixture'
+const param=()=>({setValueAtTime:vi.fn(),linearRampToValueAtTime:vi.fn(),cancelScheduledValues:vi.fn()})
+const node=()=>({gain:param(),connect:vi.fn(),disconnect:vi.fn(),start:vi.fn(),stop:vi.fn(),buffer:null,loop:false,loopEnd:0})
+it('adds only selected C stem buffers and shortens their exit on the same approved clock',()=>{const ctx:any={currentTime:10,createGain:node,createBufferSource:node},nodes:any[]=[];ctx.createBufferSource=()=>{const n=node();nodes.push(n);return n};const approval=liveFixture(),e=approval.scene.exits[0],base:any={position:0,end:60,exit:approval.scene.exits.at(-1),nextExit:()=>e,setExit:vi.fn(),cancel:vi.fn(),stop:vi.fn()},layer:any={source:'c',role:'drums',outputStart:0,loop:true,points:[[0,0],[1,.2],[40,0]]},r:any={approval:{base,layers:[layer]},buffers:new Map([['c:drums',{duration:4.8}]])},g=new MultiGraph(ctx,node()as any,base,r,20);expect(nodes).toHaveLength(1);expect(nodes[0].loop).toBe(true);ctx.currentTime=25;g.setExit(e);expect(base.setExit).toHaveBeenCalledWith(e);expect(nodes[0].stop).toHaveBeenLastCalledWith(40.008);g.cancel();expect(base.cancel).toHaveBeenCalledTimes(1);expect(nodes[0].disconnect).toHaveBeenCalled()})

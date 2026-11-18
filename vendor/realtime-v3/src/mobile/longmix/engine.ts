@@ -1,0 +1,7 @@
+import {LongmixRun} from './session'
+let run:LongmixRun|null=null,error=''
+const state=()=>({...run?.snapshot(),mode:'longmix',ready:true,error:error||run?.snapshot().error||''})
+const publish=()=>window.HarBeatEngineHost.state(JSON.stringify(state()))
+window.HarBeatEngine={async dispatch({id,method,args}){try{error='';let extra={};if(method==='prepare'){run?.dispose();run=new LongmixRun(new URL('/listen/',location.href),publish,window.HarBeatHost);extra={scenes:await run.prepare(),tracks:[]}}
+ else{if(!run)throw Error('请先进入长混试验');switch(method){case'loadScene':await run.loadScene(String(args.sceneId),args.variant);break;case'start':await run.start();break;case'pause':await run.pause();break;case'resume':await run.resume();break;case'stop':run.stop();break;case'exit':run.requestExit();break;case'export':window.HarBeatHost?.exportLog(JSON.stringify(run.export()),'json');break;default:throw Error('长混试验不支持此操作')}}publish();window.HarBeatEngineHost.reply(id,JSON.stringify({ok:true,state:state(),...extra}))}catch(e){error=(e as Error).message;publish();window.HarBeatEngineHost.reply(id,JSON.stringify({ok:false,error}))}}}
+window.addEventListener('harbeat-host',e=>{if(!(e as CustomEvent).detail?.active)void run?.pause('host-inactive')});document.addEventListener('visibilitychange',()=>{if(document.hidden&&!window.HarBeatHost?.supportsBackgroundPlayback?.())void run?.pause('document-hidden')});window.addEventListener('pagehide',()=>void run?.pause('page-hidden'));publish()

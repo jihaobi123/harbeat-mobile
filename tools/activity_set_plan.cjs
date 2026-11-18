@@ -706,6 +706,105 @@ function fullVocalCollision(a, b, p) {
   return m.simultaneousSec >= p.duration - 0.065;
 }
 
+// vendor/realtime-v3/src/mobile/device-execution.ts
+function valueAt(points, time) {
+  let before = points[0];
+  for (const p of points.slice(1)) {
+    if (time <= p[0]) return p[0] === before[0] ? p[1] : before[1] + (p[1] - before[1]) * (time - before[0]) / (p[0] - before[0]);
+    before = p;
+  }
+  return before[1];
+}
+
+// vendor/realtime-v3/src/mobile/stem-timeline.ts
+var STEM_ROLES = ["drums", "bass", "other", "vocals"];
+function validateStemTimeline(value, duration) {
+  const fail = () => {
+    throw Error("\u58F0\u90E8\u65F6\u95F4\u7EBF\u7F3A\u5931\u3001\u8D8A\u754C\u6216\u65E0\u6CD5\u8FDE\u7EED\u63A5\u7BA1\u6B63\u6587");
+  };
+  if ((value == null ? void 0 : value.schema) !== "harbeat.stem-timeline.v1" || value.clock !== "transition-start" || !Number.isFinite(duration) || duration < 1 || duration > 32 || value.duration !== duration) fail();
+  for (const side of ["a", "b"]) {
+    if (!value[side] || Object.keys(value[side]).sort().join() !== [...STEM_ROLES].sort().join()) fail();
+    for (const role of STEM_ROLES) {
+      const points = value[side][role];
+      if (!Array.isArray(points) || points.length < 2 || points.length > 32) fail();
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i], q = points[i - 1];
+        if (!Array.isArray(p) || p.length !== 2 || !p.every(Number.isFinite) || p[0] < 0 || p[0] > duration || p[1] < 0 || p[1] > 1 || q && (p[0] <= q[0] || Math.abs(p[1] - q[1]) / (p[0] - q[0]) > 20.000001)) fail();
+      }
+      if (points[0][0] !== 0 || points.at(-1)[0] !== duration || points[0][1] !== Number(side === "a") || points.at(-1)[1] !== Number(side === "b")) fail();
+    }
+  }
+  for (const role of STEM_ROLES) {
+    const times = new Set([...value.a[role], ...value.b[role]].map((p) => p[0]));
+    for (const t of times) if (valueAt(value.a[role], t) + valueAt(value.b[role], t) > 1.000001) fail();
+  }
+  return value;
+}
+function voicePhrases(t) {
+  var _a2, _b, _c;
+  const intervals = [...(_a2 = t.vocals) != null ? _a2 : [], ...((_c = (_b = t.alignment) == null ? void 0 : _b.phrases) != null ? _c : []).map((p) => [p.start, p.tailEnd])].filter(([s, e]) => Number.isFinite(s) && Number.isFinite(e) && e > s).sort((a, b) => a[0] - b[0]), out = [];
+  for (const [s, e] of intervals) {
+    const last = out.at(-1);
+    if (last && s - last[1] < 0.35) last[1] = Math.max(last[1], e);
+    else out.push([s, e]);
+  }
+  return out;
+}
+function validateTimelineVoices(t, a, b, p) {
+  if (!Array.isArray(a.vocals) || !Array.isArray(b.vocals)) throw Error("\u58F0\u90E8\u65F6\u95F4\u7EBF\u7F3A\u5C11\u540C\u6E90\u4EBA\u58F0\u6D3B\u52A8\u4F9D\u636E");
+  const fail = () => {
+    throw Error("\u58F0\u90E8\u65F6\u95F4\u7EBF\u4E0D\u80FD\u622A\u65AD A \u4EBA\u58F0\u6216\u4ECE B \u534A\u53E5\u4E2D\u6062\u590D");
+  }, times = (curve, s, e) => [Math.max(0, s), Math.min(t.duration, e), ...curve.filter(([x]) => x > s && x < e).map(([x]) => x)];
+  for (const [s, e] of voicePhrases(a)) if (e > p.start && s < p.end) {
+    if (e > p.end + 2e-3) fail();
+    if (times(t.a.vocals, s - p.start, e - p.start).some((x) => valueAt(t.a.vocals, x) < 0.999)) fail();
+  }
+  for (const [s, e] of voicePhrases(b)) if (e > p.window.start && s < p.window.end) {
+    const ss = (s - p.window.start) / p.rate, ee = (e - p.window.start) / p.rate, levels = times(t.b.vocals, ss, ee).map((x) => valueAt(t.b.vocals, x));
+    if (!levels.every((x) => x < 1e-3) && !(ss >= -2e-3 && levels.every((x) => x > 0.999))) fail();
+  }
+  return t;
+}
+
+// vendor/realtime-v3/src/mobile/stem-arrangement-contract.ts
+function validateStemArrangement(value, a, b, p, calibrated = false) {
+  var _a2, _b;
+  const fail = () => {
+    throw Error("Jetson \u58F0\u90E8\u7F16\u6392\u6216\u5904\u7406\u540E\u8BC1\u636E\u4E0D\u5B8C\u6574");
+  };
+  if (!value || value.schema !== "harbeat.stem-arrangement.v1" || value.method !== "stem-handover" || typeof value.eligible !== "boolean" || typeof value.recommended !== "boolean" || typeof value.reason !== "string" || value.reason.length > 4096 || !Array.isArray(value.requiredStems)) fail();
+  if (!value.eligible) {
+    if (value.recommended || value.score !== null || value.timeline !== null || value.evidence !== null || value.requiredStems.length) fail();
+    return value;
+  }
+  if (!Number.isFinite(value.score) || value.score < 65 || value.score > 100 || value.requiredStems.length !== 4 || [...value.requiredStems].sort().join() !== [...STEM_ROLES].sort().join()) fail();
+  const t = validateTimelineVoices(validateStemTimeline(value.timeline, p.duration), a, b, p), e = value.evidence;
+  if (!e || !["baseline", "processed"].every((k) => e[k] && STEM_ROLES.every((r) => Number.isFinite(e[k][r]) && e[k][r] >= 0 && e[k][r] <= 1)) || e.processed.vocals > 0.01 || !Number.isFinite(e.improvement) || e.improvement < 0.08 || e.improvement > 4 || !e.headroom || !["peak", "baselinePeak", "riseDb"].every((k) => Number.isFinite(e.headroom[k])) || e.headroom.peak < 0 || e.headroom.peak > 0.95 || e.headroom.baselinePeak < 0 || e.headroom.riseDb > 3 || e.headroom.eqApplied !== true || e.headroom.outputScale !== 0.76 || !e.reconstruction || ["a", "b"].some((side) => {
+    var _a3;
+    return [e.reconstruction[side], (_a3 = e.reconstruction[side]) == null ? void 0 : _a3.boundary].some((x) => !x || !Number.isFinite(x.errorRatio) || x.errorRatio < 0 || x.errorRatio > 0.25 || !Number.isFinite(x.levelDeltaDb) || Math.abs(x.levelDeltaDb) > 1.5);
+  }) || !Number.isFinite(e.aTailEnd) || e.aTailEnd < 0 || e.aTailEnd > p.duration || !Number.isFinite(e.bVoiceEntry) || e.bVoiceEntry < 0 || e.bVoiceEntry > p.duration || valueAt(t.a.vocals, e.aTailEnd) < 0.999 || valueAt(t.b.vocals, e.bVoiceEntry) < 0.999) fail();
+  if (e.tailAnalysis) {
+    const q = e.tailAnalysis;
+    if (q.dcRemoved !== true || q.frameSeconds !== 0.05 || !Number.isFinite(q.tail) || q.tail < 0 || q.tail > e.aTailEnd + 1e-3 || !Number.isFinite(q.gateDb) || q.gateDb < -70.000001 || !Number.isFinite(q.maximumAcRmsDb) || !Number.isFinite(q.maximumFrameMean) || q.maximumFrameMean < 0) fail();
+  }
+  if (calibrated) {
+    const g = value.sourceGains, q = e.sourceCalibration;
+    if (!g || Object.keys(g).sort().join() !== "a,b" || !q || q.mode !== "common-linear-gain-v1") fail();
+    for (const side of ["a", "b"]) {
+      if (!Number.isFinite(g[side]) || g[side] < 0.5 || g[side] > 2 || ((_a2 = q.gains) == null ? void 0 : _a2[side]) !== g[side] || !((_b = q.rawReconstruction) == null ? void 0 : _b[side]) || !Number.isFinite(q.rawReconstruction[side].errorRatio) || !Number.isFinite(q.rawReconstruction[side].levelDeltaDb)) fail();
+    }
+  } else if (value.sourceGains !== void 0 || e.sourceCalibration !== void 0) fail();
+  const c = e.compatibility;
+  if (!c || c.pass !== true || !Number.isFinite(c.pitchedRisk) || c.pitchedRisk < 0 || c.pitchedRisk > 1 || c.maximumPitchedRisk !== 0.35 || !Number.isFinite(c.drumOverlapSeconds) || c.drumOverlapSeconds < 0 || c.drumOverlapSeconds > p.duration + 1e-3 || !Number.isFinite(c.drumOverlapLimit) || Math.abs(c.drumOverlapLimit - (30 / a.bpm + 0.02)) > 1e-5 || !["observed", "limited", "not-overlapping"].includes(c.drumEvidence)) fail();
+  if (!["pitchedOverlapSeconds", "incompatiblePitchedSeconds"].every((k) => Number.isFinite(c[k]) && c[k] >= 0 && c[k] <= p.duration + 1e-3) || c.incompatiblePitchedSeconds > c.pitchedOverlapSeconds + 1e-3 || c.incompatiblePitchedSeconds > c.drumOverlapLimit) fail();
+  if (c.drumEvidence === "observed") {
+    if (!Number.isFinite(c.drumDensityRatio) || c.drumDensityRatio < 1 || !Number.isFinite(c.drumOnsetAgreement) || c.drumOnsetAgreement < 0 || c.drumOnsetAgreement > 1) fail();
+  } else if (c.drumDensityRatio !== null || c.drumOnsetAgreement !== null) fail();
+  if (c.drumOverlapSeconds > c.drumOverlapLimit && (c.drumEvidence !== "observed" || c.drumDensityRatio > 2.5 || c.drumOnsetAgreement < 0.5)) fail();
+  return value;
+}
+
 // vendor/realtime-v3/src/mobile/jetson-contract.ts
 var hash = /^[a-f0-9]{64}$/;
 var methods = ["original", "bass", "filter", "yield", "vocal", "bass_filter"];
@@ -738,7 +837,7 @@ async function verifyJetsonDecision(value, a, b, p) {
   const fail = () => {
     throw Error("Jetson \u7F16\u6392\u6765\u6E90\u3001\u63A5\u70B9\u6216\u63A7\u5236\u8303\u56F4\u4E0D\u4E00\u81F4: " + stage);
   };
-  if (!value || value.schema !== "harbeat.jetson-mix-plan.v1" || value.status !== "ready" || value.producer !== "jetson" || value.analysisVersion !== "jetson-decision-v1" || !hash.test(value.id) || !hash.test(value.algorithmSha256) || !hash.test(value.analysisSha256)) fail();
+  if (!value || value.schema !== "harbeat.jetson-mix-plan.v1" || value.status !== "ready" || value.producer !== "jetson" || !["jetson-decision-v1", "jetson-decision-v2", "jetson-decision-v3"].includes(value.analysisVersion) || !hash.test(value.id) || !hash.test(value.algorithmSha256) || !hash.test(value.analysisSha256)) fail();
   stage = "fingerprint";
   const { analysisSha256, ...body } = value;
   if (await jsonFingerprint(body) !== analysisSha256) fail();
@@ -778,6 +877,11 @@ async function verifyJetsonDecision(value, a, b, p) {
     if (d.methods[method].eligible) ss.forEach((s) => required.add(s));
   }
   if ([...required].some((s) => !value.requiredStems.includes(s))) fail();
+  stage = "stem-timeline";
+  if (value.analysisVersion !== "jetson-decision-v1") {
+    const arrangement = validateStemArrangement(value.stemArrangement, a, b, p, value.analysisVersion === "jetson-decision-v3");
+    if (arrangement.requiredStems.some((s) => !value.requiredStems.includes(s))) fail();
+  } else if (value.stemArrangement !== void 0) fail();
   return value;
 }
 

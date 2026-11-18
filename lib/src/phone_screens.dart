@@ -13,92 +13,334 @@ void _openPhonePage(
           AnimatedBuilder(animation: c, builder: (_, __) => page())));
 }
 
+const harbeatLongmixLab = bool.fromEnvironment('HARBEAT_LONGMIX_LAB');
+
 class PhoneMixScreen extends StatelessWidget {
   const PhoneMixScreen(this.c, {super.key});
   final AppController c;
   @override
-  Widget build(BuildContext context) =>
-      PageFrame(label: 'PLAY / YOUR FLOW', title: '让身体，跟着节奏。', children: [
-        Row(children: [
-          const Icon(Icons.graphic_eq_rounded, size: 18),
-          const SizedBox(width: 8),
-          const Expanded(
-              child: Text('你的音乐，顺着方向继续。', style: TextStyle(fontSize: 14))),
-          if (c.accessoryConnected)
-            const Icon(Icons.bluetooth_connected, size: 18)
-          else
-            const Text('无需连接设备', style: TextStyle(fontSize: 14)),
-        ]),
-        const SizedBox(height: 18),
-        if (c.v3Metric && c.activeActivityName != null) ...[
-          HardCard(
-              color: HB.mint,
-              child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('预约 set · ${c.activeActivityName}',
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    const Text('在本 set 候选范围内选择音乐。',
-                        style: TextStyle(fontSize: 14)),
-                    TextButton(
-                        onPressed: c.exitActivity,
-                        child: const Text('退出 set，使用完整曲库')),
-                  ])),
-          const SizedBox(height: 12),
-        ],
-        _PlaybackCard(c),
-        if (c.v3Error != null)
-          Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(c.v3Error!, style: const TextStyle(color: HB.error))),
-        if (c.isRemoteMode && c.catalogError != null)
-          _NetworkNotice(c.catalogError!, onRetry: () => c.refreshCatalog()),
-        const SizedBox(height: 24),
-        if (c.v3Active && !c.v3Metric) ...[
-          if (c.v3Continuous) _ContinuousSetup(c) else _DanceSetup(c),
-          _V3Directions(c),
-          TextButton(
-              onPressed: c.switchMetricMode, child: const Text('使用自动推荐接歌')),
-        ] else if (c.smartControls) ...[
-          _ListeningDirection(c),
-          const SizedBox(height: 20),
-          _NextRecommendation(c),
-        ] else
-          _FallbackDirections(c),
-        if (c.clientIssue != null) ...[
-          const SizedBox(height: 16),
-          _IssueCard(c)
-        ],
-        if (c.v3Supported) ...[
-          const SizedBox(height: 16),
-          ExpansionTile(title: const Text('更多播放工具'), children: [
-            if (c.v3Metric)
-              ExpansionTile(
-                  title: const Text('手动选歌与试听'), children: [_MetricSetup(c)]),
-            if (c.v3LegacySupported) ...[
-              HardButton(
-                  label: '定时舞程',
-                  color: HB.white,
-                  onPressed: c.v3Loading ? null : () => c.switchV3Mode(false)),
-              const SizedBox(height: 10),
-              HardButton(
-                  label: '原连续播放策略',
-                  color: HB.white,
-                  onPressed: c.v3Loading ? null : () => c.switchV3Mode(true)),
+  Widget build(BuildContext context) => PageFrame(
+          label: 'PLAY / YOUR FLOW',
+          title: 'DJ 台',
+          compact: true,
+          children: [
+            if (c.v3Metric &&
+                c.activeActivityName != null &&
+                c.orderedSetState == null) ...[
+              HardCard(
+                  color: HB.mint,
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('预约 set · ${c.activeActivityName}',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        const Text('在本 set 候选范围内选择音乐。',
+                            style: TextStyle(fontSize: 14)),
+                        TextButton(
+                            onPressed: c.exitActivity,
+                            child: const Text('退出 set，使用完整曲库')),
+                      ])),
+              const SizedBox(height: 12),
             ],
-          ]),
+            _PlaybackCard(c),
+            if (harbeatLongmixLab && c.v3Supported) _ToucanSetCard(c),
+            if (c.v3Metric && c.orderedSetState == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: _AutomaticLongmixCard(c),
+              ),
+            if (harbeatLongmixLab && c.v3Supported && c.orderedSetState == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: OutlinedButton.icon(
+                  onPressed: c.v3Loading || c.audioBusy || c.applyingDirection
+                      ? null
+                      : () =>
+                          _openPhonePage(context, c, () => LongmixScreen(c)),
+                  icon: const Icon(Icons.science_outlined),
+                  label: const Text('两来源长混试听'),
+                ),
+              ),
+            if (harbeatLongmixLab && c.v3Supported && c.orderedSetState == null)
+              Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: OutlinedButton.icon(
+                    onPressed: c.v3Loading || c.audioBusy || c.applyingDirection
+                        ? null
+                        : () => _openPhonePage(
+                            context, c, () => DjReferenceScreen(c)),
+                    icon: const Icon(Icons.compare_arrows),
+                    label: const Text('DJ 参考交接对照'),
+                  )),
+            if (c.v3Error != null)
+              Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(c.v3Error!,
+                      style: const TextStyle(color: HB.error))),
+            if (c.isRemoteMode && c.catalogError != null)
+              _NetworkNotice(c.catalogError!,
+                  onRetry: () => c.refreshCatalog()),
+            const SizedBox(height: 24),
+            if (c.v3Active && !c.v3Metric) ...[
+              if (c.v3Continuous) _ContinuousSetup(c) else _DanceSetup(c),
+              _V3Directions(c),
+              TextButton(
+                  onPressed: c.switchMetricMode, child: const Text('使用自动推荐接歌')),
+            ] else if (c.orderedSetState != null)
+              const SizedBox.shrink()
+            else if (c.smartControls) ...[
+              _ListeningDirection(c),
+              const SizedBox(height: 20),
+              _NextRecommendation(c),
+            ] else
+              _FallbackDirections(c),
+            if (c.clientIssue != null) ...[
+              const SizedBox(height: 16),
+              _IssueCard(c)
+            ],
+            if (c.v3Supported && c.orderedSetState == null) ...[
+              const SizedBox(height: 16),
+              ExpansionTile(title: const Text('更多播放工具'), children: [
+                if (c.v3Metric)
+                  ExpansionTile(
+                      title: const Text('手动选歌与试听'),
+                      children: [_MetricSetup(c)]),
+                if (c.v3Metric)
+                  ExpansionTile(
+                      title: const Text('混音诊断'),
+                      children: [_MixDiagnostics(c)]),
+                if (c.v3LegacySupported) ...[
+                  HardButton(
+                      label: '定时舞程',
+                      color: HB.white,
+                      onPressed:
+                          c.v3Loading ? null : () => c.switchV3Mode(false)),
+                  const SizedBox(height: 10),
+                  HardButton(
+                      label: '原连续播放策略',
+                      color: HB.white,
+                      onPressed:
+                          c.v3Loading ? null : () => c.switchV3Mode(true)),
+                ],
+              ]),
+            ],
+            const SizedBox(height: 22),
+            _SettingsCard(
+                title: c.accessoryConnected
+                    ? '${c.accessoryKind.label}快捷控制'
+                    : '配件控制',
+                detail: c.accessoryConnected
+                    ? (c.accessoryLocked ? '防误触已开启' : '轻按、双击、长按 · 动作可自定义')
+                    : '连接或配置配件',
+                icon: Icons.touch_app,
+                onTap: () =>
+                    _openPhonePage(context, c, () => ShortcutScreen(c))),
+          ]);
+}
+
+class _ToucanSetCard extends StatelessWidget {
+  const _ToucanSetCard(this.c);
+  final AppController c;
+
+  Future<void> _chooseAudition(BuildContext context) async {
+    final options = await c.toucanAuditions();
+    if (!context.mounted || options.isEmpty) return;
+    final selected = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Toucan 接点试听'),
+        children: [
+          for (final cue in options)
+            if (cue['slot'] is int)
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(dialogContext, cue['slot']),
+                child: Text(
+                  '${cue['slot']}→${(cue['slot'] as int) + 1}  ${cue['from']} → ${cue['to']}',
+                ),
+              ),
         ],
-        const SizedBox(height: 22),
-        _SettingsCard(
-            title: c.accessoryConnected
-                ? '${c.accessoryKind.label}快捷控制'
-                : '把控制交给饰品',
-            detail: c.accessoryConnected
-                ? (c.accessoryLocked ? '防误触已开启' : '轻按、双击、长按 · 动作可自定义')
-                : '手机已经可以播放，连接饰品后控制更顺手',
-            icon: Icons.touch_app,
-            onTap: () => _openPhonePage(context, c, () => ShortcutScreen(c))),
-      ]);
+      ),
+    );
+    if (selected != null && context.mounted) {
+      await c.startToucanSet(auditionSlot: selected);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final set = c.orderedSetState;
+    final state = set?['state'];
+    final next = set?['next'];
+    final handoff = switch (set?['handoff']) {
+      'dj-pair-reference' => 'DJ 参考混音',
+      'cue-gradual' => 'DJ 接点 · 原渐混',
+      'cue-low-eq' => 'DJ 接点 · 低频 EQ 渐混',
+      'native-continuation' => '原曲结尾续播',
+      _ => null,
+    };
+    final detail = switch (state) {
+      'complete' => '19 首已播完',
+      'blocked' => set?['error']?.toString() ?? '续播中断',
+      'playing' =>
+        '第 ${set?['slot']} / 19 首${next == null ? ' · 最后一首' : ' · 接下来 $next'}',
+      _ => '19 首原曲 · DJ 发布顺序',
+    };
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: HardCard(
+        color: HB.white,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Toucan 2014', style: Theme.of(context).textTheme.titleLarge),
+            Text(detail),
+            if (handoff != null) Text(handoff),
+            if (state != 'playing')
+              TextButton.icon(
+                onPressed: c.v3Busy || c.audioBusy || c.applyingDirection
+                    ? null
+                    : c.startToucanSet,
+                icon: const Icon(Icons.play_arrow_rounded),
+                label: Text(state == 'complete' ? '重播整套 Set' : '播放整套 Set'),
+              ),
+            if (!c.isPlaying)
+              TextButton.icon(
+                onPressed: c.v3Busy || c.audioBusy || c.applyingDirection
+                    ? null
+                    : () => _chooseAudition(context),
+                icon: const Icon(Icons.headphones_rounded),
+                label: const Text('试听接点'),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AutomaticLongmixCard extends StatelessWidget {
+  const _AutomaticLongmixCard(this.c);
+  final AppController c;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = c.liveLayeringState;
+    final reason = state['reason']?.toString();
+    return _PaperSleeve(
+      color: HB.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+          title: const Text('自动长混'),
+          subtitle: Text(harbeatLongmixLab && reason?.isNotEmpty == true
+              ? reason!
+              : c.liveLayeringHasStarted && !c.liveLayeringEnabled
+                  ? '将在合适的接点结束当前长混。'
+                  : !c.liveLayeringEnabled
+                      ? '使用普通混音衔接。'
+                      : !c.smartAutomatic
+                          ? '开启自动接歌后生效。'
+                          : '遇到适合的两首歌，自动共同播放一段再交接。'),
+          value: c.liveLayeringEnabled,
+          onChanged: c.v3Loading
+              ? null
+              : (value) => unawaited(c.setLiveLayering(value)),
+        ),
+        if (harbeatLongmixLab) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'takeover-b', label: Text('由下一首接管')),
+                ButtonSegment(value: 'return-a', label: Text('临时加入后回原曲')),
+              ],
+              selected: {c.liveLayeringOutcome},
+              onSelectionChanged:
+                  c.v3Loading || c.v3Pending != null || c.directionBusy
+                      ? null
+                      : (values) =>
+                          unawaited(c.setLiveLayeringOutcome(values.single)),
+              showSelectedIcon: false,
+            ),
+          ),
+          SwitchListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+            title: const Text('器乐循环延长 · 独立试听'),
+            subtitle: Text(c.loopExtensionState['reason']?.toString() ??
+                '重复已批准的器乐片段，释放后接回原曲。'),
+            value: c.loopExtensionRequested,
+            onChanged: c.v3Loading
+                ? null
+                : (value) => unawaited(c.setLoopExtension(value)),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: DropdownButtonFormField<String>(
+              key: const ValueKey('live-role-mode'),
+              initialValue: c.multiLayeringMode,
+              isExpanded: true,
+              decoration: const InputDecoration(labelText: '声部方案'),
+              items: const [
+                DropdownMenuItem(value: 'off', child: Text('原 A/B')),
+                DropdownMenuItem(value: 'c', child: Text('A/B + C 打击乐')),
+                DropdownMenuItem(value: 'cd', child: Text('A/B + C/D 打击乐')),
+                DropdownMenuItem(value: 'roles-c', child: Text('只替换 C 伴奏')),
+                DropdownMenuItem(value: 'roles-cd', child: Text('C 伴奏替换 + D 人声')),
+              ],
+              onChanged: c.v3Loading || c.v3Pending != null || c.directionBusy
+                  ? null
+                  : (value) {
+                      if (value != null) unawaited(c.setMultiLayering(value));
+                    },
+            ),
+          ),
+          if (c.multiLayeringMode != 'off')
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Text(
+                  state['prepared'] == true
+                      ? c.multiLayeringMode.startsWith('roles-') &&
+                              state['roleId'] == null
+                          ? '本次沿用原 A/B，角色替换尚未就绪。'
+                          : '本次已准备 ${state['sourceCount'] ?? 2} 首的指定声部'
+                      : c.multiLayeringMode.startsWith('roles-')
+                          ? '寻找获准的角色分工；未就绪时继续 A/B。'
+                          : '寻找获准的额外声部；未就绪时继续 A/B。',
+                  style: const TextStyle(fontSize: 13, color: HB.muted)),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            child: SegmentedButton<int>(
+              segments: const [
+                ButtonSegment(value: 4, label: Text('4 次')),
+                ButtonSegment(value: 8, label: Text('8 次')),
+                ButtonSegment(value: 16, label: Text('16 次')),
+              ],
+              selected: {c.loopExtensionCycles},
+              onSelectionChanged: c.v3Loading || c.v3Pending != null
+                  ? null
+                  : (values) => unawaited(c.setLoopExtension(
+                      c.loopExtensionRequested,
+                      cycles: values.single)),
+            ),
+          ),
+          if (const {'playing', 'exiting'}
+              .contains(c.loopExtensionState['state']))
+            Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text(
+                    '已完成 ${c.loopExtensionState['completedCycles'] ?? 0} 次 · 共 ${c.loopExtensionCycles} 次')),
+        ],
+        const Padding(
+          padding: EdgeInsets.fromLTRB(8, 0, 8, 6),
+          child: Text('关闭后，已开始的长混会在合适出口完成。',
+              style: TextStyle(fontSize: 13, color: HB.muted)),
+        ),
+      ]),
+    );
+  }
 }
 
 class _FallbackDirections extends StatelessWidget {
@@ -133,13 +375,11 @@ class _FallbackDirections extends StatelessWidget {
                                       ? HB.acid
                                       : HB.white,
                                   borderRadius: BorderRadius.circular(12),
-                                  border:
-                                      Border.all(color: HB.ink, width: 1.5)),
+                                  border: Border.all(color: HB.line)),
                               child: Column(children: [
-                                Text('${index + 1}',
-                                    style: const TextStyle(
-                                        fontSize: 23,
-                                        fontWeight: FontWeight.w900)),
+                                _EnergyMeter(
+                                    level: index + 1,
+                                    selected: c.draftEnergy == index + 1),
                                 Text(AppController.energyNames[index],
                                     style: const TextStyle(fontSize: 14)),
                               ])),
@@ -188,7 +428,7 @@ class _FallbackDirections extends StatelessWidget {
             ]))
       else ...[
         Text('当前方向：${c.mixStyle} · ${AppController.energyNames[c.energy - 1]}',
-            style: const TextStyle(fontWeight: FontWeight.w900)),
+            style: const TextStyle(fontWeight: FontWeight.w600)),
         const SizedBox(height: 10),
         SizedBox(
             width: double.infinity,
@@ -211,6 +451,29 @@ class _FallbackDirections extends StatelessWidget {
   }
 }
 
+class _EnergyMeter extends StatelessWidget {
+  const _EnergyMeter({required this.level, required this.selected});
+  final int level;
+  final bool selected;
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+      child: SizedBox(
+          height: 33,
+          child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(
+                  3,
+                  (i) => Container(
+                      width: 3,
+                      height: 7.0 + level * 2 + i * 4,
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 1.5, vertical: 3),
+                      decoration: BoxDecoration(
+                          color: selected ? HB.accent : HB.muted,
+                          borderRadius: BorderRadius.circular(1)))))));
+}
+
 class _ListeningDirection extends StatelessWidget {
   const _ListeningDirection(this.c);
   final AppController c;
@@ -218,7 +481,7 @@ class _ListeningDirection extends StatelessWidget {
   Widget build(BuildContext context) => HardCard(
       color: HB.white,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        const _SectionTitle('音乐方向', action: '顺着你的节奏'),
+        Text('音乐方向', style: Theme.of(context).textTheme.headlineMedium),
         const SizedBox(height: 12),
         Text('能量 · ${AppController.energyNames[c.draftEnergy - 1]}',
             style: Theme.of(context).textTheme.titleMedium),
@@ -250,22 +513,27 @@ class _ListeningDirection extends StatelessWidget {
                                         vertical: 12),
                                     decoration: BoxDecoration(
                                         color: c.draftEnergy == i + 1
-                                            ? HB.apricot
-                                            : HB.white,
+                                            ? HB.accentSoft
+                                            : HB.surface,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
-                                            color: HB.ink, width: 1.5)),
+                                            color: c.draftEnergy == i + 1
+                                                ? HB.accentSoft
+                                                : HB.surface)),
                                     child: Column(children: [
-                                      Text('${i + 1}',
-                                          style: const TextStyle(
-                                              fontSize: 23,
-                                              fontWeight: FontWeight.w900)),
+                                      _EnergyMeter(
+                                          level: i + 1,
+                                          selected: c.draftEnergy == i + 1),
                                       Text(AppController.energyNames[i],
-                                          style: const TextStyle(fontSize: 14))
+                                          style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: c.draftEnergy == i + 1
+                                                  ? FontWeight.w600
+                                                  : FontWeight.w400,
+                                              color: c.draftEnergy == i + 1
+                                                  ? HB.accent
+                                                  : HB.muted))
                                     ])))))))),
-        const SizedBox(height: 8),
-        const Text('高档优先更有劲，也可平稳接续；低档优先放缓。按局部响度排序，不调整播放音量。',
-            style: TextStyle(fontSize: 14)),
         const SizedBox(height: 18),
         DropdownButtonFormField<String>(
             key: ValueKey('listening-style-${c.smartStyle}'),
@@ -289,8 +557,6 @@ class _ListeningDirection extends StatelessWidget {
             value: c.smartAutomatic,
             title: const Text('自动接歌',
                 style: TextStyle(fontWeight: FontWeight.w700)),
-            subtitle:
-                const Text('不操作时，在最佳混音接点自动衔接。', style: TextStyle(fontSize: 14)),
             onChanged: c.v3Loading
                 ? null
                 : (value) => c.setSmartDirection(automatic: value)),
@@ -322,6 +588,59 @@ class _ListeningDirection extends StatelessWidget {
 class _NextRecommendation extends StatelessWidget {
   const _NextRecommendation(this.c);
   final AppController c;
+
+  @override
+  Widget build(BuildContext context) {
+    final pending = c.v3Pending;
+    final status = c.metricState['phase'];
+    final text = pending != null
+        ? (pending['role'] == 'native-continuation'
+            ? '将在曲尾续播'
+            : pending['locked'] == true
+                ? '正在衔接'
+                : '已安排接歌')
+        : switch (status) {
+            'ready' => '下一首已就绪',
+            'loading' => '正在准备下一首',
+            'failed' => '暂时没有合适的接点',
+            'tail-loading' => '正在准备曲尾续播',
+            'ended' => '歌曲已播完，未能准备下一首',
+            _ => !c.smartAutomatic
+                ? '自动接歌已关'
+                : c.isPlaying
+                    ? '正在寻找接点'
+                    : '播放后自动推荐',
+          };
+    return HardCard(
+      child: Row(children: [
+        Expanded(
+            child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('接下来听', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 3),
+            Text(text, style: const TextStyle(color: HB.muted, fontSize: 14)),
+          ],
+        )),
+        if (c.v3Metric)
+          TextButton(
+              onPressed: pending != null && !c.liveLayeringCanExit
+                  ? null
+                  : c.recommendNext,
+              child: Text(const {'playing', 'exiting'}
+                      .contains(c.loopExtensionState['state'])
+                  ? '释放循环并接歌'
+                  : c.liveLayeringHasStarted
+                      ? '合适点退出长混'
+                      : '播放下一首')),
+      ]),
+    );
+  }
+}
+
+class _MixDiagnostics extends StatelessWidget {
+  const _MixDiagnostics(this.c);
+  final AppController c;
   @override
   Widget build(BuildContext context) {
     final state = c.metricState, result = c.metricResult;
@@ -340,6 +659,12 @@ class _NextRecommendation extends StatelessWidget {
     final method = state['method'] ?? decision['recommended'];
     final chosenMethod =
         Map<String, dynamic>.from(methods[method] as Map? ?? {});
+    final comparison =
+        Map<String, dynamic>.from(state['strategyComparison'] as Map? ?? {});
+    final comparedMethods =
+        Map<String, dynamic>.from(comparison['methods'] as Map? ?? {});
+    final comparedChoice =
+        Map<String, dynamic>.from(comparedMethods[method] as Map? ?? {});
     final start = (cue['start'] as num?)?.toDouble();
     final remaining =
         start == null ? null : start - c.position.inMilliseconds / 1000;
@@ -347,11 +672,32 @@ class _NextRecommendation extends StatelessWidget {
         Map<String, dynamic>.from(state['warm'] as Map? ?? {}),
         currentTrackId: c.v3State['current']?['id']?.toString());
     return _PaperSleeve(
-        color: HB.apricot,
+        color: HB.surface,
         padding: const EdgeInsets.all(16),
         child:
             Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          const _SectionTitle('接下来听', action: '为你衔接'),
+          if (state['catalog'] is Map) ...[
+            const SizedBox(height: 8),
+            Text(
+                '网页曲库 · ${state['catalog']['playable']} 首可播放 · ${state['catalog']['mixable']} 首基础混音可用',
+                style: const TextStyle(fontSize: 14)),
+            Text(
+                state['catalog']['stemPublished'] == null
+                    ? '分轨发布状态暂不可查询'
+                    : '${state['catalog']['stemPublished']} 首分轨音频已发布 · 仍需曲对与接点核验',
+                style: const TextStyle(fontSize: 14, color: HB.muted)),
+            Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton.icon(
+                    onPressed: c.mixCatalogRefreshing || c.v3Pending != null
+                        ? null
+                        : c.refreshMixCatalog,
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label:
+                        Text(c.mixCatalogRefreshing ? '正在刷新素材状态…' : '刷新素材状态'))),
+            const Text('按接点、人声、鼓型和能量比较可执行手法；手动切歌保留渐混后备。',
+                style: TextStyle(fontSize: 14)),
+          ],
           const SizedBox(height: 10),
           Semantics(
               liveRegion: true,
@@ -361,7 +707,7 @@ class _NextRecommendation extends StatelessWidget {
           if (nearby.readyCount > 0 && nearby.preparing)
             const Text('继续准备后续接点', style: TextStyle(fontSize: 14)),
           const SizedBox(height: 6),
-          const Text('点击切歌后，也会等到附近合适的拍点、人声句尾或段落边界再衔接。',
+          const Text('点击切歌后，会按附近合适的拍点、段落边界和人声间隙安排衔接。',
               style: TextStyle(fontSize: 14)),
           const SizedBox(height: 16),
           AnimatedSwitcher(
@@ -421,6 +767,59 @@ class _NextRecommendation extends StatelessWidget {
             const SizedBox(height: 8),
             Text(rec['reason'].toString(), style: const TextStyle(fontSize: 14))
           ],
+          if (result == null && comparedChoice['name'] != null) ...[
+            const SizedBox(height: 8),
+            Text(
+                state['methodStatus'] == 'evaluating'
+                    ? '正在评估混音手法'
+                    : state['methodStatus'] == 'idle'
+                        ? '混音手法待确认'
+                        : '交接方式 · ${comparedChoice['name']}',
+                style:
+                    const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+          ],
+          if (comparison['state'] == 'preparing' ||
+              comparison['state'] == 'unavailable') ...[
+            const SizedBox(height: 8),
+            Text(comparison['reason']?.toString() ?? '',
+                style: const TextStyle(fontSize: 14)),
+          ],
+          if (comparedMethods.isNotEmpty)
+            ExpansionTile(
+              tilePadding: EdgeInsets.zero,
+              title: const Text('接歌方案比较', style: TextStyle(fontSize: 14)),
+              subtitle: const Text('共同规则分用于排序，听感仍需试听',
+                  style: TextStyle(fontSize: 12)),
+              children: comparedMethods.entries.map((entry) {
+                final option = Map<String, dynamic>.from(entry.value as Map);
+                final score = option['score'] as num?;
+                final status = entry.key == 'original'
+                    ? '手动后备'
+                    : entry.key == method
+                        ? '已选择'
+                        : option['eligible'] == true
+                            ? '合格候选'
+                            : '未通过';
+                return ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                      '${option['name'] ?? entry.key} · $status${option['experimental'] == true ? ' · 实验' : ''}${score == null ? '' : ' · 规则分 ${score.toStringAsFixed(1)}'}'),
+                  subtitle: Text(option['reason']?.toString() ?? ''),
+                );
+              }).toList(),
+            ),
+          if (comparison.containsKey('experimental'))
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('实验接歌手法', style: TextStyle(fontSize: 14)),
+              subtitle: const Text('刹车、倒转回声、Roll、混响，以及鼓桥、连续变速、半／双拍和固定鼓先行',
+                  style: TextStyle(fontSize: 12)),
+              value: comparison['experimental'] == true,
+              onChanged: pending == null && !c.v3Busy
+                  ? c.experimentalTransitions
+                  : null,
+            ),
           if (remaining != null && remaining > 0 && pending == null) ...[
             const SizedBox(height: 10),
             Text(
@@ -448,123 +847,161 @@ class _NextRecommendation extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.w700)),
             const Text('这次衔接完成后，继续按新的音乐方向选歌。', style: TextStyle(fontSize: 14)),
           ],
-          if (c.v3Metric)
-            Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                    onPressed: pending != null ? null : c.recommendNext,
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('播放下一首'))),
         ]));
+  }
+}
+
+class _PerformanceControls extends StatelessWidget {
+  const _PerformanceControls(this.c);
+  final AppController c;
+  @override
+  Widget build(BuildContext context) {
+    final supported = c.performanceSupported;
+    final reason = c.performanceState['scratchReason']?.toString() ?? '';
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Expanded(
+            child: HardButton(
+                key: const ValueKey('performance-host'),
+                label: c.hostMode ? '退出主持模式' : '主持模式',
+                selected: c.hostMode,
+                color: c.hostMode ? HB.accentSoft : HB.surface,
+                onPressed:
+                    supported && !c.v3Loading ? c.toggleHostMode : null)),
+        const SizedBox(width: 8),
+        Expanded(
+            child: HardButton(
+                key: const ValueKey('performance-scratch'),
+                label: c.scratching ? '回应中…' : '搓碟回应',
+                color: HB.surface,
+                onPressed: c.canScratch ? c.scratchResponse : null)),
+      ]),
+      if (supported &&
+          c.isPlaying &&
+          !c.canScratch &&
+          !c.scratching &&
+          !c.hostMode &&
+          reason.isNotEmpty) ...[
+        const SizedBox(height: 6),
+        Semantics(
+            liveRegion: true,
+            child: Text(reason,
+                style: const TextStyle(fontSize: 14, color: HB.muted))),
+      ],
+    ]);
   }
 }
 
 class _PlaybackCard extends StatelessWidget {
   const _PlaybackCard(this.c);
   final AppController c;
+  static const _inset = 16.0;
 
   @override
   Widget build(BuildContext context) {
-    final track = c.displayTrack;
+    final orderedSet = c.orderedSetState;
+    final current = c.v3State['current'] as Map?;
+    final decks = c.v3State['decks'] as Map?;
+    final incoming = decks?['incoming'] as Map?;
+    final audio = c.audio;
+    final track = c.orderedSetTrack ??
+        (c.v3Active && current != null ? c.deckTrack(row: current) : null) ??
+        (orderedSet == null ? c.displayTrack : null);
+    final selectedId =
+        (c.v3Metric ? c.metricState['nextDisplayId'] : c.continuousSelection['id'])
+            ?.toString();
+    final nextSetTrack = orderedSet?['nextId'] == null
+        ? null
+        : c.deckTrack(row: {
+            'id': orderedSet!['nextId'],
+            'title': orderedSet['next'],
+          });
+    final nextQueueId = c.pendingIntent?.direction.trackId ??
+        (c.playbackMode == PlaybackMode.sequential &&
+                c.queue.isNotEmpty &&
+                c.queueIndex >= 0
+            ? c.queue[(c.queueIndex + 1) % c.queue.length]
+            : null);
+    final next = c.v3Active
+        ? c.deckTrack(row: incoming?['track'] as Map?) ??
+            nextSetTrack ??
+            c.deckTrack(trackId: selectedId)
+        : c.tracks.where((t) => t.id == nextQueueId).firstOrNull;
+    final engineTrackId = current?['id']?.toString();
+    final nativeStarted = c.isPlaying || c.position > Duration.zero;
+    final activeTrackId = c.v3Active
+        ? (engineTrackId == null ? null : 'nas:$engineTrackId')
+        : (nativeStarted ? c.nowPlaying?.id : null);
+    final primaryPlaying =
+        c.isPlaying && (!c.v3Active || decks?['primaryPlaying'] != false);
+    final nativeIncoming = !c.v3Active && audio is PlaybackOverlap
+        ? (audio as PlaybackOverlap).incomingProgress
+        : null;
+    final incomingPlaying = c.isPlaying &&
+        (c.v3Active ? (incoming?['playing'] == true) : nativeIncoming != null);
+    final incomingTrack = incoming?['track'] as Map?;
+    final incomingDuration = (incomingTrack?['duration'] as num?) ?? 0;
+    final currentProgress = c.duration > Duration.zero
+        ? c.position.inMicroseconds / c.duration.inMicroseconds
+        : 0.0;
+    final incomingProgress = c.v3Active && incomingDuration > 0
+        ? ((incoming?['position'] as num?) ?? 0) / incomingDuration
+        : nativeIncoming ?? 0.0;
     final busy =
         c.loading || (c.v3Active ? c.v3Busy && !c.isPlaying : c.audioBusy);
-    return _PaperSleeve(
-        color: HB.teal,
-        padding: const EdgeInsets.all(16),
+    return Padding(
+        padding: const EdgeInsets.all(_inset),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Wrap(
-              spacing: 12,
-              runSpacing: 8,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                        color: HB.mint, borderRadius: BorderRadius.circular(8)),
-                    child: Text(
-                        busy
-                            ? '正在准备'
-                            : c.isPlaying
-                                ? '正在播放'
-                                : '准备就绪',
-                        style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: HB.deepTeal))),
-                Text(
-                    c.v3Active
-                        ? c.v3Metric
-                            ? '智能分轨混音'
-                            : 'V3 · 实时混音'
-                        : track?.resourceLabel ?? (c.loading ? '正在加载' : '选择歌曲'),
-                    style: const TextStyle(fontSize: 14, color: HB.muted)),
-              ]),
-          const SizedBox(height: 20),
-          Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-            RecordSleeve(
-                size: 88,
-                coverUrl: track?.coverUrl,
-                color: track == null ? HB.mint : HB.sleeve(track.color)),
-            const SizedBox(width: 16),
-            Expanded(
-                child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                  Text(track?.title ?? '今天，跳什么？',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.headlineLarge),
-                  const SizedBox(height: 6),
-                  Text(track?.artist ?? '选一首喜欢的音乐开始',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: HB.muted, fontSize: 14)),
-                ])),
-          ]),
-          const SizedBox(height: 20),
           Text(
-              c.v3Active
-                  ? '${c.v3Style} · ${track?.bpmLabel ?? '—'} BPM · 实时交接'
-                  : track?.isRenderedMix == true
-                      ? 'Hip-Hop · 125–149.4 BPM · 6 首连续混音'
-                      : '${track?.mixStyle ?? c.mixStyle} · ${track == null ? 'BPM 待分析' : '${track.bpmLabel} BPM'} · 能量 ${c.energy}',
-              style: const TextStyle(color: HB.muted, fontSize: 14)),
-          const SizedBox(height: 20),
-          ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                  value: c.duration.inMilliseconds <= 0
-                      ? 0
-                      : (c.position.inMilliseconds / c.duration.inMilliseconds)
-                          .clamp(0, 1),
-                  color: HB.deepTeal,
-                  backgroundColor: HB.mint,
-                  minHeight: 4)),
-          Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 12,
-              children: [
-                Text(
-                    '${FullPlayer._time(c.position)} / ${FullPlayer._time(c.duration)}',
-                    style: const TextStyle(
-                        color: HB.muted,
-                        fontSize: 14,
-                        fontFeatures: [FontFeature.tabularFigures()])),
-                TextButton(
-                    onPressed: c.nowPlaying == null
-                        ? null
-                        : () => _openPhonePage(context, c, () => FullPlayer(c)),
-                    child: const Text('播放队列 →')),
-              ]),
+              busy
+                  ? '正在准备'
+                  : c.isPlaying
+                      ? (primaryPlaying && incomingPlaying ? '正在混音' : '正在播放')
+                      : c.nowPlaying == null
+                          ? '准备就绪'
+                          : '已暂停',
+              style: const TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w600, color: HB.muted)),
+          const SizedBox(height: 6),
+          LayoutBuilder(builder: (context, constraints) {
+            // Let the platters meet the page edges, while keeping controls inset.
+            final width = constraints.maxWidth +
+                2 * (_inset + PageFrame._horizontalInset);
+            return OverflowBox(
+                fit: OverflowBoxFit.deferToChild,
+                minWidth: width,
+                maxWidth: width,
+                child: _PlaybackDecks(
+                    current: track,
+                    incoming: next?.id == track?.id ? null : next,
+                    currentId: activeTrackId,
+                    currentPlaying: primaryPlaying,
+                    incomingPlaying: incomingPlaying,
+                    currentProgress: currentProgress,
+                    incomingProgress: incomingProgress));
+          }),
+          const SizedBox(height: 10),
+          _PlaybackPosition(
+            c,
+            key: ValueKey(track?.id),
+            queueButton: TextButton(
+                onPressed: c.nowPlaying == null || orderedSet != null
+                    ? null
+                    : () => _openPhonePage(context, c, () => FullPlayer(c)),
+                child: const Text('播放队列 →')),
+          ),
           Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
             Expanded(
                 child: c.v3Metric
                     ? Column(mainAxisSize: MainAxisSize.min, children: [
                         const Icon(Icons.timelapse, size: 24, color: HB.muted),
                         const SizedBox(height: 8),
-                        Text(c.smartAutomatic ? '自动接歌' : '自动接歌已关',
+                        Text(
+                            orderedSet != null
+                                ? '按曲序接歌'
+                                : c.smartAutomatic
+                                    ? '自动接歌'
+                                    : '自动接歌已关',
                             textAlign: TextAlign.center,
                             style: const TextStyle(color: HB.muted)),
                       ])
@@ -599,6 +1036,7 @@ class _PlaybackCard extends StatelessWidget {
                         ]))),
             Expanded(
                 child: PlaybackButton(
+                    compact: true,
                     label: c.isPlaying
                         ? '暂停播放'
                         : c.v3Active && c.v3State['current'] != null
@@ -607,6 +1045,7 @@ class _PlaybackCard extends StatelessWidget {
                     playing: c.isPlaying,
                     busy: busy,
                     onPressed: c.loading ||
+                            orderedSet?['state'] == 'complete' ||
                             (c.v3Active
                                 ? c.v3Loading || (!c.isPlaying && c.v3Busy)
                                 : c.applyingDirection)
@@ -617,17 +1056,26 @@ class _PlaybackCard extends StatelessWidget {
                     style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 4, vertical: 12)),
-                    onPressed: c.directionBusy ||
+                    onPressed: orderedSet != null ||
+                            c.v3Loading ||
+                            (c.directionBusy && !c.liveLayeringCanExit) ||
                             !c.isPlaying ||
                             (c.v3Continuous &&
                                 c.continuousSelection['status'] != 'ready') ||
-                            (c.v3Metric && c.v3Pending != null)
+                            (c.v3Metric &&
+                                c.v3Pending != null &&
+                                !c.liveLayeringCanExit)
                         ? null
                         : () => c.nextTrack(),
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
                       const Icon(Icons.skip_next_rounded, size: 24),
                       const SizedBox(height: 8),
-                      Text(c.v3Metric ? '下一首' : '下一首 / 混入',
+                      Text(
+                          c.liveLayeringHasStarted
+                              ? '合适点退出长混'
+                              : c.v3Metric
+                                  ? '下一首'
+                                  : '下一首 / 混入',
                           textAlign: TextAlign.center),
                     ]))),
           ]),
@@ -637,24 +1085,8 @@ class _PlaybackCard extends StatelessWidget {
                     onPressed: c.v3Stop,
                     icon: const Icon(Icons.stop_rounded, size: 20),
                     label: Text(c.v3Metric ? '停止播放' : '停止混音'))),
-          const Divider(height: 24),
-          Text(
-              c.v3Active
-                  ? c.v3Metric
-                      ? '不操作时自动在最佳接点衔接；点击下一首或调整方向，会尽快混入。切到后台或锁屏会暂停。'
-                      : '选点、EQ 和双轨混音实时执行。锁屏或离开 App 会暂停。'
-                  : track?.isRenderedMix == true
-                      ? 'V3 已渲染试听 · 6 首连续混音，当前播放无需联网。'
-                      : track?.isNas == true
-                          ? 'NAS 原曲可在线播放；下一首使用手机实时混音，和完整 V3 试听分别提供。'
-                          : track?.isLocal == true
-                              ? '正在播放本机音频。上传到云端后可获取音乐分析。'
-                              : track?.isRemote == true
-                                  ? '点下一首进行混音；缺少节拍或人声数据时使用原速淡化。'
-                                  : c.isRemoteMode
-                                      ? '从云端曲库或本机音乐选择歌曲。'
-                                      : '示例曲共用试听音频；16 拍按示例 BPM 截取，未做节拍对齐。',
-              style: const TextStyle(color: HB.muted, fontSize: 14)),
+          const SizedBox(height: 16),
+          _PerformanceControls(c),
         ]));
   }
 }
@@ -792,7 +1224,7 @@ class _V3Directions extends StatelessWidget {
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('${plan['from']} → ${plan['to']}',
-                  style: const TextStyle(fontWeight: FontWeight.w900)),
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Text(
                   '${plan['bars']} 小节 · ×${(plan['rate'] as num).toStringAsFixed(3)} · ${plan['dynamicEq'] == true ? '动态均衡' : plan['midDuck'] == true ? '人声中频 −5 dB' : '原声中频'}',
@@ -1195,7 +1627,7 @@ class _DanceSetup extends StatelessWidget {
           else ...[
             Text(
                 '${selected['style']} · 约 ${(selected['seconds'] as num) ~/ 60} 分钟 · ${songs.length} 首',
-                style: const TextStyle(fontWeight: FontWeight.w900)),
+                style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
             ...songs.take(5).map((s) => Padding(
                 padding: const EdgeInsets.only(bottom: 4),
@@ -1231,7 +1663,7 @@ class _DanceSetup extends StatelessWidget {
                 style: const TextStyle(fontSize: 14)),
           ],
           const SizedBox(height: 8),
-          const Text('首次需联网准备素材；开始后自动衔接，到时淡出。锁屏或离开 App 会暂停。',
+          const Text('首次需联网准备素材。开始后自动衔接，锁屏继续播放，到时淡出。',
               style: TextStyle(fontSize: 14)),
         ]));
   }
@@ -1242,14 +1674,14 @@ class _IssueCard extends StatelessWidget {
   final AppController c;
   @override
   Widget build(BuildContext context) => HardCard(
-      color: const Color(0xFFFFD4C9),
+      color: HB.errorSurface,
       shadow: false,
       child: Row(children: [
         Expanded(
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(c.clientIssue!.title,
-              style: const TextStyle(fontWeight: FontWeight.w900)),
+              style: const TextStyle(fontWeight: FontWeight.w600)),
           Text(c.clientIssue!.detail, style: const TextStyle(fontSize: 14)),
         ])),
         IconButton(
@@ -1288,7 +1720,7 @@ class _SettingsCard extends StatelessWidget {
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(title,
               style:
-                  const TextStyle(fontWeight: FontWeight.w900, fontSize: 17)),
+                  const TextStyle(fontWeight: FontWeight.w600, fontSize: 17)),
           const SizedBox(height: 5),
           Text(detail, style: const TextStyle(fontSize: 14)),
         ])),
@@ -1318,7 +1750,7 @@ class PersonalScreen extends StatelessWidget {
                         c.hasBackendSession
                             ? (c.accountName ?? '已连接账号')
                             : '未登录',
-                        style: const TextStyle(fontWeight: FontWeight.w900)),
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
                     Text(
                         c.hasBackendSession
                             ? '已登录 · 音乐在手机，控制在手边。'
@@ -1371,7 +1803,7 @@ class PersonalScreen extends StatelessWidget {
             onTap: () => _openPhonePage(context, c, () => AccessoryScreen(c))),
         const SizedBox(height: 25),
         const Text('手机负责播放与选曲。饰品断开时，音乐继续。',
-            style: TextStyle(fontWeight: FontWeight.w900)),
+            style: TextStyle(fontWeight: FontWeight.w600)),
         const SizedBox(height: 18),
         const ExpansionTile(
             tilePadding: EdgeInsets.zero,
@@ -1404,7 +1836,7 @@ class AccessoryScreen extends StatelessWidget {
             title: '让控制，触手可及。',
             children: [
               const Text('BLE / 手机负责播放，饰品负责控制',
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
               const SizedBox(height: 22),
               HardCard(
                   color: HB.acid,
@@ -1627,7 +2059,7 @@ class ShortcutScreen extends StatelessWidget {
                             children: [
                               Text(gesture.label,
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.w900)),
+                                      fontWeight: FontWeight.w600)),
                               DropdownButton<ShortcutAction>(
                                   isExpanded: true,
                                   value: c.shortcutMapping[gesture],
@@ -1648,7 +2080,7 @@ class ShortcutScreen extends StatelessWidget {
                   child: SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('防误触锁定',
-                          style: TextStyle(fontWeight: FontWeight.w900)),
+                          style: TextStyle(fontWeight: FontWeight.w600)),
                       subtitle: Text(c.accessoryLocked
                           ? '饰品动作暂不执行，手机仍可操作'
                           : '练舞时可随时锁定饰品控制'),

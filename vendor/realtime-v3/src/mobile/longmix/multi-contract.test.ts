@@ -1,0 +1,5 @@
+import {it,expect} from 'vitest'
+import {validateMulti} from './multi-contract'
+import {multiFixture} from './multi-fixture'
+it('preserves approved AB and permits bounded C/D stem layers, never extra masters',()=>{const p=multiFixture();expect(validateMulti(p).layers[0].role).toBe('drums');p.sources.d={...p.sources.c,trackId:'track-'+ 'd'.repeat(20)};p.layers.push({...p.layers[0],source:'d',role:'other',filter:{kind:'none'}});for(const key of ['A/D','B/D','C/D'])p.evidence.pairwise[key]={beatErrorMs:25,pitchedClash:.2};expect(Object.keys(validateMulti(p).sources)).toHaveLength(2)})
+it('refuses unbounded loops, duplicate sources, unsafe aggregate audio and unsupported role/filters',()=>{for(const mutate of [(p:any)=>p.layers[0].role='master',(p:any)=>p.sources.c=p.base.scene.sources.a,(p:any)=>p.evidence.peak=1,(p:any)=>p.layers[0].points[2][1]=.8,(p:any)=>p.layers[0].lengthFrames=0,(p:any)=>p.evidence.exitPeaks.pop(),(p:any)=>p.layers[0].source='d',(p:any)=>p.layers[0].filter.frequency=30,(p:any)=>p.evidence.checks.vocalMaxDb=-20,(p:any)=>delete p.evidence.pairwise['B/C']]){const p=multiFixture();mutate(p);expect(()=>validateMulti(p)).toThrow()}})

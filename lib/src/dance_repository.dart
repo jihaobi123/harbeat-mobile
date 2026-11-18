@@ -1,11 +1,12 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'backend.dart';
+import 'cloud_endpoints.dart';
 
 class DanceRepository {
   DanceRepository({http.Client? client, Uri? baseUri})
       : _client = client ?? http.Client(),
-        baseUri = baseUri ?? Uri.parse('https://8.136.120.255');
+        baseUri = baseUri ?? CloudEndpoints.mediaUri;
   final http.Client _client;
   final Uri baseUri;
   Future<Map<String, dynamic>> _get(String path,

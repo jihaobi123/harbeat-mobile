@@ -5,7 +5,8 @@ python tools/build_realtime.py             # verify/build from local inputs
 """
 import argparse, concurrent.futures, hashlib, json, pathlib, shutil, subprocess, urllib.request
 from prepare_continuous import prepare as prepare_continuous
-from engine_build import npm_executable, source_fingerprints, stage_notices, verify_bundle, verify_metric_source, verify_upstream_source
+from prepare_device_tempo import prepare as prepare_device_tempo
+from engine_build import verify_listen_source, npm_executable, source_fingerprints, stage_notices, verify_bundle, verify_metric_source, verify_upstream_source
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCE = ROOT / 'vendor/realtime-v3'
@@ -18,7 +19,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--download', action='store_true')
     parser.add_argument('--assets-only', action='store_true', help='Verify/prepare source media without changing npm dependencies or compiling the engine')
+    parser.add_argument('--pair-reference-lab', type=pathlib.Path, help='Package private, verified original source segments and Jetson reference for the lab app')
     args = parser.parse_args()
+    prepare_device_tempo(args.download)
+    listen=verify_listen_source(SOURCE)
     prepare_continuous(args.download)
     upstream = verify_upstream_source(SOURCE)
     metric = verify_metric_source(SOURCE)
@@ -60,11 +64,13 @@ def main():
     # collides. The offline index uses .json URLs; APK compression handles size.
     shutil.copytree(SOURCE/'dist-mobile', DEST, ignore=shutil.ignore_patterns('*.json.gz'))
     shutil.copytree(SOURCE/'dist-metric-mobile', DEST, dirs_exist_ok=True)
+    if args.pair_reference_lab:
+        shutil.copytree(args.pair_reference_lab, DEST/'pair-reference-lab')
     manifest = {'commit': upstream['commit'], 'catalogSha256': sha((SOURCE/'public/catalog.json').read_bytes()),
                 'assetCount': len(assets), 'mediaBytes': sum(a['bytes'] for a in assets.values()),
                 'schema': 'harbeat.android-engine-build.v2',
-                'engine': 'bundled Web Audio V3 + local execution', 'foregroundOnly': True,
-                'metricSourceCommit': metric['commit'],
+                'engine': 'bundled Web Audio V3 + local execution', 'foregroundOnly': False,
+                'metricSourceCommit': metric['commit'], 'listenSourceCommit': listen['commit'],
                 'sourceFiles': source_fingerprints(ROOT),
                 'files': {str(p.relative_to(DEST)).replace('\\','/'): sha(p.read_bytes()) for p in DEST.rglob('*') if p.is_file()}}
     (DEST/'mobile-build.json').write_text(json.dumps(manifest, indent=2), encoding='utf-8')

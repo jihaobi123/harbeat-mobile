@@ -1,0 +1,13 @@
+{
+  "package": "@ffmpeg/core",
+  "version": "0.12.10",
+  "license": "GPL-2.0-or-later",
+  "source": "https://github.com/ffmpegwasm/ffmpeg.wasm/tree/%40ffmpeg%2Fcore%400.12.10",
+  "npmIntegrity": "sha512-dzNplnn2Nxle2c2i2rrDhqcB19q9cglCkWnoMTDN9Q9l3PvdjZWd1HfSPjCNWc/p8Q3CT+Es9fWOR0UhAeYQZA==",
+  "files": {
+    "ffmpeg-core.js": "b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21",
+    "ffmpeg-core.wasm": "9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7"
+  },
+  "licenseFile": "COPYING.GPLv2",
+  "licenseSha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643"
+}

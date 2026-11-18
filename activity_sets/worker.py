@@ -23,7 +23,7 @@ IDENTIFIER = re.compile(r'^[A-Za-z0-9_-]{1,160}$')
 PACK_ID = re.compile(r'^[a-f0-9]{32}$')
 METHODS = {'original','bass','filter','yield','vocal','bass_filter'}
 GATEWAY = 'http://127.0.0.1:8791'
-ORIGIN = 'https://8.136.120.255'
+ORIGIN = os.environ.get('LISTEN_PUBLIC_ORIGIN', 'https://47.108.118.177').rstrip('/')
 
 
 class PreparationError(ValueError):
@@ -284,7 +284,7 @@ class Worker:
         return response.json()
 
     def submit_strategy(self,edge):
-        response=self.session.post(GATEWAY+'/plans',json={k:edge[k] for k in ('from','to','windowId','start')},headers={'Origin':ORIGIN},timeout=(3,8),allow_redirects=False)
+        response=self.session.post(GATEWAY+'/plans',json={**{k:edge[k] for k in ('from','to','windowId','start')},'stemTimelineVersion':'stem-timeline-v2'},headers={'Origin':ORIGIN},timeout=(3,8),allow_redirects=False)
         if response.status_code==429:return {'status':'busy'}
         response.raise_for_status()
         return response.json()

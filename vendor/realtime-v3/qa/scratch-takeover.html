@@ -1,0 +1,16 @@
+<!doctype html><html lang="zh-CN"><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HarBeat · 基础搓碟对照</title>
+<style>body{margin:0;background:#fff;color:#202124;font:16px/1.65 system-ui,sans-serif}main{max-width:760px;margin:40px auto;padding:0 22px}h1{font-size:30px;letter-spacing:-1px}h2{font-size:23px;margin-bottom:5px}p{color:#64676c}article{background:#f4f5f6;padding:22px;border-radius:22px;margin:24px 0}label{display:block;margin-top:18px;font-weight:600}audio{width:100%;display:block;margin-top:8px}summary{cursor:pointer;color:#ba3038;margin-top:20px}small{color:#64676c}button{background:#202124;color:#fff;border:0;border-radius:14px;padding:12px 20px;font:inherit;cursor:pointer}</style>
+<main><small>HarBeat / 手机搓碟改进</small><h1>让推拉接管当前歌曲。</h1><p>每段前 2 秒是原曲，接着两拍推拉，再按拍恢复。本轮使用完全相同的推拉声音，只比较原曲继续大声叠播与原曲让位两种关系。</p><button id="stop">全部暂停</button><div id="groups">正在载入试听…</div><p>推拉期间，原曲仅在后台静音计时；结束时恢复到本来应该播放的位置。伴奏盘配合搓碟是另一种设置，本轮没有加入第二首伴奏。</p></main>
+<script type="module">
+const container=document.querySelector('#groups');
+document.querySelector('#stop').onclick=()=>document.querySelectorAll('audio').forEach(a=>a.pause());
+function player(id,kind){const a=document.createElement('audio');a.controls=true;a.preload='metadata';a.src=encodeURIComponent(id)+'/'+kind+'.wav';a.addEventListener('play',()=>document.querySelectorAll('audio').forEach(b=>{if(a!==b)b.pause()}));return a}
+try{
+ const response=await fetch('report.json');if(!response.ok)throw Error('试听资料未就绪');const rows=await response.json();container.replaceChildren();
+ for(const [i,row] of rows.entries()){
+  const card=document.createElement('article'),meta=document.createElement('small'),title=document.createElement('h2');meta.textContent=String(i+1).padStart(2,'0')+' · '+row.bpm+' BPM';title.textContent=row.title;card.append(meta,title);
+  for(const [kind,text]of [['original','原曲参考'],['overlay','上一版 · 原曲保留 82% 叠播'],['takeover','修正版 · 原曲静音，推拉接管']]){const label=document.createElement('label');label.textContent=text;label.append(player(row.id,kind));card.append(label)}
+  container.append(card);
+ }
+}catch(e){container.textContent='试听载入失败：'+e.message}
+</script></html>

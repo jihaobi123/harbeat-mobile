@@ -127,6 +127,7 @@ extension MusicSearchFlow on AppController {
           covered: result.covered,
           total: result.total,
           title: result.title,
+          spotifySearchUrl: result.spotifySearchUrl,
           hits: result.hits.map((h) {
             final cover = h.coverUrl ??
                 tracks
@@ -144,6 +145,7 @@ extension MusicSearchFlow on AppController {
                 durationSeconds: h.durationSeconds,
                 trackId: h.trackId,
                 discoveryId: h.discoveryId,
+                discoveryReason: h.discoveryReason,
                 isLibrary: h.isLibrary,
                 playable: h.playable,
                 mixReady: h.mixReady,
@@ -314,18 +316,40 @@ extension MusicSearchFlow on AppController {
     }
   }
 
-  /// Appends newly published index rows without preparing a new audio context.
+  Future<void> refreshMixCatalog() async {
+    if (mixCatalogRefreshing || !v3Active || !v3Metric) return;
+    mixCatalogRefreshing = true;
+    _changed();
+    try {
+      await _refreshV3MusicCatalog();
+      v3Error = null;
+    } catch (_) {
+      v3Error = '素材状态刷新失败，保留当前播放和已加载目录。';
+    } finally {
+      mixCatalogRefreshing = false;
+      if (!_disposed) _changed();
+    }
+  }
+
+  /// Updates publication metadata without preparing a new audio context.
   Future<void> _refreshMusicCatalog() async {
     if (nasRepository != null) await refreshNas();
-    if (_disposed || !v3Active || !v3Metric) return;
+    await _refreshV3MusicCatalog();
+  }
+
+  Future<void> _refreshV3MusicCatalog() async {
+    if (_disposed || !v3Active || !v3Metric || v3Loading) return;
     final result = await realtimeEngine.command('refreshLibrary');
-    if (_disposed) return;
+    if (_disposed || !v3Active || !v3Metric || v3Loading) return;
     final rows = (result['tracks'] as List? ?? [])
         .whereType<Map>()
         .map((r) => Map<String, dynamic>.from(r))
         .toList();
-    final known = v3Catalog.map((v) => v['id']).toSet();
-    v3Catalog = [...v3Catalog, ...rows.where((r) => !known.contains(r['id']))];
+    final merged = {for (final row in v3Catalog) row['id']: row};
+    for (final row in rows) {
+      merged[row['id']] = row;
+    }
+    v3Catalog = merged.values.toList();
     for (final row in rows) {
       final id = row['id'];
       if (id is! String || tracks.any((t) => t.id == 'nas:$id')) continue;
@@ -342,6 +366,7 @@ extension MusicSearchFlow on AppController {
             durationMs: ((row['duration'] as num? ?? 0) * 1000).round())
       ]);
     }
+    _applySourceCatalogCovers(rows);
     if (result['state'] is Map) {
       _receiveV3(Map<String, dynamic>.from(result['state'] as Map));
     }

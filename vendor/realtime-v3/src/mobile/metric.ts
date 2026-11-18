@@ -6,7 +6,7 @@ import {canArm} from '../metric-upstream/metric-mix/plan'
 import type {Prepared, Method} from '../metric-upstream/metric-mix/types'
 import type {Track,Plan} from '../metric-upstream/realtime/planner'
 import {nativeSegment} from '../metric-upstream/continuous/segments'
-import {candidateStages,rankContinuousChoices,rankNearbyChoices,choiceForPlan,SMART_POLICY,NEARBY_DIRECTION_POLICY,styleMatches,type SmartChoice} from './smart-selection'
+import {candidateStages,rankChoices,rankContinuousChoices,rankNearbyChoices,rankApprovedNearbyChoices,choiceForPlan,SMART_POLICY,NEARBY_DIRECTION_POLICY,RESERVATION_NEARBY_POLICY,styleMatches,type SmartChoice} from './smart-selection'
 import type {Host} from './session'
 import {mixNearby,nearbyPlan} from './nearby'
 import {localOriginal,preloadOriginal} from './local-original'
@@ -77,6 +77,11 @@ export class MetricRun {
  phase='idle'
  private refreshTask:Promise<void>|null=null
  private activity:ActivitySession|null=null
+ private get approvedReservation(){return this.activity?.strategyVersion==='jetson-decision-v1'?this.activity:null}
+ private reservationSelector(a:Track,b:Track){
+  const session=this.approvedReservation,energy=this.energyLevel
+  return session?(position:number,excluded:Set<string>)=>rankApprovedNearbyChoices(a,session.approvedCandidates(a,position,energy).filter(c=>c.track.id===b.id&&!excluded.has(c.plan.id)&&!this.excludedPlans.has(c.plan.id)),position,energy).best?.plan??null:undefined
+ }
  private automaticSet=false
  private autoSetSequence=0
  private pendingAutoSet:ActivitySession|null=null
@@ -147,7 +152,8 @@ export class MetricRun {
   if(hit)p.logs?.push({kind:'device_prepared_reused',from:a.id,to:b.id,start:plan.start,sourcePosition:p.position})
   // Subscribe before releasing background work: an exact shared preparation
   // survives, while an unrelated cold job yields its CPU/network budget.
-  const operation=this.preparedPool.get(key,inner=>prepareDevice(p,a,b,plan,this.base,inner),signal)
+  const cachedApprovalOnly=!!this.approvedReservation
+  const operation=this.preparedPool.get(key,inner=>prepareDevice(p,a,b,plan,this.base,inner,{cachedApprovalOnly}),signal)
   if(!background&&this.warmRunning)this.resetWarm()
   return operation
  }
@@ -234,7 +240,7 @@ export class MetricRun {
   if(this.player?.transition||this.player?.continuation)throw Error('正在交接；完成后可以选择下一首')
   if(!this.index.tracks.some(t=>t.id===id&&t.playStatus==='ready'&&t.mixStatus==='ready'))throw Error('这首歌尚未具备智能混音条件')
   if(id===this.player?.current?.id)throw Error('请选择不同的下一首')
-  this.resetWarm(true);this.invalidate();this.selected=this.explicit=id;this.retryAt=0;this.excludedPlans.clear();this.excludedTracks.clear()
+  this.userIntent=null;this.resetWarm(true);this.invalidate();this.selected=this.explicit=id;this.retryAt=0;this.excludedPlans.clear();this.excludedTracks.clear()
   this.notice='已指定下一首，系统会自动寻找合适接点';this.update()
  }
  private playbackEntries(){return this.activity?this.index.tracks.filter(t=>this.activity!.ids.has(t.id)||this.automaticSet&&t.id===this.explicit):this.index.tracks}
@@ -365,6 +371,13 @@ export class MetricRun {
     const qualified=new Set<string>()
     const compare=(x:SmartChoice,y:SmartChoice)=>(stage.kind==='recent'?this.recent.lastIndexOf(x.track.id)-this.recent.lastIndexOf(y.track.id):0)||
      (intent?(x.nearbyBudget??60)-(y.nearbyBudget??60)||y.score-x.score||x.plan.start-y.plan.start:y.score-x.score||y.plan.end-x.plan.end)||x.plan.id.localeCompare(y.plan.id)
+    if(intent&&this.approvedReservation){
+     const allowed=new Set(stage.entries.map(t=>t.id))
+     choices=rankApprovedNearbyChoices(a,this.approvedReservation.approvedCandidates(a,p.position,energy).filter(c=>allowed.has(c.track.id)&&!this.excludedPlans.has(c.plan.id)),p.position,energy).choices.sort(compare).slice(0,3)
+     selection.checked+=stage.entries.length;selection.qualified=choices.length
+     if(choices.length)break
+     continue
+    }
     // Cached approvals prepare exact cues; they do not replace the automatic
     // quality policy with the earliest nearby cue intended for a manual tap.
     if(!intent){
@@ -373,11 +386,14 @@ export class MetricRun {
       .filter(c=>allowed.has(c.track.id)&&!this.excludedPlans.has(c.plan.id))
      const byPlan=new Map(approved.map(c=>[c.plan.id,c]))
      const tracks=[...new Map(approved.map(c=>[c.track.id,c.track])).values()]
-     choices=rankContinuousChoices(a,tracks,p.position,energy,p.cache.ready).choices
+     choices=(this.approvedReservation?rankChoices:rankContinuousChoices)(a,tracks,p.position,energy,p.cache.ready).choices
       .flatMap(c=>{const saved=byPlan.get(c.plan.id);return saved?[{...c,plan:saved.plan}]:[]})
       .sort(compare).slice(0,3)
      if(choices.length){selection.checked=choices.length;selection.qualified=choices.length;break}
     }
+    // A prepared reservation is a bounded set of approvals, not a request to
+    // speculate on new Jetson jobs after a saved point expires.
+    if(this.approvedReservation)continue
     // Rank and release each eight-track batch. Keep only the three render
     // attempts, rather than holding every track's full analysis in memory.
     for(let batch=0;batch<stage.entries.length;batch+=8){
@@ -401,7 +417,7 @@ export class MetricRun {
     if(choices.length)break
    }
    if(!valid())return
-   if(!choices.length)throw Error(`已检查 ${selection.checked} 首，暂时没有通过接点与响度连续性检查的歌曲${selection.metadataFailed?`（${selection.metadataFailed} 首分析资料读取失败）`:''}；当前音乐继续播放`)
+   if(!choices.length){if(this.approvedReservation)throw Object.assign(Error('附近暂时没有可用的预约接点，当前音乐继续播放，将等待后续合格接点'),{code:'reservation_waiting'});throw Error(`已检查 ${selection.checked} 首，暂时没有通过接点与响度连续性检查的歌曲${selection.metadataFailed?`（${selection.metadataFailed} 首分析资料读取失败）`:''}；当前音乐继续播放`)}
    let lastError='',expired=false
    const liveBudget={attempted:false}
    for(const choice of choices.slice(0,3)){
@@ -413,7 +429,7 @@ export class MetricRun {
     const describe=(chosen:SmartChoice)=>{
     selection.usedRecent=this.recent.includes(chosen.track.id)
     this.selected=chosen.track.id;this.phase='preparing'
-    this.recommendation={id:chosen.track.id,title:chosen.track.title,style:this.targetStyle,energyLevel:this.energyLevel,reason:chosen.reason,styleLabels:this.index.tracks.find(t=>t.id===chosen.track.id)?.styleLabels??[],selection:{...selection},energy:chosen.energy,score:chosen.score,qualityScore:chosen.plan.score,energyPenalty:chosen.plan.score-chosen.score,policy:SMART_POLICY,qualityPolicy:intent?NEARBY_DIRECTION_POLICY:'continuous-auto-quality-v1',
+    this.recommendation={id:chosen.track.id,title:chosen.track.title,style:this.targetStyle,energyLevel:this.energyLevel,reason:chosen.reason,styleLabels:this.index.tracks.find(t=>t.id===chosen.track.id)?.styleLabels??[],selection:{...selection},energy:chosen.energy,score:chosen.score,qualityScore:chosen.plan.score,energyPenalty:chosen.plan.score-chosen.score,policy:SMART_POLICY,qualityPolicy:intent?(this.approvedReservation?RESERVATION_NEARBY_POLICY:NEARBY_DIRECTION_POLICY):'continuous-auto-quality-v1',
      cue:{start:chosen.plan.start,end:chosen.plan.end,bStart:chosen.plan.window.start,bEnd:chosen.plan.window.end,bars:chosen.plan.window.bars},
      alternatives:choices.slice(0,3).map(c=>({id:c.track.id,title:c.track.title,start:c.plan.start,windowId:c.plan.window.id,score:c.score}))}
     }
@@ -429,6 +445,7 @@ export class MetricRun {
     try{
      if(intent){
       const outcome=await mixNearby({player:p,a,b,signal:candidate.signal,ready,material:choice.plan,
+       selectPlan:this.reservationSelector(a,b),
        preload:(plan,signal)=>(p.localExecution?preloadDevice(p,a,b,plan,signal):preloadOriginal(p,a,b,plan,signal)),
        acceptPlan:plan=>!!choiceForPlan(a,b,plan,energy),
        scorePlan:plan=>choiceForPlan(a,b,plan,energy)?.score??-Infinity,
@@ -451,6 +468,9 @@ export class MetricRun {
      this.library.trim(new Set([a.id,b.id]),10);this.retryAt=0;return
     }catch(e){
      if(!valid()||controller.signal.aborted)return
+     // Quota/queue pressure is not a musical rejection. Preserve this cue and
+     // stop the batch instead of spending more slots on other candidates.
+     if((e as {status?:number}).status===429||(e as {code?:string}).code==='reservation_waiting')throw e
      this.excludedPlans.add(choice.plan.id);lastError=(e as Error).message
      this.history.push({at:new Date().toISOString(),kind:'candidate_failed',planId:choice.plan.id,reason:lastError})
      this.history=this.history.slice(-12)
@@ -459,13 +479,16 @@ export class MetricRun {
    }
    if(expired)throw expiredCue()
    throw Error(lastError||'本轮转场尚未准备成功，当前音乐继续播放')
-  }catch(e){if(valid()&&(e as Error).name!=='AbortError'){this.phase='no_match';this.error=(e as Error).message;p.logs.push({kind:'automatic_no_match',at:new Date().toISOString(),track:a.id,sourcePosition:p.position,duration:a.duration,selection:{...this.selection},reason:this.error});this.recommendation=null;this.selected=null;this.retryAt=Date.now()+(isExpiredCue(e)?1000:30000)}}
+  }catch(e){if(valid()&&(e as Error).name!=='AbortError'){const waiting=(e as {code?:string}).code==='reservation_waiting';this.phase=waiting?'waiting_approved':'no_match';this.error=(e as Error).message;p.logs.push({kind:waiting?'reservation_waiting':'automatic_no_match',at:new Date().toISOString(),track:a.id,sourcePosition:p.position,duration:a.duration,selection:{...this.selection},reason:this.error});this.recommendation=null;this.selected=null;if(waiting&&intent)this.userIntent=intent;this.retryAt=Date.now()+(waiting?2000:(e as {status?:number;retryAfterMs?:number}).status===429?Math.max(2000,Math.min(60000,(e as {retryAfterMs?:number}).retryAfterMs??10000)):isExpiredCue(e)?1000:30000)}}
   finally{this.library.trim(new Set([p.current?.id??'',this.selected??'']),10);if(token===this.revision){this.working=false;this.update()}}
  }
  /** Roll a small device-ready horizon. This timer only prepares immutable
   * plans; the common audio clock still schedules every accepted handoff. */
  private warmNearby(){
   if((this.cloudPreparing||this.autoDownloading)&&!this.automaticSet)return
+  // A speculative nearest-cue job cannot be cancelled on Jetson once submitted.
+  // Secure the actual automatic handoff first, then roll optional nearby cues.
+  if(this.automatic&&!this.result)return
   const p=this.player,a=p?.current
   const key=this.alive&&p?.playing&&this.index.tracks.find(t=>t.id===a?.id)?.mixStatus==='ready'&&!p.continuation&&!p.paused&&!p.busy&&!p.transition&&a?[a.id,this.targetStyle,this.energyLevel,this.explicit??'',this.activity?.packId??''].join(':'):''
   if(key!==this.warmKey){this.resetWarm();this.warmKey=key}
@@ -477,6 +500,16 @@ export class MetricRun {
    const entry=this.index.tracks.find(t=>t.id===a.id);if(!entry)return
    const search=candidateStages(this.playbackEntries(),entry,this.targetStyle,this.recent,this.excludedTracks,this.explicit,this.selected)
    const allowed=new Set(search.stages.flatMap(s=>s.entries.map(t=>t.id)))
+   if(this.approvedReservation){
+    const candidates=rankApprovedNearbyChoices(a,this.approvedReservation.approvedCandidates(a,p.position,this.energyLevel).filter(c=>allowed.has(c.track.id)&&!this.excludedPlans.has(c.plan.id)),p.position,this.energyLevel).choices.slice(0,this.resultPin?2:3)
+    for(const {track:b,plan} of candidates){
+     controller.signal.throwIfAborted();if(p.current?.id!==a.id||!canArm(plan,a.id,p.position))continue
+     this.warmPreparing={from:a.id,to:b.id,start:plan.start,end:plan.end};this.update()
+     try{const result=await this.deviceResult(p,a,b,plan,controller.signal,true);if(canArm(result.plan,a.id,p.position))p.logs.push({kind:'device_rolling_ready',from:a.id,to:b.id,start:plan.start,method:result.decision.recommended,sourcePosition:p.position,renderRequested:false,reserved:true})}
+     catch(error){controller.signal.throwIfAborted();p.logs.push({kind:'device_rolling_unavailable',to:b.id,start:plan.start,reason:(error as Error).message,reserved:true})}
+    }
+    return
+   }
    const session=this.activity as (ActivitySession&{candidates?:(a:Track,position:number,energy:number)=>{track:Track;plan:Plan}[]})|null
    const tracks:Track[]=[]
    // Use every retained reservation track when selecting the live nearest
@@ -507,10 +540,10 @@ export class MetricRun {
     controller.signal.throwIfAborted();if(p.current?.id!==a.id||!canArm(plan,a.id,p.position))continue
     this.warmPreparing={from:a.id,to:b.id,start:plan.start,end:plan.end};this.update()
     try{const result=await this.deviceResult(p,a,b,plan,controller.signal,true);if(canArm(result.plan,a.id,p.position))p.logs.push({kind:'device_rolling_ready',from:a.id,to:b.id,start:plan.start,method:result.decision.recommended,sourcePosition:p.position,renderRequested:false})}
-    catch(error){controller.signal.throwIfAborted();p.logs.push({kind:'device_rolling_unavailable',to:b.id,start:plan.start,reason:(error as Error).message})}
+    catch(error){controller.signal.throwIfAborted();p.logs.push({kind:'device_rolling_unavailable',to:b.id,start:plan.start,reason:(error as Error).message});if((error as {status?:number}).status===429){this.warmAt=Date.now()+Math.max(2000,Math.min(60000,(error as {retryAfterMs?:number}).retryAfterMs??10000));break}}
    }
   })().catch(e=>{if(!controller.signal.aborted)p.logs.push({kind:'nearby_preload_failed',reason:(e as Error).message})})
-   .finally(()=>{if(this.warmController===controller){this.warmRunning=false;this.warmPreparing=null;this.warmAt=Date.now()+2000;this.update()}})
+   .finally(()=>{if(this.warmController===controller){this.warmRunning=false;this.warmPreparing=null;this.warmAt=Math.max(this.warmAt,Date.now()+2000);this.update()}})
  }
  tick(){
   const p=this.player
@@ -520,7 +553,7 @@ export class MetricRun {
    p?.logs.push({kind:'automatic_set_attached',at:new Date().toISOString(),packId:this.activity.packId,current:p.current?.id,position:p.position})
    this.update()
   }
-  if(this.automatic&&p?.playing&&!p.paused&&!p.transition&&!p.continuation&&!this.working&&!this.autoTask&&!this.nearbyTask&&['no_match','waiting_assets'].includes(this.phase)&&p.current&&p.current.duration-p.position<=30&&Date.now()>=this.nativeRetryAt){
+  if(!this.approvedReservation&&this.automatic&&p?.playing&&!p.paused&&!p.transition&&!p.continuation&&!this.working&&!this.autoTask&&!this.nearbyTask&&['no_match','waiting_assets'].includes(this.phase)&&p.current&&p.current.duration-p.position<=30&&Date.now()>=this.nativeRetryAt){
    const task=this.queueNativeContinuation().finally(()=>{if(this.autoTask===task)this.autoTask=null});this.autoTask=task;return
   }
   if(p?.continuation)return
@@ -528,6 +561,7 @@ export class MetricRun {
   if(!this.alive||!p?.playing||p.continuation||p.paused||p.busy||p.buffering||p.transition||this.working||this.autoTask||this.nearbyTask)return
   if((this.cloudPreparing||this.autoDownloading)&&!this.automaticSet&&!this.result){this.phase='waiting_assets';this.notice='后台正在准备下一组分轨，当前歌曲继续播放';return}
   if(this.userIntent){
+   if(Date.now()<this.retryAt)return
    const intent=this.userIntent;this.userIntent=null
    const task=this.recommend(intent).finally(()=>{if(this.autoTask===task)this.autoTask=null})
    this.autoTask=task;return
@@ -584,11 +618,11 @@ export class MetricRun {
   try{
    const b=await abortable(this.library.load(id),controller.signal)
    if(!this.alive||token!==this.revision)return
-   const outcome=await mixNearby({player:p,a,b,signal:controller.signal,ready,preload:(plan,signal)=>(p.localExecution?preloadDevice(p,a,b,plan,signal):preloadOriginal(p,a,b,plan,signal)),prepare:this.livePreparation(p,a,b),onStatus:message=>{if(this.alive&&token===this.revision){this.notice=message;this.update()}}})
+   const outcome=await mixNearby({player:p,a,b,signal:controller.signal,ready,selectPlan:this.reservationSelector(a,b),preload:(plan,signal)=>(p.localExecution?preloadDevice(p,a,b,plan,signal):preloadOriginal(p,a,b,plan,signal)),prepare:this.livePreparation(p,a,b),onStatus:message=>{if(this.alive&&token===this.revision){this.notice=message;this.update()}}})
    if(!this.alive||token!==this.revision)return
    this.adopt(outcome.result,a,b,'nearby');this.method=outcome.method;this.phase='armed';this.notice='已安排附近合适接点，将自动混入下一首'
    this.history.push({kind:'handoff_requested',origin:'nearby',jobId:outcome.result.id,method:outcome.method,sourcePosition:p.position,at:new Date().toISOString()});this.history=this.history.slice(-12)
-  }catch(e){if(token===this.revision&&(e as Error).name!=='AbortError'){this.phase='no_match';this.error=(e as Error).message;this.retryAt=Date.now()+30000}}
+  }catch(e){if(token===this.revision&&(e as Error).name!=='AbortError'){const waiting=(e as {code?:string}).code==='reservation_waiting';this.phase=waiting?'waiting_approved':'no_match';this.error=(e as Error).message;if(waiting)this.userIntent={kind:'user-next',preferred:id};this.retryAt=Date.now()+(waiting?2000:30000)}}
   finally{if(token===this.revision){this.working=false;this.update()}}
  }
  requestNext(){
@@ -612,6 +646,7 @@ export class MetricRun {
   if(this.autoManifest&&!this.autoDownloading&&this.autoPreparation?.state==='partial')void this.prepareAutoSet(this.autoManifest,this.autoName)
   const p=await this.ensure(),a=p.current
   if(a&&p.position>=a.duration-.1){
+   if(this.approvedReservation)throw Error('当前歌曲已结束，预约中已没有可用的后续混音接点；请从播放队列选择歌曲重新开始')
    const entry=this.index.tracks.find(t=>t.id===a.id),next=this.automatic&&entry?this.nativeCandidates(entry)[0]:null
    if(this.automatic&&!next)throw Error('歌曲已结束，当前方向暂无其他可播放音乐')
    p.logs?.push({kind:'resume_ended_track',at:new Date().toISOString(),from:a.id,to:next?.id??a.id,mixed:false})

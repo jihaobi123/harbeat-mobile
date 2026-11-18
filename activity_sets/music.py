@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 STYLES=['EDM','KPOP','Hip-Hop','afro','amapiano','baile funk','boombap','breakbeat','dancehall','disco','funk','grime','house','jazz hiphop','jersey club','trap']
 ACTIVE=('queued','submitting','downloading','transferring','analyzing','publishing')
 TERMINAL=('ready','ready_playback','failed')
-PUBLIC_ORIGIN='https://8.136.120.255'
+PUBLIC_ORIGIN=os.environ.get('LISTEN_PUBLIC_ORIGIN', 'https://47.108.118.177').rstrip('/')
 
 class Match(BaseModel):
     model_config=ConfigDict(extra='forbid')

@@ -8,7 +8,7 @@ import {fullVocalCollision} from './original-quality'
 import {loadPrepared} from './device-prepare'
 import {hasMethod} from './device-execution'
 import {buildV30Eq} from '../metric-upstream/v30/eq'
-export type NearbyOptions={player:MetricTransport;a:Track;b:Track;signal:AbortSignal;prepare:(plan:Plan,signal:AbortSignal)=>Promise<Prepared>;preload?:(plan:Plan,signal:AbortSignal)=>Promise<unknown>;material?:Plan;ready?:{result:Prepared;method:Method};onStatus?:(message:string)=>void;acceptPlan?:(plan:Plan)=>boolean;onCandidate?:(plan:Plan)=>void;scorePlan?:(plan:Plan)=>number;leadSeconds?:number}
+export type NearbyOptions={player:MetricTransport;a:Track;b:Track;signal:AbortSignal;prepare:(plan:Plan,signal:AbortSignal)=>Promise<Prepared>;preload?:(plan:Plan,signal:AbortSignal)=>Promise<unknown>;material?:Plan;ready?:{result:Prepared;method:Method};onStatus?:(message:string)=>void;acceptPlan?:(plan:Plan)=>boolean;onCandidate?:(plan:Plan)=>void;scorePlan?:(plan:Plan)=>number;selectPlan?:(position:number,excluded:Set<string>)=>Plan|null;leadSeconds?:number}
 function wait<T>(operation:Promise<T>,signal:AbortSignal){return new Promise<T>((resolve,reject)=>{
  const cleanup=()=>signal.removeEventListener('abort',abort),abort=()=>{cleanup();reject(signal.reason??new DOMException('已取消','AbortError'))}
  signal.addEventListener('abort',abort,{once:true});operation.then(x=>{cleanup();resolve(x)},e=>{cleanup();reject(e)});if(signal.aborted)abort()
@@ -39,12 +39,12 @@ export async function mixNearby(o:NearbyOptions){
  const valid=()=>{signal.throwIfAborted();if(p.current?.id!==a.id||!p.playing)throw new DOMException('播放状态已变化，已取消这次混入','AbortError')}
  p.logs.push({kind:'nearby_request',at:new Date().toISOString(),from:a.id,to:b.id,sourcePosition:p.position})
  let material=o.material
- const choose=()=>nearbyPlan(a,material?{...b,windows:[material.window]}:b,p.position,excluded,o.acceptPlan,o.scorePlan)
+ const choose=()=>o.selectPlan?o.selectPlan(p.position,excluded):nearbyPlan(a,material?{...b,windows:[material.window]}:b,p.position,excluded,o.acceptPlan,o.scorePlan)
  let lastError:unknown=Error('附近没有通过拍点、人声和速度检查的接点，请换歌或稍后再试')
  for(let attempt=0;attempt<3;attempt++){
   valid()
   let plan=choose()
-  if(!plan)throw lastError
+  if(!plan)throw o.selectPlan?Object.assign(Error('附近暂时没有可用的预约接点，当前音乐继续播放，将等待后续合格接点'),{code:'reservation_waiting'}):lastError
   material??=plan
   const preparedFor=(plan:Plan)=>{
    const r=o.ready?.result
@@ -58,12 +58,12 @@ export async function mixNearby(o:NearbyOptions){
    // still cancels it. Select the actual nearest cue only after inputs arrive.
    await wait(o.preload(plan,signal),signal);valid()
    plan=choose()
-   if(!plan)throw lastError
+   if(!plan)throw o.selectPlan?Object.assign(Error('附近暂时没有可用的预约接点，当前音乐继续播放，将等待后续合格接点'),{code:'reservation_waiting'}):lastError
    cached=preparedFor(plan)
   }
   o.onCandidate?.(plan)
   const cue=cached?.result.plan??plan,controller=new AbortController(),cancel=()=>controller.abort(signal.reason)
-  p.logs.push({kind:'nearby_candidate',at:new Date().toISOString(),sourcePosition:p.position,start:cue.start,end:cue.end,reused:!!cached,policy:'formal-material-quality-v2'})
+  p.logs.push({kind:'nearby_candidate',at:new Date().toISOString(),sourcePosition:p.position,start:cue.start,end:cue.end,reused:!!cached,policy:o.selectPlan?'reservation-approved-nearby-v1':'formal-material-quality-v2'})
   signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel()
   const timer=setInterval(()=>{
    if(p.current?.id!==a.id||!p.playing)controller.abort(new DOMException('已取消这次混入','AbortError'))
@@ -86,10 +86,14 @@ export async function mixNearby(o:NearbyOptions){
    return {result,method}
   }catch(e){
    valid();if((e as Error).name==='AbortError')throw e
+   // Busy is shared queue pressure, not a rejection of this musical point.
+   // The caller owns Retry-After; do not burn three later cues during cooldown.
+   if((e as {status?:number}).status===429)throw e
    p.logs.push({kind:'nearby_candidate_failed',at:new Date().toISOString(),sourcePosition:p.position,start:cue.start,reason:(e as Error).message})
    lastError=e;excluded.add(plan.id)
    o.onStatus?.('这个接点未能及时准备，正在寻找后续可用接点…')
   }finally{clearInterval(timer);signal.removeEventListener('abort',cancel);controller.abort()}
  }
+ if(o.selectPlan&&(lastError as {code?:string})?.code==='cue_expired')throw Object.assign(Error('准备期间接点已过，当前音乐继续播放，将等待后续合格接点'),{code:'reservation_waiting'})
  throw lastError
 }

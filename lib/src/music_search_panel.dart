@@ -247,7 +247,11 @@ class _SearchImportPanelState extends State<SearchImportPanel> {
           decoration: InputDecoration(
             counterText: '',
             labelText: '歌曲、艺人、舞种或 BPM',
-            hintText: c.isRemoteMode ? '歌名、艺人或风格' : '也可以描述：深夜、鼓点重、95 BPM',
+            hintText: c.musicSearchScope == 'discover'
+                ? '例如：适合深夜独处的 R&B'
+                : c.isRemoteMode
+                    ? '歌名、艺人或风格'
+                    : '例如：深夜、鼓点重、95 BPM',
             prefixIcon: const Icon(Icons.search),
             filled: true,
             fillColor: HB.white,
@@ -319,16 +323,14 @@ class _SearchImportPanelState extends State<SearchImportPanel> {
       ],
       if (_actionError != null) ...[
         const SizedBox(height: 12),
-        HardCard(color: const Color(0xFFFFD4C9), child: Text(_actionError!)),
+        HardCard(color: HB.errorSurface, child: Text(_actionError!)),
       ],
       if (c.musicImportError != null && c.musicImportError != _actionError) ...[
         const SizedBox(height: 12),
-        HardCard(
-            color: const Color(0xFFFFD4C9), child: Text(c.musicImportError!)),
+        HardCard(color: HB.errorSurface, child: Text(c.musicImportError!)),
       ],
       if (mode == 1 && c.musicSearchError != null)
-        HardCard(
-            color: const Color(0xFFFFD4C9), child: Text(c.musicSearchError!)),
+        HardCard(color: HB.errorSurface, child: Text(c.musicSearchError!)),
       if (mode == 2 && !_linked && c.musicSearchError != null)
         _NetworkNotice(c.musicSearchError!,
             onRetry: () => _action(() async {
@@ -354,6 +356,18 @@ class _SearchImportPanelState extends State<SearchImportPanel> {
               padding: const EdgeInsets.only(bottom: 12),
               child: Text(result!.semanticMessage!,
                   style: const TextStyle(color: HB.muted, fontSize: 14))),
+        if (result?.spotifySearchUrl case final Uri url)
+          Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                  icon: const Icon(Icons.open_in_new, size: 18),
+                  label: const Text('在 Spotify 搜索'),
+                  onPressed: () => _action(() async {
+                        if (!await launchUrl(url,
+                            mode: LaunchMode.externalApplication)) {
+                          throw const ActivityException('暂时无法打开 Spotify。');
+                        }
+                      }))),
         if (result?.covered != null && result?.total != null)
           Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -366,7 +380,7 @@ class _SearchImportPanelState extends State<SearchImportPanel> {
               c.musicSearchScope == 'discover' &&
                       query.text.trim().isEmpty &&
                       mode == 0
-                  ? '输入歌名或艺人，发现新的音乐。'
+                  ? '输入歌名、艺人或想听的场景。'
                   : '没有找到可用结果，试试其他关键词。',
               style: const TextStyle(color: HB.muted)),
         for (final hit in result?.hits ?? <MusicHit>[]) _hitCard(hit),
@@ -399,6 +413,16 @@ class _SearchImportPanelState extends State<SearchImportPanel> {
         const Text('还没有下载或上传任务。', style: TextStyle(color: HB.muted)),
       for (final job in c.musicImportJobs) _jobCard(job),
     ]);
+  }
+
+  String? _publicationLabel(MusicHit hit) {
+    if (!hit.isLibrary || hit.remoteTrack != null || hit.trackId == null) {
+      return null;
+    }
+    final row =
+        widget.c.v3Catalog.where((row) => row['id'] == hit.trackId).firstOrNull;
+    final readiness = row?['mixReadiness'];
+    return readiness is Map ? readiness['label']?.toString() : null;
   }
 
   Widget _hitCard(MusicHit hit) => Padding(
@@ -440,13 +464,22 @@ class _SearchImportPanelState extends State<SearchImportPanel> {
                     ? hit.remoteTrack!.analysisLabel
                     : hit.isLibrary
                         ? (hit.mixReady
-                            ? '可混音'
+                            ? '基础混音可用'
                             : hit.playable
                                 ? '可播放 · 混音未就绪'
                                 : '音频待就绪')
                         : '外部歌曲信息 · 尚未下载'
               ].join(' · '),
               style: const TextStyle(color: HB.muted, fontSize: 14)),
+          if (_publicationLabel(hit) case final String label) ...[
+            const SizedBox(height: 6),
+            Text(label, style: const TextStyle(color: HB.muted, fontSize: 14)),
+          ],
+          if (hit.discoveryReason?.isNotEmpty == true) ...[
+            const SizedBox(height: 6),
+            Text(hit.discoveryReason!,
+                style: const TextStyle(color: HB.muted, fontSize: 14)),
+          ],
           const SizedBox(height: 12),
           if (hit.isLibrary) ...[
             HardButton(

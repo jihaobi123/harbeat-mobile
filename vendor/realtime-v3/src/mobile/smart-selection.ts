@@ -79,6 +79,19 @@ export function rankChoices(a:Track,tracks:Track[],position:number,energy:number
 }
 
 export const NEARBY_DIRECTION_POLICY='mobile-direction-formal-nearby-v2'
+export const RESERVATION_NEARBY_POLICY='mobile-reservation-approved-nearby-v1'
+/** Reservations select only frozen, source-verified approvals. Being cached
+ * never authorizes a failed musical gate, and a later horizon cannot displace
+ * an eligible point in the first horizon. */
+export function rankApprovedNearbyChoices(a:Track,candidates:{track:Track;plan:Plan}[],position:number,energy:number){
+ for(const budget of [18,60]){
+  const choices=candidates.filter(c=>c.plan.from===a.id&&c.plan.to===c.track.id&&c.plan.start>=position+1.5&&c.plan.end<=position+budget)
+   .flatMap(c=>{const choice=choiceForPlan(a,c.track,c.plan,energy);return choice?[{...choice,nearbyBudget:budget}]:[]})
+   .sort((x,y)=>y.score-x.score||x.plan.start-y.plan.start||x.plan.id.localeCompare(y.plan.id))
+  if(choices.length)return{best:choices[0],choices}
+ }
+ return{best:null,choices:[] as SmartChoice[]}
+}
 export function rankNearbyChoices(a:Track,tracks:Track[],position:number,energy:number){
  const choices:SmartChoice[]=[],rejected:string[]=[]
  for(const budget of [18,60]){

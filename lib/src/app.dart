@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show OverflowBoxFit;
+import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'audio_service.dart';
+import 'dj_reference_feedback.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'activity_repository.dart';
 import 'music_search_repository.dart';
 import 'accessory_ble.dart';
@@ -18,12 +21,15 @@ import 'repository.dart';
 import 'theme.dart';
 
 part 'phone_screens.dart';
+part 'longmix_screen.dart';
+part 'dj_reference_screen.dart';
 part 'music_search_panel.dart';
 part 'activity_screens.dart';
 part 'backend_screen.dart';
 part 'upload_screen.dart';
 part 'music_widgets.dart';
 part 'vinyl_widgets.dart';
+part 'player_turntable.dart';
 
 class HarBeatApp extends StatefulWidget {
   const HarBeatApp({super.key, this.repository, this.localStore, this.audio});
@@ -60,6 +66,12 @@ class _HarBeatAppState extends State<HarBeatApp> {
         debugShowCheckedModeBanner: false,
         title: 'HarBeat',
         theme: HB.theme,
+        builder: (_, child) => AnnotatedRegion<SystemUiOverlayStyle>(
+            value: SystemUiOverlayStyle.dark.copyWith(
+                statusBarColor: Colors.transparent,
+                systemNavigationBarColor: HB.white,
+                systemNavigationBarIconBrightness: Brightness.dark),
+            child: child!),
         home: AnimatedBuilder(
             animation: controller,
             builder: (_, __) => Shell(controller: controller)),
@@ -80,7 +92,10 @@ class Shell extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
           child: Stack(children: [
-        IndexedStack(index: controller.tab, children: pages),
+        IndexedStack(index: controller.tab, children: [
+          for (var i = 0; i < pages.length; i++)
+            TickerMode(enabled: controller.tab == i, child: pages[i]),
+        ]),
         if (controller.tab != 0 && controller.nowPlaying != null)
           Positioned(
               left: 12,
@@ -89,34 +104,24 @@ class Shell extends StatelessWidget {
               child: MiniPlayer(
                   track: controller.nowPlaying!, controller: controller)),
       ])),
-      bottomNavigationBar: SafeArea(
-          top: false,
-          child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-              child: Material(
-                  color: HB.white,
-                  clipBehavior: Clip.antiAlias,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      side: const BorderSide(color: HB.ink, width: 1.5)),
-                  child: NavigationBar(
-                    selectedIndex: controller.tab,
-                    onDestinationSelected: controller.setTab,
-                    destinations: const [
-                      NavigationDestination(
-                          icon: Icon(Icons.tune),
-                          selectedIcon: Icon(Icons.tune),
-                          label: '播放'),
-                      NavigationDestination(
-                          icon: Icon(Icons.album_outlined),
-                          selectedIcon: Icon(Icons.album),
-                          label: '音乐'),
-                      NavigationDestination(
-                          icon: Icon(Icons.person_outline),
-                          selectedIcon: Icon(Icons.person),
-                          label: '我的'),
-                    ],
-                  )))),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: controller.tab,
+        onDestinationSelected: controller.setTab,
+        destinations: const [
+          NavigationDestination(
+              icon: Icon(Icons.tune_rounded),
+              selectedIcon: Icon(Icons.tune_rounded),
+              label: '播放'),
+          NavigationDestination(
+              icon: Icon(Icons.album_outlined),
+              selectedIcon: Icon(Icons.album),
+              label: '音乐'),
+          NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: '我的'),
+        ],
+      ),
     );
   }
 }
@@ -127,11 +132,14 @@ class PageFrame extends StatelessWidget {
       required this.label,
       required this.title,
       this.scrollKey,
+      this.compact = false,
       required this.children});
   final String label;
   final String title;
   final String? scrollKey;
+  final bool compact;
   final List<Widget> children;
+  static const _horizontalInset = 16.0;
 
   @override
   Widget build(BuildContext context) => Center(
@@ -139,38 +147,30 @@ class PageFrame extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: 720),
           child: ListView(
             key: ValueKey(scrollKey ?? label),
-            padding: const EdgeInsets.fromLTRB(16, 20, 16, 128),
+            padding: EdgeInsets.fromLTRB(
+                _horizontalInset, compact ? 12 : 20, _horizontalInset, 128),
             children: [
-              Row(children: [
-                Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                        color: HB.teal,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: HB.ink, width: 1.5)),
-                    child: const Icon(Icons.graphic_eq_rounded, size: 22)),
-                const SizedBox(width: 8),
-                const Text('HARBEAT',
+              const Row(children: [
+                Text('HarBeat',
                     style: TextStyle(
-                        fontSize: 14,
-                        letterSpacing: 1.6,
-                        fontWeight: FontWeight.w800)),
-                const Spacer(),
-                const ExcludeSemantics(
-                    child: Icon(Icons.auto_awesome_outlined,
-                        color: HB.deepTeal, size: 24)),
+                        fontSize: 25,
+                        letterSpacing: -.8,
+                        fontWeight: FontWeight.w700)),
+                Padding(
+                    padding: EdgeInsets.only(left: 3, top: 10),
+                    child: SizedBox.square(
+                        dimension: 5,
+                        child: DecoratedBox(
+                            decoration: BoxDecoration(
+                                color: HB.accent, shape: BoxShape.circle)))),
               ]),
-              const SizedBox(height: 20),
-              Text(title, style: Theme.of(context).textTheme.displayLarge),
-              const SizedBox(height: 4),
-              Text(label,
-                  style: const TextStyle(
-                      fontSize: 14,
-                      letterSpacing: 1,
-                      color: HB.muted,
-                      fontWeight: FontWeight.w600)),
-              const SizedBox(height: 24),
+              SizedBox(height: compact ? 10 : 20),
+              Text(title,
+                  style: compact
+                      ? const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.w600)
+                      : Theme.of(context).textTheme.displayLarge),
+              SizedBox(height: compact ? 10 : 20),
               ...children,
             ],
           )));
@@ -203,11 +203,11 @@ class MusicScreen extends StatelessWidget {
                     c.setMusicSection(selection.single),
                 style: SegmentedButton.styleFrom(
                     minimumSize: const Size(48, 48),
-                    selectedBackgroundColor: HB.mint,
-                    selectedForegroundColor: HB.ink,
+                    selectedBackgroundColor: HB.accentSoft,
+                    selectedForegroundColor: HB.accent,
                     foregroundColor: HB.muted,
-                    backgroundColor: HB.white,
-                    side: const BorderSide(color: HB.ink, width: 1.5),
+                    backgroundColor: HB.surface,
+                    side: BorderSide.none,
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12)))),
             const SizedBox(height: 20),
@@ -261,7 +261,7 @@ class MusicScreen extends StatelessWidget {
                         children: [
                       const Text('THIS WEEK / PRACTICE',
                           style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w900)),
+                              fontSize: 14, fontWeight: FontWeight.w600)),
                       const SizedBox(height: 32),
                       Text('BODY\nELECTRIC',
                           style: Theme.of(context).textTheme.headlineLarge),
@@ -459,8 +459,7 @@ class MusicScreen extends StatelessWidget {
         context: context,
         builder: (dialogContext) => AlertDialog(
               shape: const RoundedRectangleBorder(
-                  borderRadius: HB.radius,
-                  side: BorderSide(color: HB.ink, width: 2)),
+                  borderRadius: HB.radius, side: BorderSide.none),
               title: Text(title),
               content: TextField(
                   controller: field,
@@ -622,14 +621,14 @@ class TrackDetail extends StatelessWidget {
               decoration: BoxDecoration(
                   color: HB.sleeve(track.color),
                   borderRadius: HB.radius,
-                  border: Border.all(color: HB.ink, width: 1.5)),
+                  border: Border.all(color: HB.line)),
               padding: const EdgeInsets.all(18),
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('${track.bpmLabel} BPM',
-                        style: const TextStyle(fontWeight: FontWeight.w900)),
+                        style: const TextStyle(fontWeight: FontWeight.w600)),
                     Text(track.title,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -677,7 +676,7 @@ class TrackDetail extends StatelessWidget {
             const SizedBox(height: 12),
             const HardCard(
                 shadow: false,
-                color: Color(0xFFFFD4C9),
+                color: HB.errorSurface,
                 child: Text('暂无可用音频。可以收藏歌曲信息，导入音频后再播放。'))
           ],
           const SizedBox(height: 22),
@@ -777,7 +776,7 @@ class MiniPlayer extends StatelessWidget {
           IconButton.filled(
               onPressed: controller.togglePlayback,
               style: IconButton.styleFrom(
-                  backgroundColor: HB.apricot, foregroundColor: HB.ink),
+                  backgroundColor: HB.ink, foregroundColor: HB.white),
               icon: Icon(controller.isPlaying
                   ? Icons.pause_rounded
                   : Icons.play_arrow_rounded),
@@ -802,6 +801,95 @@ class MiniPlayer extends StatelessWidget {
       ]));
 }
 
+class _PlaybackPosition extends StatefulWidget {
+  const _PlaybackPosition(this.controller, {super.key, this.queueButton});
+
+  final AppController controller;
+  final Widget? queueButton;
+
+  @override
+  State<_PlaybackPosition> createState() => _PlaybackPositionState();
+}
+
+class _PlaybackPositionState extends State<_PlaybackPosition> {
+  double? _preview;
+  bool _seeking = false;
+
+  Future<void> _finish(double value) async {
+    setState(() {
+      _preview = value;
+      _seeking = true;
+    });
+    try {
+      await widget.controller.seek(Duration(milliseconds: value.round()));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _preview = null;
+          _seeking = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = widget.controller;
+    final duration = c.duration.inMilliseconds.toDouble();
+    final max = duration > 0 ? duration : 1.0;
+    final enabled = duration > 0 &&
+        !_seeking &&
+        !c.danceRunning &&
+        !c.audioBusy &&
+        (!c.v3Active ||
+            (c.v3State['current'] != null &&
+                !c.v3Busy &&
+                c.v3Pending?['locked'] != true));
+    final value =
+        (_preview ?? c.position.inMilliseconds.toDouble()).clamp(0.0, max);
+    final elapsed = FullPlayer._time(Duration(milliseconds: value.round()));
+    final total = FullPlayer._time(c.duration);
+    final queueButton = widget.queueButton;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          label: '播放进度',
+          child: Slider(
+            key: const Key('playback-position'),
+            value: value,
+            max: max,
+            activeColor: HB.deepTeal,
+            semanticFormatterCallback: (value) =>
+                FullPlayer._time(Duration(milliseconds: value.round())),
+            onChanged:
+                enabled ? (value) => setState(() => _preview = value) : null,
+            onChangeEnd: enabled ? _finish : null,
+          ),
+        ),
+        if (queueButton == null)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [Text(elapsed), Text(total)],
+          )
+        else
+          Wrap(
+            spacing: 12,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Text('$elapsed / $total',
+                  style: const TextStyle(
+                      color: HB.muted,
+                      fontSize: 14,
+                      fontFeatures: [FontFeature.tabularFigures()])),
+              queueButton,
+            ],
+          ),
+      ],
+    );
+  }
+}
+
 class FullPlayer extends StatelessWidget {
   const FullPlayer(this.c, {super.key});
   final AppController c;
@@ -810,9 +898,6 @@ class FullPlayer extends StatelessWidget {
   Widget build(BuildContext context) {
     final track = c.nowPlaying;
     if (track == null) return const SizedBox.shrink();
-    final max = c.duration.inMilliseconds <= 0
-        ? 1.0
-        : c.duration.inMilliseconds.toDouble();
     return Scaffold(
         backgroundColor: HB.paper,
         appBar: AppBar(backgroundColor: Colors.transparent),
@@ -838,25 +923,14 @@ class FullPlayer extends StatelessWidget {
                               style: Theme.of(context).textTheme.displayLarge),
                           const SizedBox(height: 8),
                           Text('${track.artist} · ${track.bpmLabel} BPM',
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w900)),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                  color: HB.muted,
+                                  fontFeatures: [
+                                    FontFeature.tabularFigures()
+                                  ])),
                           const SizedBox(height: 28),
-                          Slider(
-                              value: c.position.inMilliseconds
-                                  .toDouble()
-                                  .clamp(0, max),
-                              max: max,
-                              activeColor: HB.deepTeal,
-                              onChanged: c.danceRunning
-                                  ? null
-                                  : (value) => c.seek(
-                                      Duration(milliseconds: value.round()))),
-                          Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(_time(c.position)),
-                                Text(_time(c.duration))
-                              ]),
+                          _PlaybackPosition(c, key: ValueKey(track.id)),
                           if (!c.v3Active)
                             Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -905,10 +979,8 @@ class FullPlayer extends StatelessWidget {
                                     tooltip: c.isPlaying ? '暂停播放' : '继续播放',
                                     style: IconButton.styleFrom(
                                         minimumSize: const Size(72, 72),
-                                        side: const BorderSide(
-                                            color: HB.ink, width: 1.5),
-                                        backgroundColor: HB.acid,
-                                        foregroundColor: HB.ink),
+                                        backgroundColor: HB.ink,
+                                        foregroundColor: HB.white),
                                     onPressed: c.togglePlayback,
                                     icon: Icon(c.isPlaying
                                         ? Icons.pause
@@ -929,7 +1001,7 @@ class FullPlayer extends StatelessWidget {
                                       ? '候选曲目 · ${c.queue.length} · 按方向实时选曲'
                                       : 'QUEUE · ${c.queue.length}',
                               style:
-                                  const TextStyle(fontWeight: FontWeight.w900)),
+                                  const TextStyle(fontWeight: FontWeight.w600)),
                           const SizedBox(height: 8),
                           SizedBox(
                               height: 240,
@@ -979,9 +1051,9 @@ class _Fact extends StatelessWidget {
       Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Text(label,
             style: const TextStyle(
-                color: Colors.grey, fontSize: 14, fontWeight: FontWeight.w900)),
+                color: HB.muted, fontSize: 14, fontWeight: FontWeight.w600)),
         Text(value,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900))
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600))
       ]);
 }
 
@@ -1001,7 +1073,7 @@ class _SectionTitle extends StatelessWidget {
             Text(title, style: Theme.of(context).textTheme.headlineMedium),
             Text(action,
                 style:
-                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w900))
+                    const TextStyle(fontSize: 14, fontWeight: FontWeight.w600))
           ]));
 }
 

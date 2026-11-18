@@ -20,6 +20,14 @@ def npm_executable():
     return command
 
 
+def verify_listen_source(source):
+    manifest=json.loads((source / 'listen-upstream.json').read_text(encoding='utf-8'))
+    if sha256(source/'public/v3-clock.js') != manifest['clockSha256']:raise ValueError('Listen audio clock differs')
+    for name,expected in manifest['files'].items():
+        if sha256(source/'src/listen-upstream'/name) != expected:raise ValueError('Listen source differs: '+name)
+    return manifest
+
+
 def verify_metric_source(source):
     manifest = json.loads((source / 'metric-upstream.json').read_text(encoding='utf-8'))
     if sha256(source / 'public/v3-clock.js') != manifest['clockSha256']:
@@ -53,12 +61,14 @@ def source_fingerprints(root):
     """Bind generated assets to inputs, including new non-pinned executors."""
     source = root / 'vendor/realtime-v3'
     paths = list((source / 'src').rglob('*'))
+    for name in ('transition-materials', 'drum-first'):
+        paths += list((source / 'public' / name).rglob('*'))
     paths += [source / name for name in (
         'package.json', 'package-lock.json', 'tsconfig.json', 'upstream.json',
-        'dependency-overlay.json', 'metric-upstream.json', 'continuous-source.json', 'public/catalog.json',
+        'dependency-overlay.json', 'listen-upstream.json', 'device-tempo.json', 'metric-upstream.json', 'continuous-source.json', 'public/catalog.json',
         'engine.html', 'mobile.html', 'metric-engine.html',
-        'vite.mobile.config.ts', 'vite.metric-mobile.config.ts', 'public/v3-clock.js', 'public/v3-device-clock.js')]
-    paths += [root / 'tools' / name for name in ('build_realtime.py', 'engine_build.py', 'prepare_continuous.py')]
+        'vite.mobile.config.ts', 'vite.metric-mobile.config.ts', 'public/v3-clock.js', 'public/v3-device-clock.js', 'public/device-atempo-worker.js')]
+    paths += [root / 'tools' / name for name in ('build_realtime.py', 'engine_build.py', 'prepare_continuous.py', 'prepare_device_tempo.py')]
     return {path.relative_to(root).as_posix(): sha256(path)
             for path in sorted(set(paths)) if path.is_file()}
 

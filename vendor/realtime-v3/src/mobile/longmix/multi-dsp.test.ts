@@ -1,0 +1,3 @@
+import {it,expect} from 'vitest'
+import {filterLoop} from './multi-dsp'
+it('uses a warmed periodic highpass and preserves stereo and loop samples',()=>{const x=new Float32Array(44100*2);for(let i=0;i<44100;i++){x[2*i]=.2+.1*Math.sin(2*Math.PI*50*i/44100)+.1*Math.sin(2*Math.PI*1000*i/44100);x[2*i+1]=-x[2*i]}const y=filterLoop(x,44100,{kind:'highpass',frequency:180,q:Math.SQRT1_2,warmupCycles:3});expect(y.length).toBe(x.length);let dc=0;for(let i=0;i<44100;i++){dc+=y[2*i];expect(y[2*i+1]).toBe(-y[2*i])}expect(Math.abs(dc/44100)).toBeLessThan(1e-5);expect(Math.max(...y.slice(2000,3000))).toBeLessThan(.12);expect(x[0]).toBeCloseTo(.2)})

@@ -8,6 +8,16 @@ import 'package:harbeat/src/repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
+  // These exercise playback actions; dedicated turntable tests cover motion.
+  setUp(() {
+    TestWidgetsFlutterBinding.ensureInitialized()
+            .platformDispatcher
+            .accessibilityFeaturesTestValue =
+        const FakeAccessibilityFeatures(disableAnimations: true);
+  });
+  tearDown(() => TestWidgetsFlutterBinding.ensureInitialized()
+      .platformDispatcher
+      .clearAccessibilityFeaturesTestValue());
   testWidgets(
       'phone sized viewport renders playback and queue without overflow',
       (tester) async {
@@ -22,6 +32,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(tester.takeException(), isNull);
     await tester.ensureVisible(find.text('开始播放'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('开始播放'));
     await tester.pumpAndSettle();
     await Scrollable.ensureVisible(tester.element(find.text('播放队列 →')),
@@ -44,9 +55,9 @@ void main() {
     expect(find.text('音乐'), findsOneWidget);
     expect(find.text('设备'), findsNothing);
     expect(find.text('我的'), findsOneWidget);
-    expect(find.text('让身体，跟着节奏。'), findsOneWidget);
+    expect(find.text('DJ 台'), findsOneWidget);
     expect(find.text('开始播放'), findsOneWidget);
-    expect(find.text('无需连接设备'), findsOneWidget);
+    expect(find.byKey(const ValueKey('mix-deck-A')), findsOneWidget);
   });
 
   testWidgets('opens music recommendations', (tester) async {
@@ -83,6 +94,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('暂停播放'), findsOneWidget);
     await tester.ensureVisible(find.text('播放队列 →'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('播放队列 →'));
     await tester.pumpAndSettle();
     expect(find.text('NOW / PHONE'), findsOneWidget);

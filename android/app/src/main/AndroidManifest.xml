@@ -43,6 +43,9 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <service android:name=".RealtimePlaybackService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="false" />
         <service android:name="com.ryanheise.audioservice.AudioService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="true" tools:ignore="Instantiatable">

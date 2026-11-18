@@ -3,6 +3,7 @@ import {planContinuous} from '../metric-upstream/continuous/beatAlignment'
 import {buildV30Eq} from '../metric-upstream/v30/eq'
 import {rankChoices,choiceForPlan} from './smart-selection'
 import {analyseWindow,pcmBuffer,rms} from './decision-core'
+import {analyseStemArrangement} from './stem-arrangement'
 import {jointStretch} from './joint-stretch'
 import {stemCurves,valueAt,type Controls} from './device-execution'
 import type {Method} from '../metric-upstream/metric-mix/types'
@@ -98,6 +99,7 @@ export async function analyseJetsonInput(input:Input,read:(file:string)=>Float32
  const analysis=analyseWindow(a,b,p,{a:buffers(mainA),b:buffers(mainB)}),requiredStems=new Set<string>()
  for(const [m,ss] of [['bass',['bass']],['filter',['other']],['yield',['other']],['vocal',['vocals']],['bass_filter',['bass','other']]] as [string,string[]][])if((analysis.decision.methods as any)[m].eligible)ss.forEach(s=>requiredStems.add(s))
  let result={schema:'harbeat.jetson-mix-plan.v1',id:input.jobId,status:'ready',producer:'jetson',analysisVersion:'jetson-decision-v1',algorithmSha256:input.plannerSha256,plan:{from:a.id,to:b.id,windowId:p.window.id,start:p.start,end:p.end,duration:p.duration,rate:p.rate,bStart:p.window.start,bEnd:p.window.end,beatErrorMs:mainBeatErrorMs(a,b,p)},sourceProof:input.sourceProof,...analysis,eq:p.v30Eq,restore:p.restore,requiredStems:[...requiredStems]} as unknown as JetsonDecision
+ if(input.stemTimelineVersion!==undefined){if(!['stem-timeline-v1','stem-timeline-v2'].includes(input.stemTimelineVersion))throw Error('Unsupported stem timeline version');const arrangement=analyseStemArrangement(a,b,p,{a:buffers(mainA),b:buffers(mainB)},{calibrateSources:input.stemTimelineVersion==='stem-timeline-v2'});result={...result,analysisVersion:input.stemTimelineVersion==='stem-timeline-v2'?'jetson-decision-v3':'jetson-decision-v2',stemArrangement:arrangement,requiredStems:[...new Set([...result.requiredStems,...arrangement.requiredStems])]}}
  const waves:Record<string,Wave>={},prelude=input.prelude
  let group:any={id:input.jobId,title:a.title+' → '+b.title,skip:'没有完整的前置鼓段'}
  if(prelude){try{

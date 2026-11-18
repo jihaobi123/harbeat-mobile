@@ -89,6 +89,10 @@ extension SmartPlaybackFlow on AppController {
   }
 
   void prepareAutomaticMusic({bool retry = false}) {
+    if (metricState['release']?['executionPolicy'] == 'listen-live-v1') {
+      _autoMixPreparation?.cancel();
+      return;
+    }
     if (_disposed || !v3Metric || activityBusy || activeActivityId != null) {
       return;
     }

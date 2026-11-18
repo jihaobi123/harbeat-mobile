@@ -1,12 +1,12 @@
 part of 'app.dart';
 
-const _recordColors = [HB.mint, HB.peach, HB.lavender, Color(0xFFDBEDF4)];
+const _recordColors = [HB.surface, HB.accentSoft, HB.surfaceStrong, HB.surface];
 
 void _openVinylPage(BuildContext context, Widget page) {
   final reduced = MediaQuery.disableAnimationsOf(context);
   Navigator.of(context).push(PageRouteBuilder<void>(
-    transitionDuration: Duration(milliseconds: reduced ? 0 : 520),
-    reverseTransitionDuration: Duration(milliseconds: reduced ? 0 : 320),
+    transitionDuration: Duration(milliseconds: reduced ? 0 : 220),
+    reverseTransitionDuration: Duration(milliseconds: reduced ? 0 : 180),
     pageBuilder: (_, __, ___) => page,
     transitionsBuilder: (_, animation, __, child) => FadeTransition(
       opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
@@ -74,21 +74,23 @@ class _VinylDisplay extends StatelessWidget {
                                                           borderRadius:
                                                               BorderRadius
                                                                   .circular(12),
-                                                          border: Border.all(
-                                                              color: HB.ink,
-                                                              width: 1.5),
+                                                          border:
+                                                              Border.all(color: HB.line),
                                                           boxShadow: const [
                                                             BoxShadow(
-                                                                color: HB.ink,
+                                                                color: Color(
+                                                                    0x14202124),
                                                                 offset: Offset(
-                                                                    0, 3))
+                                                                    0, 3),
+                                                                blurRadius: 10)
                                                           ]),
                                                       padding:
                                                           const EdgeInsets.all(
                                                               2),
                                                       child: ExcludeSemantics(
                                                           child: ClipRRect(
-                                                              borderRadius: BorderRadius.circular(9),
+                                                              borderRadius:
+                                                                  BorderRadius.circular(9),
                                                               child: TrackArtwork(
                                                                   url: coverUrl,
                                                                   fallback: Padding(
@@ -101,7 +103,7 @@ class _VinylDisplay extends StatelessWidget {
                                                                             style: TextStyle(
                                                                                 fontSize: 9,
                                                                                 letterSpacing: 1.5,
-                                                                                fontWeight: FontWeight.w800)),
+                                                                                fontWeight: FontWeight.w600)),
                                                                         Icon(
                                                                             index.isEven
                                                                                 ? Icons.graphic_eq_rounded
@@ -122,7 +124,7 @@ class _VinylDisplay extends StatelessWidget {
                             style: const TextStyle(
                                 fontSize: 16,
                                 height: 1.4,
-                                fontWeight: FontWeight.w800)),
+                                fontWeight: FontWeight.w600)),
                         const SizedBox(height: 6),
                         Text(subtitle,
                             maxLines: 2,
@@ -138,7 +140,7 @@ class _VinylDisplay extends StatelessWidget {
               decoration: BoxDecoration(
                   color: HB.peach,
                   borderRadius: BorderRadius.circular(3),
-                  border: Border.all(color: HB.ink, width: 1))),
+                  border: Border.all(color: HB.line))),
         ]));
   }
 }
@@ -200,10 +202,17 @@ class _SavedVinylPage extends StatelessWidget {
 
 class _VinylDisc extends StatefulWidget {
   const _VinylDisc(
-      {this.color = HB.apricot, this.playing = false, this.coverUrl});
+      {this.color = HB.apricot,
+      this.playing = false,
+      this.coverUrl,
+      this.size = 160,
+      this.coverFraction = .38,
+      this.refined = false});
   final Color color;
   final bool playing;
   final String? coverUrl;
+  final double size, coverFraction;
+  final bool refined;
   @override
   State<_VinylDisc> createState() => _VinylDiscState();
 }
@@ -248,31 +257,40 @@ class _VinylDiscState extends State<_VinylDisc>
               turns: spin,
               child: Stack(alignment: Alignment.center, children: [
                 CustomPaint(
-                    painter: _VinylPainter(widget.color),
-                    size: const Size.square(160)),
+                    painter:
+                        _VinylPainter(widget.color, refined: widget.refined),
+                    size: Size.square(widget.size)),
                 Positioned.fill(
                     child: Center(
                         child: FractionallySizedBox(
-                            widthFactor: .38,
-                            heightFactor: .38,
+                            widthFactor: widget.coverFraction,
+                            heightFactor: widget.coverFraction,
                             child: ClipOval(
-                                child: TrackArtwork(
-                                    url: widget.coverUrl,
-                                    fallback: const SizedBox.expand()))))),
+                                child: AnimatedSwitcher(
+                                    duration: widget.refined &&
+                                            !MediaQuery.disableAnimationsOf(
+                                                context)
+                                        ? const Duration(milliseconds: 200)
+                                        : Duration.zero,
+                                    child: TrackArtwork(
+                                        key: ValueKey(widget.coverUrl),
+                                        url: widget.coverUrl,
+                                        fallback: const SizedBox.expand())))))),
                 if (widget.coverUrl != null)
                   Container(
-                      width: 7,
-                      height: 7,
+                      width: widget.refined ? 4 : 7,
+                      height: widget.refined ? 4 : 7,
                       decoration: BoxDecoration(
                           color: HB.paper,
                           shape: BoxShape.circle,
-                          border: Border.all(color: HB.ink, width: 1))),
+                          border: Border.all(color: HB.line))),
               ]))));
 }
 
 class _VinylPainter extends CustomPainter {
-  const _VinylPainter(this.color);
+  const _VinylPainter(this.color, {this.refined = false});
   final Color color;
+  final bool refined;
   @override
   void paint(Canvas canvas, Size size) {
     final center = size.center(Offset.zero);
@@ -281,14 +299,14 @@ class _VinylPainter extends CustomPainter {
         center + const Offset(0, 2), radius, Paint()..color = HB.line);
     canvas.drawCircle(center, radius, Paint()..color = HB.ink);
     final groove = Paint()
-      ..color = const Color(0xFF3A4748)
+      ..color = const Color(0xFF3C3E42)
       ..style = PaintingStyle.stroke
       ..strokeWidth = .7;
     for (var i = 0; i < 9; i++) {
       canvas.drawCircle(center, radius * (.43 + i * .06), groove);
     }
     final shine = Paint()
-      ..color = const Color(0xFF657474)
+      ..color = refined ? const Color(0xFF44464A) : const Color(0xFF686A6E)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     canvas.drawArc(Rect.fromCircle(center: center, radius: radius * .84), -.9,
@@ -308,7 +326,7 @@ class _VinylPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _VinylPainter oldDelegate) =>
-      oldDelegate.color != color;
+      oldDelegate.color != color || oldDelegate.refined != refined;
 }
 
 class _VinylPlaylistPage extends StatefulWidget {
@@ -469,7 +487,7 @@ class _VinylPlaylistPageState extends State<_VinylPlaylistPage>
                         backgroundColor: HB.apricot,
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: const BorderSide(color: HB.ink, width: 1.5))),
+                            side: BorderSide.none)),
                     icon: const Icon(Icons.arrow_back_rounded))),
             actions: [
               IconButton(
@@ -764,13 +782,12 @@ class _LinkedTrackTile extends StatelessWidget {
                       decoration: BoxDecoration(
                           color: color,
                           borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: HB.ink, width: 1.5))))),
+                          border: Border.all(color: HB.line))))),
           Material(
-              color: active ? const Color(0xFFF1F9F6) : HB.white,
+              color: active ? HB.accentSoft : HB.surface,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
-                  side: BorderSide(
-                      color: active ? HB.deepTeal : HB.ink, width: 1.5)),
+                  side: BorderSide(color: active ? HB.accentSoft : HB.surface)),
               child: InkWell(
                   onTap: onDetail,
                   borderRadius: BorderRadius.circular(18),
@@ -790,7 +807,7 @@ class _LinkedTrackTile extends StatelessWidget {
                                   style: const TextStyle(
                                       fontSize: 16,
                                       height: 1.3,
-                                      fontWeight: FontWeight.w800)),
+                                      fontWeight: FontWeight.w600)),
                               const SizedBox(height: 5),
                               Text(track.artist,
                                   maxLines: 1,

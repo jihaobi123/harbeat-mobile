@@ -1,0 +1,33 @@
+{
+  "schema": "harbeat.listen-source.v1",
+  "commit": "913268a14c4a03b85438da345e01c792d887ee55",
+  "files": {
+    "continuous/activation.ts": "118052d8a539dbc1ccd433f2b053d9906fcde39d9fb92dc265eed0570beed9aa",
+    "continuous/automatic.ts": "1ef41a6e6ad39e94a157c3e66b6faa88793bb200c4613d6a6528e3b35b5f87b9",
+    "continuous/automaticPlan.ts": "42ec9bad36b42495f60afe513d6838f7e1ef8019e6581eb82f4e5a54fb27dfa3",
+    "continuous/beatAlignment.ts": "28c991f74ff32bb58b68632b043e43593dbce820814fb49fd30c5bfcd8e71045",
+    "continuous/catalog.ts": "bc2b2e4de88e40f8de96e43033d51cad4ec99773ffb28b5ca2cc9883375b2c40",
+    "continuous/qualityPlan.ts": "2a92c09d1c8cfdb9ed1b6ef61a25579b879d384f7099dca54fef5f311dc1f55c",
+    "continuous/segments.ts": "da40a6c237234c11a597845878e0bb02b2992c540d98714d2f2fcca31ee85c8d",
+    "continuous/selection.ts": "bb32cec24fd0fe162268b0ae5d4e9a6017ef101d5f4cbdf5273006a7a60586bd",
+    "phrase/load.ts": "7275735d1ca25eb3b1c60f558dd8f95bbece9a274a288b56ec9c64ec813fef0c",
+    "phrase/schedule.ts": "58405781c2a566b50f9b8b8a0d1a3e2ab6931d7989c7a09ebab1126f4dcd1633",
+    "phrase/types.ts": "ea91611a158e71fa04755d50bb83c2ef4612313b93cc08df466301cd90e268c7",
+    "realtime/cache.ts": "7db83b29e45bc6b3339e0ecb5dbc1a09edec2bb51ae7f6b9e25a24f1b5b859df",
+    "realtime/comparisonSources.ts": "a141f4c3955cd0eab4f4fb02b7c1e66f7efbe5f500d2ab81482182cca77add62",
+    "realtime/decision.ts": "b031316f0f3fef143db6a6719d1c127a2a31fcb42bdb4258c3812be0203d0ffc",
+    "realtime/encodedCache.ts": "ccf3a71cd59dd6a6a0bd795720de30b5fba048b4db3422e51a570dba9cf0c745",
+    "realtime/evidence.ts": "cbc2c03b43ce12fb185e5c5f8b95003f60b73ad315e08f7566d7e611704d09e6",
+    "realtime/planner.ts": "a47793283f16cee6f608bc1344514f3be0b3af7c6ae43110f27c1f80d8e60d0a",
+    "realtime/sessionStore.ts": "339cde65ec9ab1fd5348001c49ccadf50d75eab488c8962565b548932f73422e",
+    "realtime/trace.ts": "4d9b6610d99e9251b70dd637b5232683ee2b1cb316bd60f7502344ee7c79fd93",
+    "realtime/transport.ts": "4803b402ef467f9741c2511893713fa010aa65a938ef5fa782c89afb249cb11b",
+    "v30/eq.ts": "837cafaa4d17a29db8e69093b70ba65961a5e6beddd0aa2c289c9aaaf697ca37",
+    "v30/planner.ts": "8d973182eceda23eaeb90829ed810c4f3fd901861f28afed6c2cfdeee4c24f2f",
+    "v30/types.ts": "0e41425a74917aa53b768284f1e6f18c6eded3dfec8cf738b633a0aa885c1292",
+    "v31-release/release.ts": "a2482027f34a921e38010a3e08a73695e8d121d5709301ce7003d7125072a0e4",
+    "vocal-overlap/planner.ts": "a2bf3ee91fdffc6e5e170ead8897c5a1f746c3d5a4d72c353c21a4d32deef3ba",
+    "vocal-overlap/score.ts": "0aa95e08d73227c3aff6fadbae921818718003d1961bde78decfeb18c1fbc490"
+  },
+  "clockSha256": "da4c97488f80b3f5272055991111d50069746997d2f1bd1732ca5ee55f5328d7"
+}

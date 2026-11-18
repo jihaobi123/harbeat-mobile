@@ -16,6 +16,9 @@ export class ActivitySession{
  private constructor(readonly packId:string,readonly name:string,readonly tracks:Track[],readonly results:Prepared[],readonly initialTrackId:string,private entries:Asset[]=[],private executionTracks:ExecutionTrack[]=[],private candidatePlans:BoundActivityCandidate[]=[],readonly cloudCoverage:ActivityCoverage|null=null,private strategies:{decision:JetsonDecision;a:Track;b:Track;plan:Plan}[]=[],readonly strategyVersion:string|null=null){this.ids=new Set(tracks.map(t=>t.id))}
  get candidateCount(){return this.candidatePlans.length||this.results.length}
  get strategyCount(){return this.strategies.length}
+ /** Preparation order only: a verified decision never substitutes for PCM or live cue checks. */
+ preparationPriority(p:Plan){const d=this.strategies.find(s=>s.plan.id===p.id)?.decision;if(!d)return 0;return d.stemArrangement?.recommended?1000+(d.stemArrangement.score??0):d.decision.recommended!=='original'?d.decision.methods[d.decision.recommended].score??0:0}
+
  candidates(a:Track,position:number,energy:number){return futureActivityCandidates(this.candidatePlans,a,position,energy)}
  approvedCandidates(a:Track,position:number,energy:number){const approved=new Set(this.strategies.map(s=>s.plan.id));return this.candidates(a,position,energy).filter(c=>approved.has(c.plan.id))}
  static async open(value:any,name:string,load:(id:string)=>Promise<Track>){

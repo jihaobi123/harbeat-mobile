@@ -9,6 +9,13 @@ function setup(){
  return {a,b,player,prepare,signal:controller.signal,controller}
 }
 afterEach(()=>vi.useRealTimers())
+it('returns queue pressure without spending all nearby attempts or excluding another musical cue',async()=>{
+ const s=setup(),busy=Object.assign(Error('queue busy'),{status:429,retryAfterMs:10000})
+ s.prepare.mockRejectedValue(busy)
+ await expect(mixNearby(s)).rejects.toBe(busy)
+ expect(s.prepare).toHaveBeenCalledTimes(1)
+ expect(s.player.arm).not.toHaveBeenCalled();expect(s.player.start).not.toHaveBeenCalled()
+})
 it('one live request prepares, preloads and arms a nearby cue without restarting A',async()=>{
  const s=setup();await mixNearby(s)
  expect(s.player.arm).toHaveBeenCalledTimes(1)

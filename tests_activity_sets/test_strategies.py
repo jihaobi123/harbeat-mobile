@@ -5,7 +5,7 @@ import json
 import unittest
 from tests_activity_sets import test_service as fixtures
 from tests_activity_sets import test_execution as execution_fixtures
-from activity_sets.worker import Worker
+from activity_sets.worker import Worker, ORIGIN
 
 
 class StrategyTests(unittest.TestCase):
@@ -40,6 +40,27 @@ class StrategyTests(unittest.TestCase):
 
     def tick(self,worker):
         pack=self.store.pack(self.reservation['packId']);pack['executionRetryAt']=0;self.store.save_pack(pack);worker.run_once();return self.store.pack(pack['packId'])
+
+    def test_ready_v2_strategy_can_be_retained_without_replacing_legacy_container(self):
+        worker=self.worker();worker.run_once();original=worker.poll_plan
+        def upgraded(identity):
+            result=original(identity);result['analysisVersion']='jetson-decision-v2'
+            result['stemArrangement']={'schema':'harbeat.stem-arrangement.v1','method':'stem-handover','eligible':False,'recommended':False,'score':None,'timeline':None,'evidence':None,'requiredStems':[],'reason':'no benefit'}
+            return result
+        worker.poll_plan=upgraded;pack=self.tick(worker)
+        self.assertEqual(pack['prepared'],3)
+        self.assertTrue(all(s['analysisVersion']=='jetson-decision-v2' for s in pack['execution']['strategies']))
+        self.assertEqual(pack['execution']['strategyVersion'],'jetson-decision-v1')
+
+    def test_ready_v3_calibrated_protocol_can_be_retained(self):
+        worker=self.worker();worker.run_once();original=worker.poll_plan
+        def upgraded(identity):
+            result=original(identity);result['analysisVersion']='jetson-decision-v3'
+            result['stemArrangement']={'schema':'harbeat.stem-arrangement.v1','method':'stem-handover','eligible':False,'recommended':False,'score':None,'timeline':None,'evidence':None,'requiredStems':[],'reason':'source not applicable'}
+            return result
+        worker.poll_plan=upgraded;pack=self.tick(worker)
+        self.assertEqual(pack['prepared'],3)
+        self.assertTrue(all(s['analysisVersion']=='jetson-decision-v3' for s in pack['execution']['strategies']))
 
     def test_only_three_inflight_approvals_are_checkpointed_then_next_pack_can_run(self):
         worker=self.worker();worker.run_once()
@@ -105,8 +126,9 @@ class StrategyTests(unittest.TestCase):
         self.assertEqual(worker.session.post.call_count,1)
         call=worker.session.post.call_args
         self.assertEqual(call.args[0],'http://127.0.0.1:8791/plans')
-        self.assertEqual(call.kwargs['headers'],{'Origin':'https://8.136.120.255'})
-        self.assertEqual(set(call.kwargs['json']),{'from','to','windowId','start'})
+        self.assertEqual(call.kwargs['json']['stemTimelineVersion'],'stem-timeline-v2')
+        self.assertEqual(call.kwargs['headers'],{'Origin':ORIGIN})
+        self.assertEqual(set(call.kwargs['json']),{'from','to','windowId','start','stemTimelineVersion'})
         pack=self.store.pack(self.reservation['packId'])
         self.assertEqual(pack['prepared'],0);self.assertEqual(pack['state'],'preparing')
 

@@ -89,8 +89,40 @@ class RefreshEngine extends MetricEngine {
   }
 }
 
+class WaitingRefreshEngine extends MetricEngine {
+  final refresh = Completer<Map<String, dynamic>>();
+  @override
+  Future<Map<String, dynamic>> command(String method,
+      [Map<String, dynamic> args = const {}]) {
+    if (method == 'refreshLibrary') {
+      calls.add(method);
+      return refresh.future;
+    }
+    return super.command(method, args);
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('publication refresh coalesces taps and recovers after failure without stopping music', () async {
+    final engine = WaitingRefreshEngine();
+    final c = AppController(MockHarBeatRepository(),
+        realtimeEngine: engine, audio: ProbeAudio(),
+        localStore: MemoryLocalStore());
+    addTearDown(c.dispose);
+    await c.initialize();
+    await c.enableV3(mode: 'metric');
+    await c.togglePlayback();
+    final first = c.refreshMixCatalog();
+    await c.refreshMixCatalog();
+    expect(engine.calls.where((m) => m == 'refreshLibrary'), hasLength(1));
+    expect(c.mixCatalogRefreshing, true);
+    engine.refresh.completeError(StateError('offline'));
+    await first;
+    expect(c.mixCatalogRefreshing, false);
+    expect(c.v3Error, contains('保留当前播放'));
+    expect(c.isPlaying, true);
+  });
   AppController controller(FakeMusic repo) =>
       AppController(MockHarBeatRepository(),
           musicSearchRepository: repo,
@@ -150,8 +182,13 @@ void main() {
         starts = engine.calls.where((m) => m == 'start').length,
         stops = engine.calls.where((m) => m == 'stop').length;
     repo.ready = true;
+    engine.catalog[0]['mixReadiness'] = {
+      'state': 'published',
+      'label': '分轨音频已发布 · 接点待核验'
+    };
     await c.refreshMusicJobs();
     expect(c.v3Catalog.any((r) => r['id'] == 'track-${'c' * 20}'), true);
+    expect(c.v3Catalog.first['mixReadiness']?['state'], 'published');
     expect(c.nowPlaying!.id, current);
     expect(c.isPlaying, true);
     expect(c.position.inSeconds, 42);

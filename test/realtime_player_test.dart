@@ -216,8 +216,9 @@ void main() {
         theme: HB.theme,
         home: AnimatedBuilder(
             animation: c, builder: (_, __) => Shell(controller: c))));
-    expect(find.text('PLAY / YOUR FLOW'), findsOneWidget);
-    expect(find.text('让身体，跟着节奏。'), findsOneWidget);
+    expect(find.byType(PhoneMixScreen), findsOneWidget);
+    expect(find.byKey(const ValueKey('mix-deck-A')), findsOneWidget);
+    expect(find.byKey(const ValueKey('mix-deck-B')), findsOneWidget);
     expect(find.text('播放'), findsOneWidget);
     expect(find.text('音乐'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('提高能量 ↑').hitTestable(), 200);

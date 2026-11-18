@@ -38,6 +38,37 @@ void main() {
     expect(error, isNull);
   });
 
+  test('discovery exposes the official Spotify search link', () async {
+    final activity = ActivityRepository(
+        credentials: MemoryActivityCredentials()..value = 't' * 48,
+        baseUri: Uri.parse('https://example.test'),
+        client: MockClient((r) async => http.Response(
+            jsonEncode({
+              'links': [
+                {
+                  'provider': 'spotify',
+                  'url': 'https://lookalike.test/search/rap'
+                },
+                {
+                  'provider': 'spotify',
+                  'url': 'https://open.spotify.com/search/late%20night'
+                }
+              ],
+              'results': [
+                {'discoveryId': 'external-1', 'reason': '来自歌单「深夜私藏」'}
+              ]
+            }),
+            200,
+            headers: {'content-type': 'application/json'})));
+    addTearDown(activity.dispose);
+    final repo = MusicSearchRepository(activity);
+    final result = await repo.search('适合深夜独处', 'discover');
+    expect(result.spotifySearchUrl?.host, 'open.spotify.com');
+    expect(result.spotifySearchUrl?.pathSegments, ['search', 'late night']);
+    expect(result.hits.single.discoveryReason, '来自歌单「深夜私藏」');
+    expect((await repo.search('深夜', 'library')).spotifySearchUrl, isNull);
+  });
+
   test(
       'semantic library search reuses reservation workspace and keeps coverage',
       () async {

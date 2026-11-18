@@ -1,0 +1,1 @@
+export const PRELUDE_INDEX_SHA='08af54bf176d1ba07e30eac9d08e5c27c8dc2ceb44773b54e9a156bcb7823bc2'

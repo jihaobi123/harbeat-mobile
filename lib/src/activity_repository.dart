@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
-import 'backend.dart';
+import 'cloud_endpoints.dart';
 
 class ActivityException implements Exception {
   const ActivityException(this.message);
@@ -17,13 +17,28 @@ abstract class ActivityCredentials {
 }
 
 class SecureActivityCredentials implements ActivityCredentials {
-  const SecureActivityCredentials();
+  const SecureActivityCredentials({this.origin = CloudEndpoints.publicAddress});
+  final String origin;
+  String get _scopedKey =>
+      '$_key:${Uri.encodeComponent(Uri.parse(origin).origin)}';
   static const _storage = FlutterSecureStorage();
   static const _key = 'harbeat_activity_workspace_v1';
   @override
-  Future<String?> read() => _storage.read(key: _key);
+  Future<String?> read() async {
+    final scoped = await _storage.read(key: _scopedKey);
+    if (scoped != null) return scoped;
+    // Older released builds had one fixed cloud workspace key. Only the
+    // explicitly migrated cloud pair may read it; custom hosts start isolated.
+    if (['https://8.136.120.255', CloudEndpoints.newOrigin]
+        .contains(Uri.parse(origin).origin)) {
+      return _storage.read(key: _key);
+    }
+    return null;
+  }
+
   @override
-  Future<void> write(String token) => _storage.write(key: _key, value: token);
+  Future<void> write(String token) =>
+      _storage.write(key: _scopedKey, value: token);
 }
 
 class MemoryActivityCredentials implements ActivityCredentials {
@@ -147,9 +162,15 @@ class ActivityRepository {
   ActivityRepository(
       {http.Client? client, ActivityCredentials? credentials, Uri? baseUri})
       : _client = client ?? http.Client(),
-        credentials = credentials ?? const SecureActivityCredentials(),
+        credentials = credentials ??
+            SecureActivityCredentials(
+                origin: (baseUri ??
+                        (kIsWeb
+                            ? Uri.parse(Uri.base.origin)
+                            : CloudEndpoints.publicUri))
+                    .origin),
         baseUri = baseUri ??
-            (kIsWeb ? Uri.base : Uri.parse(BackendConfig.defaultAddress));
+            (kIsWeb ? Uri.parse(Uri.base.origin) : CloudEndpoints.publicUri);
   final http.Client _client;
   final ActivityCredentials credentials;
   final Uri baseUri;
@@ -305,7 +326,7 @@ class ActivityRepository {
       _request('GET', '/packs/$packId/manifest');
   Future<String> exportBackup() async => jsonEncode({
         'schema': 'harbeat.activity-workspace-backup.v1',
-        'server': BackendConfig.defaultAddress,
+        'server': baseUri.origin,
         'token': await _workspace()
       });
   Future<void> importBackup(String raw) async {
@@ -319,7 +340,8 @@ class ActivityRepository {
     try {
       final data = jsonDecode(raw);
       if (data['schema'] != 'harbeat.activity-workspace-backup.v1' ||
-          data['server'] != BackendConfig.defaultAddress ||
+          data['server'] is! String ||
+          !CloudEndpoints.acceptsReservationBackup(data['server'], baseUri) ||
           data['token'] is! String ||
           !_validToken(data['token'])) {
         throw const FormatException();

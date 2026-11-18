@@ -1,57 +1,17 @@
 part of 'app.dart';
 
-/// A paper sleeve, with an offset coloured back and a small binder eyelet.
-/// Only the decoration is offset; text and hit targets stay aligned.
+/// Shared section surface; content and hit targets keep their existing layout.
 class _PaperSleeve extends StatelessWidget {
   const _PaperSleeve(
       {required this.child,
-      this.color = HB.mint,
+      this.color = HB.surface,
       this.padding = const EdgeInsets.all(10)});
   final Widget child;
   final Color color;
   final EdgeInsets padding;
   @override
-  Widget build(BuildContext context) => Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 6),
-      child: Stack(clipBehavior: Clip.none, children: [
-        Positioned.fill(
-            top: 5,
-            bottom: -5,
-            left: 3,
-            right: 3,
-            child: DecoratedBox(
-                decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: HB.radius,
-                    border: Border.all(color: HB.ink, width: 1.5)))),
-        HardCard(padding: padding, child: child),
-        Positioned(
-            left: 18,
-            top: -8,
-            child: IgnorePointer(
-                child: ExcludeSemantics(
-                    child: CustomPaint(
-                        size: const Size(14, 27), painter: _BinderPainter())))),
-      ]));
-}
-
-class _BinderPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final pen = Paint()
-      ..color = HB.ink
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    canvas.drawCircle(const Offset(7, 22), 3.4, Paint()..color = HB.paper);
-    canvas.drawCircle(const Offset(7, 22), 3.4, pen);
-    canvas.drawRRect(
-        RRect.fromRectAndRadius(
-            const Rect.fromLTWH(4, 0, 6, 23), const Radius.circular(3)),
-        pen);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget build(BuildContext context) =>
+      HardCard(color: color, padding: padding, child: child);
 }
 
 /// The NAS cover sits inside the existing paper sleeve; graphics are a fallback.
@@ -61,7 +21,7 @@ class _GenreArtwork extends StatelessWidget {
   final int index;
   @override
   Widget build(BuildContext context) {
-    final palette = [HB.mint, HB.lavender, HB.peach, const Color(0xFFDBEDF4)];
+    final palette = [HB.mint, HB.lavender, HB.peach, HB.surfaceStrong];
     return ExcludeSemantics(
         child: ClipRRect(
             borderRadius: BorderRadius.circular(11),
@@ -83,7 +43,7 @@ class _GenreArtwork extends StatelessWidget {
                                     style: TextStyle(
                                         fontSize: 9,
                                         letterSpacing: 1,
-                                        fontWeight: FontWeight.w800)),
+                                        fontWeight: FontWeight.w600)),
                                 FittedBox(
                                     fit: BoxFit.scaleDown,
                                     alignment: Alignment.centerLeft,
@@ -94,7 +54,7 @@ class _GenreArtwork extends StatelessWidget {
                                         style: const TextStyle(
                                             fontSize: 30,
                                             height: .98,
-                                            fontWeight: FontWeight.w900,
+                                            fontWeight: FontWeight.w600,
                                             letterSpacing: -1))),
                                 Text(
                                     'SIDE ${String.fromCharCode(65 + index % 26)}',
@@ -277,9 +237,7 @@ class _SearchShortcut extends StatelessWidget {
             Container(
                 width: 48,
                 height: 48,
-                decoration: const BoxDecoration(
-                    border:
-                        Border(right: BorderSide(color: HB.ink, width: 1.5))),
+                decoration: const BoxDecoration(color: HB.surface),
                 child: const Icon(Icons.search_rounded, size: 24)),
             const SizedBox(width: 14),
             const Expanded(
@@ -307,7 +265,7 @@ class _FeaturedMixShelf extends StatelessWidget {
           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           leading: const RecordSleeve(size: 52, color: HB.lavender),
           title: const Text('HIP-HOP SIX',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
           subtitle: const Text('精选歌单 · 6 首 · 4 分 21 秒',
               style: TextStyle(fontSize: 14, color: HB.muted)),
           children: [

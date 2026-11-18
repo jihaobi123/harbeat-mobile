@@ -49,7 +49,7 @@ it('reservation warming prepares nearby qualified plans, expires them on seek, a
  p.localExecution=true;p.logs=[];p.ctx.sampleRate=44100;p.arm=vi.fn();p.seek=vi.fn(async(position:number)=>{p.position=position})
  const local=vi.spyOn(devicePreparation,'prepareDevice').mockResolvedValue(result)
  vi.spyOn(selection,'choiceForPlan').mockImplementation((_a,_b,plan)=>({plan,track:b,score:1}) as any)
- await run.start(aid);p.playing=true
+ await run.start(aid);run.direction({automatic:false});p.playing=true
  ;(run as any).activity={ids:new Set([aid,bid]),packId:'set',name:'test',results:[],candidates:()=>[{track:b,plan}]}
  ;(run as any).warmNearby()
  await vi.waitFor(()=>expect(run.snapshot().warm.ready).toHaveLength(1))

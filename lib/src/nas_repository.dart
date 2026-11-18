@@ -3,6 +3,7 @@ import 'package:flutter/material.dart' show Color;
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:http/http.dart' as http;
 import 'backend.dart';
+import 'cloud_endpoints.dart';
 import 'models.dart';
 
 /// Read-only NAS catalog. This client never receives account/SSH credentials.
@@ -12,9 +13,7 @@ class NasCatalogRepository {
       Uri? baseUri,
       Future<String> Function()? snapshotLoader})
       : _client = client ?? http.Client(),
-        baseUri = baseUri ??
-            Uri.parse(const String.fromEnvironment('HARBEAT_NAS_BASE_URL',
-                defaultValue: 'https://8.136.120.255')),
+        baseUri = baseUri ?? CloudEndpoints.mediaUri,
         _snapshotLoader = snapshotLoader ??
             (() => rootBundle.loadString('assets/nas/catalog.json'));
   final http.Client _client;
@@ -102,6 +101,43 @@ class NasCatalogRepository {
             row['styleLabels'] is List &&
             (row['styleLabels'] as List).every((s) => s is String))
         .toList();
+  }
+
+  static const phoneSourcePlaylistId = 'nas-streetdance-source-v1';
+
+  /// Optional, explicitly published phone sources; primary playback is independent.
+  Future<List<Map<String, dynamic>>> phoneSourceDirectory() async {
+    try {
+      final value = _map(await _get(
+          '/analysis-lab-static/mobile-library-v1/library.json',
+          timeoutSeconds: 12));
+      if (value['schema'] != 'harbeat.continuous-library.v1' ||
+          value['executionPolicy'] != 'device-native-windows-v1' ||
+          value['tracks'] is! List) {
+        return [];
+      }
+      final rows = <String, Map<String, dynamic>>{};
+      for (final raw in (value['tracks'] as List).take(10000)) {
+        final row = _map(raw), id = row['id'];
+        if (id is! String ||
+            !RegExp(r'^track-[a-f0-9]{20}$').hasMatch(id) ||
+            _string(row['title']) == null ||
+            _string(row['collection']) == null ||
+            (_number(row['duration']) ?? 0) <= 0 ||
+            (row['bpm'] != null && (_number(row['bpm']) ?? 0) <= 0) ||
+            row['playStatus'] != 'ready' ||
+            !['ready', 'unavailable'].contains(row['mixStatus']) ||
+            row['detailUrl'] is! String ||
+            !RegExp('^/analysis-lab-static/mobile-library-v1/catalog/[A-Za-z0-9_-]{1,160}/details/$id\\.json\$')
+                .hasMatch(row['detailUrl'] as String)) {
+          continue;
+        }
+        rows.putIfAbsent(id, () => row);
+      }
+      return rows.values.toList();
+    } catch (_) {
+      return [];
+    }
   }
 
   Future<List<Track>> refresh() async {

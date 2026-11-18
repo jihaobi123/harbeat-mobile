@@ -21,3 +21,16 @@ it('accepts cross-engine floating point EQ rounding but rejects audible or struc
  await expect(verifyJetsonDecision(await sealJetsonDecision(value),f.a,f.b,f.p)).resolves.toBeDefined()
  value.eq!.a[1].low+=.001;await expect(verifyJetsonDecision(await sealJetsonDecision(value),f.a,f.b,f.p)).rejects.toThrow()
 })
+it('accepts a source-bound v2 timeline and rejects rehashed curve or voice corruption',async()=>{
+ const {timelineFixture}=await import('./stem-timeline-fixture'),f=await timelineFixture()
+ expect(await verifyJetsonDecision(f.approval,f.a,f.b,f.p)).toEqual(f.approval)
+ for(const mutate of [(r:any)=>r.stemArrangement.timeline.b.bass[1][1]=2,(r:any)=>r.stemArrangement.timeline.a.drums.pop(),(r:any)=>r.requiredStems=['bass'],(r:any)=>r.stemArrangement.evidence.processed.vocals=.5]){
+  const bad=structuredClone(f.approval);mutate(bad);await expect(verifyJetsonDecision(await sealJetsonDecision(bad),f.a,f.b,f.p)).rejects.toThrow()
+ }
+})
+it('requires a separate v3 protocol for calibrated source gains and rejects downgrade or gain corruption',async()=>{
+ const {timelineFixture}=await import('./stem-timeline-fixture'),f=await timelineFixture(),a:any=structuredClone(f.approval)
+ a.analysisVersion='jetson-decision-v3';a.stemArrangement.sourceGains={a:1,b:1};a.stemArrangement.evidence.sourceCalibration={mode:'common-linear-gain-v1',gains:{a:1,b:1},rawReconstruction:a.stemArrangement.evidence.reconstruction}
+ const approved=await sealJetsonDecision(a);expect(await verifyJetsonDecision(approved,f.a,f.b,f.p)).toEqual(approved)
+ for(const mutate of [(v:any)=>v.analysisVersion='jetson-decision-v2',(v:any)=>delete v.stemArrangement.sourceGains,(v:any)=>v.stemArrangement.sourceGains.a=3,(v:any)=>v.stemArrangement.evidence.sourceCalibration.gains.b=.8]){const bad=structuredClone(approved);mutate(bad);await expect(verifyJetsonDecision(await sealJetsonDecision(bad),f.a,f.b,f.p)).rejects.toThrow()}
+})

@@ -9,6 +9,7 @@ outputs/install-backups/
 outputs/*.mp3
 outputs/*.wav
 outputs/*.zip
+outputs/crossgenre-*/
 .vite/
 android/.gradle/
 android/build/
@@ -37,3 +38,8 @@ services/__pycache__/
 
 # Local Python tooling caches
 __pycache__/
+# SHA-pinned local tempo runtime, restored by tools/prepare_device_tempo.py
+vendor/realtime-v3/public/device-tempo/
+
+# Local cloud migration release artifacts and verification logs
+outputs/cloud-candidate-20261102/

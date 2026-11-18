@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from engine_build import npm_executable, sha256, source_fingerprints, verify_bundle, verify_metric_source, verify_upstream_source
+from engine_build import npm_executable, sha256, source_fingerprints, verify_bundle, verify_listen_source, verify_metric_source, verify_upstream_source
 
 
 class EngineBuildTests(unittest.TestCase):
@@ -30,6 +30,19 @@ class EngineBuildTests(unittest.TestCase):
             clock.write_bytes(b'clock\r\n')
             with self.assertRaisesRegex(ValueError, 'clock differs'):
                 verify_metric_source(root)
+
+    def test_listen_source_pin_rejects_dsp_changes(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            (root/'public').mkdir()
+            (root/'public/v3-clock.js').write_bytes(b'clock')
+            (root/'src/listen-upstream').mkdir(parents=True)
+            dsp=root/'src/listen-upstream/transport.ts'
+            dsp.write_bytes(b'graph')
+            (root/'listen-upstream.json').write_text(json.dumps({'clockSha256':sha256(root/'public/v3-clock.js'),'files':{'transport.ts':sha256(dsp)}}))
+            verify_listen_source(root)
+            dsp.write_bytes(b'changed graph')
+            with self.assertRaisesRegex(ValueError,'Listen source differs'):verify_listen_source(root)
 
     def test_bundle_requires_executable_assets(self):
         with tempfile.TemporaryDirectory() as temp:

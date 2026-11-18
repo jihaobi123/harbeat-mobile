@@ -1,12 +1,55 @@
 import 'dart:convert';
 import 'dart:async';
-import 'package:harbeat/src/backend.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:harbeat/src/activity_repository.dart';
 
 void main() {
+  test(
+      'new cloud restores a legacy cloud reservation backup only after validation',
+      () async {
+    final store = MemoryActivityCredentials();
+    final repo = ActivityRepository(
+        credentials: store,
+        baseUri: Uri.parse('https://47.108.118.177'),
+        client: MockClient((r) async {
+          expect(r.url.origin, 'https://47.108.118.177');
+          expect(r.headers['authorization'], 'Bearer ${'b' * 43}');
+          return http.Response('{"reservations":[]}', 200);
+        }));
+    addTearDown(repo.dispose);
+    await repo.importBackup(jsonEncode({
+      'schema': 'harbeat.activity-workspace-backup.v1',
+      'server': 'https://8.136.120.255',
+      'token': 'b' * 43
+    }));
+    expect(store.value, 'b' * 43);
+    expect(jsonDecode(await repo.exportBackup())['server'],
+        'https://47.108.118.177');
+  });
+  test(
+      'custom servers cannot accept another server backup using the cloud migration',
+      () async {
+    var requests = 0;
+    final repo = ActivityRepository(
+        credentials: MemoryActivityCredentials(),
+        baseUri: Uri.parse('https://custom.example'),
+        client: MockClient((_) async {
+          requests++;
+          return http.Response('{"reservations":[]}', 200);
+        }));
+    addTearDown(repo.dispose);
+    await expectLater(
+        repo.importBackup(jsonEncode({
+          'schema': 'harbeat.activity-workspace-backup.v1',
+          'server': 'https://8.136.120.255',
+          'token': 'b' * 43
+        })),
+        throwsA(isA<ActivityException>()));
+    expect(requests, 0);
+  });
+
   test('backup restoration waits for an in-flight first workspace creation',
       () async {
     final gate = Completer<http.Response>(),
@@ -24,7 +67,7 @@ void main() {
     await Future<void>.delayed(Duration.zero);
     final imported = repo.importBackup(jsonEncode({
       'schema': 'harbeat.activity-workspace-backup.v1',
-      'server': BackendConfig.defaultAddress,
+      'server': 'https://example.test',
       'token': 'b' * 43
     }));
     gate.complete(http.Response(jsonEncode({'token': 'a' * 43}), 201));

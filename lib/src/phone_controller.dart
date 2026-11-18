@@ -418,6 +418,7 @@ extension PhoneFlow on AppController {
         'mixStyle': mixStyle,
         'smartStyle': smartStyle,
         'smartAutomatic': smartAutomatic,
+        'liveLayeringEnabled': liveLayeringRequested,
         'accessoryKind': accessoryKind.name,
         'accessoryLocked': accessoryLocked,
         'shortcuts':
@@ -428,6 +429,7 @@ extension PhoneFlow on AppController {
     smartStyle =
         state['smartStyle'] is String ? state['smartStyle'] as String : '';
     smartAutomatic = state['smartAutomatic'] != false;
+    liveLayeringRequested = state['liveLayeringEnabled'] != false;
     _directionSessionActive = state['directionSessionActive'] == true;
     energy =
         draftEnergy = ((state['mixEnergy'] as num?)?.toInt() ?? 3).clamp(1, 5);

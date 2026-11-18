@@ -479,10 +479,10 @@ var planVocalOverlap = (a, tracks, position, intent, ready, budget = 18, require
       count: 1
     }] };
   }
-  const baseline = original.best;
-  if (!baseline) return original;
-  const b = tracks.find((t) => t.id === baseline.to);
-  const sameMaterial = original.candidates.filter((p) => p.to === baseline.to && p.window.id === baseline.window.id && p.window.start === baseline.window.start && p.window.end === baseline.window.end && p.asset.sha256 === baseline.asset.sha256 && p.asset.url === baseline.asset.url && p.rate === baseline.rate && p.duration === baseline.duration);
+  const baseline2 = original.best;
+  if (!baseline2) return original;
+  const b = tracks.find((t) => t.id === baseline2.to);
+  const sameMaterial = original.candidates.filter((p) => p.to === baseline2.to && p.window.id === baseline2.window.id && p.window.start === baseline2.window.start && p.window.end === baseline2.window.end && p.asset.sha256 === baseline2.asset.sha256 && p.asset.url === baseline2.asset.url && p.rate === baseline2.rate && p.duration === baseline2.duration);
   const exclusions = [...original.exclusions];
   const excluded = original.candidates.length - sameMaterial.length;
   if (excluded) exclusions.push({
@@ -523,16 +523,16 @@ var planVocalOverlap = (a, tracks, position, intent, ready, budget = 18, require
         vocalOverlap: {
           ...measure,
           version: OVERLAP_POLICY_VERSION,
-          baselinePlanId: baseline.id,
-          baselineStart: baseline.start,
-          baselineEnd: baseline.end,
+          baselinePlanId: baseline2.id,
+          baselineStart: baseline2.start,
+          baselineEnd: baseline2.end,
           oldScore: p.score,
           newScore: score,
           oldVocalProduct,
-          shiftSec: p.start - baseline.start,
+          shiftSec: p.start - baseline2.start,
           originalCandidateCount: original.candidates.length,
           timingCandidateCount: sameMaterial.length,
-          anchor: { to: baseline.to, windowId: baseline.window.id, assetSha256: baseline.asset.sha256, rate: baseline.rate, duration: baseline.duration }
+          anchor: { to: baseline2.to, windowId: baseline2.window.id, assetSha256: baseline2.asset.sha256, rate: baseline2.rate, duration: baseline2.duration }
         }
       };
     });
@@ -716,6 +716,90 @@ function stemCurves(method, p) {
   return result;
 }
 
+// vendor/realtime-v3/src/mobile/stem-timeline.ts
+var STEM_ROLES = ["drums", "bass", "other", "vocals"];
+function validateStemTimeline(value, duration) {
+  const fail = () => {
+    throw Error("\u58F0\u90E8\u65F6\u95F4\u7EBF\u7F3A\u5931\u3001\u8D8A\u754C\u6216\u65E0\u6CD5\u8FDE\u7EED\u63A5\u7BA1\u6B63\u6587");
+  };
+  if (value?.schema !== "harbeat.stem-timeline.v1" || value.clock !== "transition-start" || !Number.isFinite(duration) || duration < 1 || duration > 32 || value.duration !== duration) fail();
+  for (const side of ["a", "b"]) {
+    if (!value[side] || Object.keys(value[side]).sort().join() !== [...STEM_ROLES].sort().join()) fail();
+    for (const role of STEM_ROLES) {
+      const points = value[side][role];
+      if (!Array.isArray(points) || points.length < 2 || points.length > 32) fail();
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i], q = points[i - 1];
+        if (!Array.isArray(p) || p.length !== 2 || !p.every(Number.isFinite) || p[0] < 0 || p[0] > duration || p[1] < 0 || p[1] > 1 || q && (p[0] <= q[0] || Math.abs(p[1] - q[1]) / (p[0] - q[0]) > 20.000001)) fail();
+      }
+      if (points[0][0] !== 0 || points.at(-1)[0] !== duration || points[0][1] !== Number(side === "a") || points.at(-1)[1] !== Number(side === "b")) fail();
+    }
+  }
+  for (const role of STEM_ROLES) {
+    const times = new Set([...value.a[role], ...value.b[role]].map((p) => p[0]));
+    for (const t of times) if (valueAt(value.a[role], t) + valueAt(value.b[role], t) > 1.000001) fail();
+  }
+  return value;
+}
+function voicePhrases(t) {
+  const intervals = [...t.vocals ?? [], ...(t.alignment?.phrases ?? []).map((p) => [p.start, p.tailEnd])].filter(([s, e]) => Number.isFinite(s) && Number.isFinite(e) && e > s).sort((a, b) => a[0] - b[0]), out = [];
+  for (const [s, e] of intervals) {
+    const last = out.at(-1);
+    if (last && s - last[1] < 0.35) last[1] = Math.max(last[1], e);
+    else out.push([s, e]);
+  }
+  return out;
+}
+function validateTimelineVoices(t, a, b, p) {
+  if (!Array.isArray(a.vocals) || !Array.isArray(b.vocals)) throw Error("\u58F0\u90E8\u65F6\u95F4\u7EBF\u7F3A\u5C11\u540C\u6E90\u4EBA\u58F0\u6D3B\u52A8\u4F9D\u636E");
+  const fail = () => {
+    throw Error("\u58F0\u90E8\u65F6\u95F4\u7EBF\u4E0D\u80FD\u622A\u65AD A \u4EBA\u58F0\u6216\u4ECE B \u534A\u53E5\u4E2D\u6062\u590D");
+  }, times = (curve, s, e) => [Math.max(0, s), Math.min(t.duration, e), ...curve.filter(([x]) => x > s && x < e).map(([x]) => x)];
+  for (const [s, e] of voicePhrases(a)) if (e > p.start && s < p.end) {
+    if (e > p.end + 2e-3) fail();
+    if (times(t.a.vocals, s - p.start, e - p.start).some((x) => valueAt(t.a.vocals, x) < 0.999)) fail();
+  }
+  for (const [s, e] of voicePhrases(b)) if (e > p.window.start && s < p.window.end) {
+    const ss = (s - p.window.start) / p.rate, ee = (e - p.window.start) / p.rate, levels = times(t.b.vocals, ss, ee).map((x) => valueAt(t.b.vocals, x));
+    if (!levels.every((x) => x < 1e-3) && !(ss >= -2e-3 && levels.every((x) => x > 0.999))) fail();
+  }
+  return t;
+}
+
+// vendor/realtime-v3/src/mobile/stem-arrangement-contract.ts
+function validateStemArrangement(value, a, b, p, calibrated = false) {
+  const fail = () => {
+    throw Error("Jetson \u58F0\u90E8\u7F16\u6392\u6216\u5904\u7406\u540E\u8BC1\u636E\u4E0D\u5B8C\u6574");
+  };
+  if (!value || value.schema !== "harbeat.stem-arrangement.v1" || value.method !== "stem-handover" || typeof value.eligible !== "boolean" || typeof value.recommended !== "boolean" || typeof value.reason !== "string" || value.reason.length > 4096 || !Array.isArray(value.requiredStems)) fail();
+  if (!value.eligible) {
+    if (value.recommended || value.score !== null || value.timeline !== null || value.evidence !== null || value.requiredStems.length) fail();
+    return value;
+  }
+  if (!Number.isFinite(value.score) || value.score < 65 || value.score > 100 || value.requiredStems.length !== 4 || [...value.requiredStems].sort().join() !== [...STEM_ROLES].sort().join()) fail();
+  const t = validateTimelineVoices(validateStemTimeline(value.timeline, p.duration), a, b, p), e = value.evidence;
+  if (!e || !["baseline", "processed"].every((k) => e[k] && STEM_ROLES.every((r) => Number.isFinite(e[k][r]) && e[k][r] >= 0 && e[k][r] <= 1)) || e.processed.vocals > 0.01 || !Number.isFinite(e.improvement) || e.improvement < 0.08 || e.improvement > 4 || !e.headroom || !["peak", "baselinePeak", "riseDb"].every((k) => Number.isFinite(e.headroom[k])) || e.headroom.peak < 0 || e.headroom.peak > 0.95 || e.headroom.baselinePeak < 0 || e.headroom.riseDb > 3 || e.headroom.eqApplied !== true || e.headroom.outputScale !== 0.76 || !e.reconstruction || ["a", "b"].some((side) => [e.reconstruction[side], e.reconstruction[side]?.boundary].some((x) => !x || !Number.isFinite(x.errorRatio) || x.errorRatio < 0 || x.errorRatio > 0.25 || !Number.isFinite(x.levelDeltaDb) || Math.abs(x.levelDeltaDb) > 1.5)) || !Number.isFinite(e.aTailEnd) || e.aTailEnd < 0 || e.aTailEnd > p.duration || !Number.isFinite(e.bVoiceEntry) || e.bVoiceEntry < 0 || e.bVoiceEntry > p.duration || valueAt(t.a.vocals, e.aTailEnd) < 0.999 || valueAt(t.b.vocals, e.bVoiceEntry) < 0.999) fail();
+  if (e.tailAnalysis) {
+    const q = e.tailAnalysis;
+    if (q.dcRemoved !== true || q.frameSeconds !== 0.05 || !Number.isFinite(q.tail) || q.tail < 0 || q.tail > e.aTailEnd + 1e-3 || !Number.isFinite(q.gateDb) || q.gateDb < -70.000001 || !Number.isFinite(q.maximumAcRmsDb) || !Number.isFinite(q.maximumFrameMean) || q.maximumFrameMean < 0) fail();
+  }
+  if (calibrated) {
+    const g = value.sourceGains, q = e.sourceCalibration;
+    if (!g || Object.keys(g).sort().join() !== "a,b" || !q || q.mode !== "common-linear-gain-v1") fail();
+    for (const side of ["a", "b"]) {
+      if (!Number.isFinite(g[side]) || g[side] < 0.5 || g[side] > 2 || q.gains?.[side] !== g[side] || !q.rawReconstruction?.[side] || !Number.isFinite(q.rawReconstruction[side].errorRatio) || !Number.isFinite(q.rawReconstruction[side].levelDeltaDb)) fail();
+    }
+  } else if (value.sourceGains !== void 0 || e.sourceCalibration !== void 0) fail();
+  const c = e.compatibility;
+  if (!c || c.pass !== true || !Number.isFinite(c.pitchedRisk) || c.pitchedRisk < 0 || c.pitchedRisk > 1 || c.maximumPitchedRisk !== 0.35 || !Number.isFinite(c.drumOverlapSeconds) || c.drumOverlapSeconds < 0 || c.drumOverlapSeconds > p.duration + 1e-3 || !Number.isFinite(c.drumOverlapLimit) || Math.abs(c.drumOverlapLimit - (30 / a.bpm + 0.02)) > 1e-5 || !["observed", "limited", "not-overlapping"].includes(c.drumEvidence)) fail();
+  if (!["pitchedOverlapSeconds", "incompatiblePitchedSeconds"].every((k) => Number.isFinite(c[k]) && c[k] >= 0 && c[k] <= p.duration + 1e-3) || c.incompatiblePitchedSeconds > c.pitchedOverlapSeconds + 1e-3 || c.incompatiblePitchedSeconds > c.drumOverlapLimit) fail();
+  if (c.drumEvidence === "observed") {
+    if (!Number.isFinite(c.drumDensityRatio) || c.drumDensityRatio < 1 || !Number.isFinite(c.drumOnsetAgreement) || c.drumOnsetAgreement < 0 || c.drumOnsetAgreement > 1) fail();
+  } else if (c.drumDensityRatio !== null || c.drumOnsetAgreement !== null) fail();
+  if (c.drumOverlapSeconds > c.drumOverlapLimit && (c.drumEvidence !== "observed" || c.drumDensityRatio > 2.5 || c.drumOnsetAgreement < 0.5)) fail();
+  return value;
+}
+
 // vendor/realtime-v3/src/mobile/jetson-contract.ts
 var hash = /^[a-f0-9]{64}$/;
 var methods = ["original", "bass", "filter", "yield", "vocal", "bass_filter"];
@@ -751,7 +835,7 @@ async function verifyJetsonDecision(value, a, b, p) {
   const fail = () => {
     throw Error("Jetson \u7F16\u6392\u6765\u6E90\u3001\u63A5\u70B9\u6216\u63A7\u5236\u8303\u56F4\u4E0D\u4E00\u81F4: " + stage);
   };
-  if (!value || value.schema !== "harbeat.jetson-mix-plan.v1" || value.status !== "ready" || value.producer !== "jetson" || value.analysisVersion !== "jetson-decision-v1" || !hash.test(value.id) || !hash.test(value.algorithmSha256) || !hash.test(value.analysisSha256)) fail();
+  if (!value || value.schema !== "harbeat.jetson-mix-plan.v1" || value.status !== "ready" || value.producer !== "jetson" || !["jetson-decision-v1", "jetson-decision-v2", "jetson-decision-v3"].includes(value.analysisVersion) || !hash.test(value.id) || !hash.test(value.algorithmSha256) || !hash.test(value.analysisSha256)) fail();
   stage = "fingerprint";
   const { analysisSha256, ...body } = value;
   if (await jsonFingerprint(body) !== analysisSha256) fail();
@@ -782,6 +866,11 @@ async function verifyJetsonDecision(value, a, b, p) {
     if (d.methods[method].eligible) ss.forEach((s) => required.add(s));
   }
   if ([...required].some((s) => !value.requiredStems.includes(s))) fail();
+  stage = "stem-timeline";
+  if (value.analysisVersion !== "jetson-decision-v1") {
+    const arrangement = validateStemArrangement(value.stemArrangement, a, b, p, value.analysisVersion === "jetson-decision-v3");
+    if (arrangement.requiredStems.some((s) => !value.requiredStems.includes(s))) fail();
+  } else if (value.stemArrangement !== void 0) fail();
   return value;
 }
 
@@ -840,14 +929,14 @@ function rankChoices(a, tracks, position, energy, ready = /* @__PURE__ */ new Se
 }
 
 // vendor/realtime-v3/src/mobile/source-features.ts
-function sourceChroma(mono, sampleRate) {
+function sourceChroma(mono2, sampleRate) {
   let energy = 0;
-  for (const x of mono) energy += x * x;
-  if (mono.length < 1024 || Math.sqrt(energy / mono.length) < 1e-6) return null;
-  const n = 2 ** Math.floor(Math.log2(Math.min(mono.length, 32768))), profile = Array(12).fill(0);
-  for (let at = 0; at < Math.max(1, mono.length - n + 1); at += n) {
+  for (const x of mono2) energy += x * x;
+  if (mono2.length < 1024 || Math.sqrt(energy / mono2.length) < 1e-6) return null;
+  const n = 2 ** Math.floor(Math.log2(Math.min(mono2.length, 32768))), profile = Array(12).fill(0);
+  for (let at = 0; at < Math.max(1, mono2.length - n + 1); at += n) {
     const real = new Float64Array(n), imag = new Float64Array(n);
-    for (let i = 0; i < n; i++) real[i] = mono[at + i] * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (n - 1)));
+    for (let i = 0; i < n; i++) real[i] = mono2[at + i] * (0.5 - 0.5 * Math.cos(2 * Math.PI * i / (n - 1)));
     for (let i = 1, j = 0; i < n; i++) {
       let bit = n >> 1;
       for (; j & bit; bit >>= 1) j ^= bit;
@@ -956,6 +1045,297 @@ function analyseWindow(a, b, p, audio) {
   const sorted = Object.keys(methods2).filter((m) => methods2[m].eligible).sort((a2, b2) => methods2[b2].score - methods2[a2].score), best = sorted[0], recommended = best !== "original" && methods2[best].score - 50 >= 4 ? best : "original";
   const decision = { recommended, explanation: methods2[recommended].reason, methods: methods2, policy: { version: "device-source-execution-v1", maximumDuration: 32, maximumRate: 1.05, minimumRate: 0.95, renderedStats: false, localHeadroom: true }, limitations: ["\u6307\u6807\u662F\u6682\u5B9A\u58F0\u5B66\u4EE3\u7406\uFF0C\u9700\u8BD5\u542C\u6821\u51C6", "Jetson \u5224\u65AD\uFF0C\u7AEF\u4FA7\u6267\u884C\u4E0E\u97F3\u91CF\u4FDD\u62A4\uFF1B\u672A\u751F\u6210\u6210\u54C1\u8F6C\u573A WAV"] };
   return { controls, metrics, decision };
+}
+
+// vendor/realtime-v3/src/mobile/timeline-audio-evidence.ts
+function rbj(kind, frequency, gain = 0) {
+  const w = 2 * Math.PI * frequency / 44100, c = Math.cos(w), s = Math.sin(w), A = 10 ** (gain / 40), alpha = s / (2 * (kind === "mid" ? 1.05 : Math.SQRT1_2)), beta = 2 * Math.sqrt(A) * s / Math.SQRT2;
+  let b0, b1, b2, a0, a1, a2;
+  if (kind === "low") {
+    b0 = A * (A + 1 - (A - 1) * c + beta);
+    b1 = 2 * A * (A - 1 - (A + 1) * c);
+    b2 = A * (A + 1 - (A - 1) * c - beta);
+    a0 = A + 1 + (A - 1) * c + beta;
+    a1 = -2 * (A - 1 + (A + 1) * c);
+    a2 = A + 1 + (A - 1) * c - beta;
+  } else if (kind === "high") {
+    b0 = A * (A + 1 + (A - 1) * c + beta);
+    b1 = -2 * A * (A - 1 + (A + 1) * c);
+    b2 = A * (A + 1 + (A - 1) * c - beta);
+    a0 = A + 1 - (A - 1) * c + beta;
+    a1 = 2 * (A - 1 - (A + 1) * c);
+    a2 = A + 1 - (A - 1) * c - beta;
+  } else if (kind === "mid") {
+    b0 = 1 + alpha * A;
+    b1 = -2 * c;
+    b2 = 1 - alpha * A;
+    a0 = 1 + alpha / A;
+    a1 = -2 * c;
+    a2 = 1 - alpha / A;
+  } else {
+    b0 = (1 + c) / 2;
+    b1 = -(1 + c);
+    b2 = b0;
+    a0 = 1 + alpha;
+    a1 = -2 * c;
+    a2 = 1 - alpha;
+  }
+  return [b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0];
+}
+function processor() {
+  const states = Array.from({ length: 2 }, () => [0, 0, 0, 0]);
+  return (x, c, ch) => {
+    const q = states[ch], y = c[0] * x + c[1] * q[0] + c[2] * q[1] - c[3] * q[2] - c[4] * q[3];
+    q[1] = q[0];
+    q[0] = x;
+    q[3] = q[2];
+    q[2] = y;
+    return y;
+  };
+}
+function measureTimelineAudio(audio, t, p) {
+  const frames = Math.round(t.duration * 44100), filtered = {};
+  for (const side of ["a", "b"]) {
+    filtered[side] = {};
+    for (const role of ["master", ...STEM_ROLES]) {
+      const input = audio[side][role], out = new Float32Array(frames * 2), filters = [processor(), processor(), processor()];
+      let coeffs = [];
+      for (let i = 0; i < frames; i++) {
+        const time = i / 44100, restore = Math.max(0, Math.min(t.duration, p.restore - p.start)), wet = side === "a" ? Math.min(1, time / 0.02) : time < restore ? 1 : Math.max(0, (t.duration - time) / (t.duration - restore || 1));
+        if (i % 128 === 0) coeffs = ["low", "high", "mid"].map((band, k) => rbj(band, [140, 3600, 1200][k], p.v30Eq?.[side]?.length ? valueAt(p.v30Eq[side].map((v) => [v.t, v[band]]), time) : 0));
+        for (let ch = 0; ch < 2; ch++) {
+          const x = input.getChannelData(ch)[i];
+          let y = x;
+          for (let k = 0; k < 3; k++) y = filters[k](y, coeffs[k], ch);
+          out[i * 2 + ch] = wet * y + (1 - wet) * x;
+        }
+      }
+      filtered[side][role] = out;
+    }
+  }
+  let peak = 0, baselinePeak = 0, power = 0, reference = 0;
+  for (let i = 0; i < frames; i++) {
+    const time = i / 44100, ga = 1 - time / t.duration, gb = time / t.duration;
+    for (let ch = 0; ch < 2; ch++) {
+      const j = i * 2 + ch, dry = filtered.a.master[j] * ga + filtered.b.master[j] * gb;
+      let x = 0;
+      for (const r of STEM_ROLES) x += filtered.a[r][j] * valueAt(t.a[r], time) + filtered.b[r][j] * valueAt(t.b[r], time);
+      peak = Math.max(peak, Math.abs(x * 0.76));
+      baselinePeak = Math.max(baselinePeak, Math.abs(dry * 0.76));
+      power += x * x;
+      reference += dry * dry;
+    }
+  }
+  return { peak, baselinePeak, riseDb: 10 * Math.log10((power + 1e-12) / (reference + 1e-12)), eqApplied: true, outputScale: 0.76, coefficientBlockFrames: 128 };
+}
+function measureReconstruction(audio, duration) {
+  const measure = (side, start, end) => {
+    const rows = audio[side];
+    let master = 0, stems2 = 0, error = 0;
+    for (let i = Math.round(start * 44100); i < Math.round(end * 44100); i++) for (let ch = 0; ch < 2; ch++) {
+      const x = rows.master.getChannelData(ch)[i], y = STEM_ROLES.reduce((s, r) => s + rows[r].getChannelData(ch)[i], 0);
+      master += x * x;
+      stems2 += y * y;
+      error += (x - y) ** 2;
+    }
+    return { errorRatio: Math.sqrt(error / (master + 1e-12)), levelDeltaDb: 10 * Math.log10((stems2 + 1e-12) / (master + 1e-12)) };
+  };
+  return Object.fromEntries(["a", "b"].map((side) => [side, { ...measure(side, 0, duration), boundary: measure(side, side === "a" ? 0 : Math.max(0, duration - 0.25), side === "a" ? Math.min(0.25, duration) : duration) }]));
+}
+
+// vendor/realtime-v3/src/mobile/stem-calibration.ts
+function calibrateStemSources(input, duration) {
+  const audio = { a: { ...input.a }, b: { ...input.b } }, gains = { a: 1, b: 1 }, rawReconstruction = measureReconstruction(input, duration), n = Math.round(duration * 44100);
+  for (const side of ["a", "b"]) {
+    const rows = input[side];
+    let dot = 0, power = 0;
+    for (let ch = 0; ch < 2; ch++) {
+      let sx = 0, sy = 0, sxy = 0, syy = 0;
+      const x = rows.master.getChannelData(ch), ys = STEM_ROLES.map((r) => rows[r].getChannelData(ch));
+      for (let i = 0; i < n; i++) {
+        const y = ys.reduce((s, v) => s + v[i], 0);
+        sx += x[i];
+        sy += y;
+        sxy += x[i] * y;
+        syy += y * y;
+      }
+      dot += sxy - sx * sy / n;
+      power += Math.max(0, syy - sy * sy / n);
+    }
+    const gain = power > 1e-12 ? dot / power : 1;
+    if (!Number.isFinite(gain) || gain < 0.5 || gain > 2) return null;
+    gains[side] = gain;
+    for (const role of STEM_ROLES) {
+      const p = rows[role], channels = [0, 1].map((c) => p.getChannelData(c).map((x) => x * gain));
+      audio[side][role] = { length: p.length, sampleRate: p.sampleRate, numberOfChannels: 2, getChannelData: (c) => channels[c] };
+    }
+  }
+  return { audio, gains, evidence: { mode: "common-linear-gain-v1", gains, rawReconstruction } };
+}
+
+// vendor/realtime-v3/src/mobile/vocal-envelope.ts
+function vocalEnvelope(v, duration) {
+  const step = Math.round(v.sampleRate * 0.05), n = Math.round(duration * v.sampleRate), levels = [];
+  let largestDc = 0;
+  for (let i = 0; i < n; i += step) {
+    const end = Math.min(n, i + step), count = end - i;
+    let power = 0;
+    for (let ch = 0; ch < 2; ch++) {
+      const x = v.getChannelData(ch);
+      let sum = 0, square = 0;
+      for (let j = i; j < end; j++) {
+        sum += x[j];
+        square += x[j] * x[j];
+      }
+      const mean = sum / count;
+      largestDc = Math.max(largestDc, Math.abs(mean));
+      power += Math.max(0, square / count - mean * mean);
+    }
+    levels.push(Math.sqrt(power / 2));
+  }
+  const sorted = [...levels].sort((a, b) => a - b), gate = Math.max((sorted[Math.floor(sorted.length * 0.95)] ?? 0) * 8e-3, 10 ** (-70 / 20));
+  let tail = 0;
+  levels.forEach((x, i) => {
+    if (x >= gate) tail = Math.min(duration, (i + 1) * 0.05);
+  });
+  return { tail, dcRemoved: true, frameSeconds: 0.05, gateDb: 20 * Math.log10(gate), maximumAcRmsDb: 20 * Math.log10(Math.max(...levels) + 1e-12), maximumFrameMean: largestDc };
+}
+
+// vendor/realtime-v3/src/mobile/stem-compatibility.ts
+function measureStemCompatibility(audio, t, bpm) {
+  const sr = 44100, step = Math.round(sr * 0.05), n = Math.round(t.duration * sr), pitchRoles = ["bass", "other", "vocals"], gate = 10 ** (-45 / 20);
+  const mono2 = (p, start, end) => {
+    const x = new Float32Array(end - start);
+    for (let i = 0; i < x.length; i++) x[i] = (p.getChannelData(0)[start + i] + p.getChannelData(1)[start + i]) * 0.5;
+    return x;
+  };
+  let pitchedRisk = 0, totalFrames = 0, pitchedOverlapSeconds = 0, incompatiblePitchedSeconds = 0, drumOverlapSeconds = 0;
+  const drums = { a: [], b: [] };
+  let chroma = {};
+  for (let i = 0; i < n; i += step) {
+    const end = Math.min(n, i + step), time = (i + end) / 2 / sr;
+    if (i % (step * 40) === 0) {
+      chroma = {};
+      for (const side of ["a", "b"]) for (const r of pitchRoles) chroma[side + r] = sourceChroma(mono2(audio[side][r], i, Math.min(n, i + step * 40)), sr);
+    }
+    let frameRisk = 0, overlapping = false;
+    for (const ar of pitchRoles) for (const br of pitchRoles) {
+      const a = rms(audio.a[ar], i, end) * valueAt(t.a[ar], time), b = rms(audio.b[br], i, end) * valueAt(t.b[br], time);
+      if (a >= gate && b >= gate) {
+        const tonal = (c) => !!c && Math.max(...c) / c.reduce((s, x) => s + x, 0) >= 0.3;
+        if (ar === "vocals" && !tonal(chroma["a" + ar]) || br === "vocals" && !tonal(chroma["b" + br])) continue;
+        overlapping = true;
+        frameRisk = Math.max(frameRisk, 2 * Math.min(a, b) / (a + b) * (chromaDifference(chroma["a" + ar], chroma["b" + br]) ?? 1));
+      }
+    }
+    if (overlapping) {
+      pitchedRisk += frameRisk * (end - i);
+      totalFrames += end - i;
+      pitchedOverlapSeconds += (end - i) / sr;
+      if (frameRisk > 0.35) incompatiblePitchedSeconds += (end - i) / sr;
+    }
+    const da = rms(audio.a.drums, i, end), db = rms(audio.b.drums, i, end);
+    drums.a.push(da);
+    drums.b.push(db);
+    if (da * valueAt(t.a.drums, time) >= gate && db * valueAt(t.b.drums, time) >= gate) drumOverlapSeconds += (end - i) / sr;
+  }
+  pitchedRisk /= Math.max(1, totalFrames);
+  const onsets = (v) => {
+    const threshold = Math.max(gate, Math.max(...v) * 0.25);
+    return v.flatMap((x, i) => x - (v[i - 1] ?? 0) >= threshold ? [i] : []);
+  }, oa = onsets(drums.a), ob = onsets(drums.b);
+  const observed = oa.length >= 3 && ob.length >= 3, densityRatio = observed ? Math.max(oa.length, ob.length) / Math.min(oa.length, ob.length) : null, onsetAgreement = observed ? ob.filter((i) => oa.some((j) => Math.abs(i - j) <= 1)).length / ob.length : null;
+  const drumOverlapLimit = 30 / bpm + 0.02, drumPass = drumOverlapSeconds <= drumOverlapLimit || observed && densityRatio <= 2.5 && onsetAgreement >= 0.5;
+  return { pitchedRisk, pitchedOverlapSeconds, incompatiblePitchedSeconds, drumOverlapSeconds, drumOverlapLimit, drumDensityRatio: densityRatio, drumOnsetAgreement: onsetAgreement, drumEvidence: observed ? "observed" : drumOverlapSeconds === 0 ? "not-overlapping" : "limited", maximumPitchedRisk: 0.35, pass: incompatiblePitchedSeconds <= drumOverlapLimit && drumPass };
+}
+
+// vendor/realtime-v3/src/mobile/stem-arrangement.ts
+function evaluateStemConflicts(audio, t) {
+  const result = {};
+  for (const role of STEM_ROLES) {
+    const a = audio.a[role], b = audio.b[role];
+    if (!a || !b) throw Error("\u5904\u7406\u540E\u51B2\u7A81\u68C0\u67E5\u7F3A\u5C11\u540C\u6E90\u58F0\u90E8");
+    const sr = a.sampleRate, step = Math.round(sr * 0.125), frames = Math.round(t.duration * sr);
+    let total = 0, count = 0;
+    for (let i = 0; i < frames; i += step) {
+      const end = Math.min(frames, i + step), time = (i + end) / 2 / sr, aa = rms(a, i, end) * valueAt(t.a[role], time), bb = rms(b, i, end) * valueAt(t.b[role], time);
+      total += aa < 10 ** (-45 / 20) || bb < 10 ** (-45 / 20) ? 0 : 2 * Math.min(aa, bb) / (aa + bb + 1e-12);
+      count++;
+    }
+    result[role] = total / Math.max(1, count);
+  }
+  return result;
+}
+var baseline = (d) => ({ schema: "harbeat.stem-timeline.v1", clock: "transition-start", duration: d, a: Object.fromEntries(STEM_ROLES.map((r) => [r, [[0, 1], [d, 0]]])), b: Object.fromEntries(STEM_ROLES.map((r) => [r, [[0, 0], [d, 1]]])) });
+var mono = (v, d) => {
+  const x = new Float32Array(Math.round(d * v.sampleRate)), a = v.getChannelData(0), b = v.getChannelData(1);
+  for (let i = 0; i < x.length; i++) x[i] = (a[i] + b[i]) * 0.5;
+  return x;
+};
+function analyseStemArrangement(a, b, p, audio, options = {}) {
+  const fail = (reason) => ({ schema: "harbeat.stem-arrangement.v1", method: "stem-handover", eligible: false, recommended: false, score: null, reason, requiredStems: [], timeline: null, evidence: null });
+  const d = p.duration;
+  if (d < 1 || d > 32 || p.rate < 0.95 || p.rate > 1.05 || ["a", "b"].some((side) => ["master", ...STEM_ROLES].some((r) => !audio[side][r] || audio[side][r].sampleRate !== 44100 || audio[side][r].length < Math.round(d * 44100)))) return fail("\u7F3A\u5C11\u5B8C\u6574\u540C\u6E90\u56DB\u5206\u8F68\u6216\u8D85\u51FA\u5DF2\u9A8C\u8BC1\u7A97\u53E3");
+  const calibration = options.calibrateSources ? calibrateStemSources(audio, d) : null;
+  if (options.calibrateSources && !calibration) return fail("\u540C\u6E90\u5206\u8F68\u5171\u540C\u589E\u76CA\u65E0\u6CD5\u5728\u5DF2\u9A8C\u8BC1\u8303\u56F4\u5185\u6807\u5B9A");
+  if (calibration) audio = calibration.audio;
+  const t = baseline(d), relativeBeats = a.alignment.bars.flatMap((row) => row.beats).map((x) => x - p.start).filter((x) => x >= 0 && x <= d), beat = Math.max(0.1, 60 / a.bpm), swap = (role, fraction) => {
+    const at = relativeBeats.find((x) => x >= d * fraction) ?? d * fraction, start = Math.max(0.05, Math.min(d - 0.1, at)), end = Math.min(d - 0.05, start + Math.max(0.05, beat * 0.5));
+    t.a[role] = [[0, 1], [start, 1], [end, 0], [d, 0]];
+    t.b[role] = [[0, 0], [start, 0], [end, 1], [d, 1]];
+  };
+  swap("other", 0.2);
+  swap("bass", 0.45);
+  swap("drums", 0.7);
+  const ap = voicePhrases(a).filter(([s, e]) => s < p.end && e > p.start);
+  if (ap.some(([, e]) => e > p.end + 2e-3)) return fail("A \u4EBA\u58F0\u5728\u63A5\u7BA1\u70B9\u540E\u4ECD\u672A\u5531\u5B8C\uFF0C\u4FDD\u6301\u539F\u4EBA\u58F0\u89C4\u5219");
+  const tailAnalysis = vocalEnvelope(audio.a.vocals, d), tail = Math.max(tailAnalysis.tail, 0, ...ap.map(([, e]) => e - p.start)), release = relativeBeats.find((x) => x >= tail + 0.08 && x + 0.2 <= d - 0.12);
+  if (release === void 0) return fail("A \u4EBA\u58F0\u5C3E\u97F3\u4E4B\u540E\u6CA1\u6709\u8DB3\u591F\u62CD\u70B9\u548C\u9000\u51FA\u7A7A\u9699");
+  const releaseEnd = release + 0.2;
+  t.a.vocals = [[0, 1], [release, 1], [releaseEnd, 0], [d, 0]];
+  const bp = voicePhrases(b), incoming = bp.find(([s]) => (s - p.window.start) / p.rate >= releaseEnd + 0.12 && (s - p.window.start) / p.rate < d - 0.05);
+  let entry = incoming ? (incoming[0] - p.window.start) / p.rate : d;
+  if (!incoming && bp.some(([s, e]) => e > p.window.start + releaseEnd * p.rate && s < p.window.end)) return fail("B \u6CA1\u6709\u53EF\u6062\u590D\u7684\u5B8C\u6574\u4EBA\u58F0\u53E5\u5165\u53E3\uFF0C\u4E0D\u80FD\u4ECE\u534A\u53E5\u4E2D\u6253\u5F00");
+  const begin = entry - 0.08;
+  if (begin < releaseEnd + 0.02 || bp.some(([s, e]) => s < p.window.start + entry * p.rate - 1e-5 && e > p.window.start + begin * p.rate + 1e-5)) return fail("B \u4EBA\u58F0\u5165\u53E3\u524D\u7F3A\u5C11\u5B89\u5168\u7A7A\u9699");
+  t.b.vocals = [[0, 0], [begin, 0], [entry, 1], ...entry < d ? [[d, 1]] : []];
+  try {
+    validateStemTimeline(t, d);
+    validateTimelineVoices(t, a, b, p);
+  } catch {
+    return fail("\u4EBA\u58F0\u5B8C\u6574\u6027\u6216\u58F0\u90E8\u66F2\u7EBF\u8FDE\u7EED\u6027\u6821\u9A8C\u672A\u901A\u8FC7");
+  }
+  let compatibility = measureStemCompatibility(audio, t, a.bpm);
+  if (!compatibility.pass) {
+    swap("bass", 0.2);
+    swap("other", 0.45);
+    compatibility = measureStemCompatibility(audio, t, a.bpm);
+  }
+  if (!compatibility.pass) {
+    swap("bass", 0.2);
+    swap("other", 0.2);
+    compatibility = measureStemCompatibility(audio, t, a.bpm);
+  }
+  if (!compatibility.pass) {
+    swap("bass", 0.45);
+    swap("other", 0.45);
+    compatibility = measureStemCompatibility(audio, t, a.bpm);
+  }
+  if (!compatibility.pass) return fail("\u4FDD\u7559\u7684\u65CB\u5F8B\u4E0E\u8D1D\u65AF\u4EA4\u53C9\u58F0\u90E8\u6216\u9F13\u7EC4\u91CD\u53E0\u4ECD\u4E0D\u76F8\u5BB9\uFF0C\u4FDD\u7559\u8F83\u7B80\u5355\u65B9\u6848");
+  validateStemTimeline(t, d);
+  const raw = evaluateStemConflicts(audio, baseline(d)), processed = evaluateStemConflicts(audio, t), pitch = {};
+  for (const role of ["bass", "other"]) {
+    const aa = audio.a[role], bb = audio.b[role];
+    pitch[role] = chromaDifference(sourceChroma(mono(aa, d), aa.sampleRate), sourceChroma(mono(bb, d), bb.sampleRate)) ?? 1;
+  }
+  const risk = (x) => x.vocals * 2 + x.bass * pitch.bass + x.other * pitch.other, improvement = risk(raw) - risk(processed);
+  const reconstruction = measureReconstruction(audio, d);
+  if (Object.values(reconstruction).some((v) => [v, v.boundary].some((x) => x.errorRatio > 0.25 || Math.abs(x.levelDeltaDb) > 1.5))) return fail("\u5206\u8F68\u91CD\u5EFA\u4E0E\u539F\u66F2\u5DEE\u5F02\u8FC7\u5927\uFF0C\u4E0D\u80FD\u4FDD\u8BC1\u8FDE\u7EED\u8FDB\u5165\u548C\u6B63\u6587\u63A5\u7BA1");
+  const headroom = measureTimelineAudio(audio, t, p);
+  if (!Number.isFinite(headroom.peak) || headroom.peak > 0.95 || headroom.riseDb > 3) return fail("\u5904\u7406\u540E\u6DF7\u5408\u5CF0\u503C\u6216\u97F3\u91CF\u589E\u957F\u8D85\u8FC7\u5DF2\u9A8C\u8BC1\u4F59\u91CF");
+  if (processed.vocals > 0.01) return fail("\u5904\u7406\u540E\u7684\u5B9E\u9645\u4EBA\u58F0\u4ECD\u6709\u540C\u65F6\u53D1\u58F0\u51B2\u7A81");
+  if (improvement < 0.08) return fail("\u5F53\u524D\u7A97\u53E3\u6CA1\u6709\u8DB3\u591F\u7684\u5904\u7406\u540E\u51B2\u7A81\u6539\u5584\uFF0C\u4FDD\u7559\u8F83\u7B80\u5355\u65B9\u6848");
+  return { schema: "harbeat.stem-arrangement.v1", method: "stem-handover", ...calibration ? { sourceGains: calibration.gains } : {}, eligible: true, recommended: true, score: Math.min(95, 70 + 20 * improvement), reason: "Jetson \u6309\u5904\u7406\u540E\u7684\u5B9E\u9645\u58F0\u90E8\u91CD\u53E0\u6279\u51C6\u72EC\u7ACB\u65F6\u95F4\u7EBF", requiredStems: [...STEM_ROLES], timeline: t, evidence: { baseline: raw, processed, improvement, ...calibration ? { sourceCalibration: calibration.evidence } : {}, compatibility, headroom, reconstruction, aTailEnd: tail, bVoiceEntry: entry, tailAnalysis, basis: "gain-weighted source-bound stems; source chroma proxy", limitations: ["\u6D3B\u52A8\u533A\u95F4\u4E0D\u662F\u6B4C\u8BCD\u8BED\u4E49\u5206\u53E5", "\u8272\u5EA6\u5DEE\u5F02\u4E0D\u662F\u548C\u5F26\u771F\u503C\uFF1B\u4EC5\u5BF9\u8272\u5EA6\u96C6\u4E2D\u7684\u4EBA\u58F0\u68C0\u67E5\u548C\u58F0\uFF0C\u975E\u8C03\u6027\u8BF4\u5531\u4ECD\u4EE5\u6D3B\u52A8\u53CA\u62CD\u70B9\u89C4\u5219\u7EA6\u675F", "\u5CF0\u503C\u542B\u9010\u58F0\u90E8 EQ \u7684 128 \u5E27\u7CFB\u6570\u4EE3\u7406\uFF1B\u7AEF\u4FA7\u4ECD\u9700\u97F3\u91CF\u4FDD\u62A4", "\u5206\u79BB\u4E32\u97F3\u4ECD\u6709\u68C0\u6D4B\u5C40\u9650\uFF0C\u9700\u8BD5\u542C\u9A8C\u8BC1"] } };
 }
 
 // vendor/realtime-v3/node_modules/@soundtouchjs/core/.dist/AbstractSamplePipe.js
@@ -1900,7 +2280,7 @@ function checkPreludeBeats(a, b, as, bs, d, rate) {
 function mainBeatErrorMs(a, b, p) {
   return checkPreludeBeats(a, b, p.start, p.window.start, p.duration, p.rate);
 }
-function rbj(kind, frequency, gain = 0) {
+function rbj2(kind, frequency, gain = 0) {
   const w = 2 * Math.PI * frequency / 44100, c = Math.cos(w), s = Math.sin(w), A = 10 ** (gain / 40), alpha = s / (2 * (kind === "mid" ? 1.05 : Math.SQRT1_2)), beta = 2 * Math.sqrt(A) * s / Math.SQRT2;
   let b0, b1, b2, a0, a1, a2;
   if (kind === "low") {
@@ -1934,7 +2314,7 @@ function rbj(kind, frequency, gain = 0) {
   }
   return [b0 / a0, b1 / a0, b2 / a0, a1 / a0, a2 / a0];
 }
-function processor() {
+function processor2() {
   const states = Array.from({ length: 2 }, () => [0, 0, 0, 0]);
   return (x, c, ch) => {
     const q = states[ch], y = c[0] * x + c[1] * q[0] + c[2] * q[1] - c[3] * q[2] - c[4] * q[3];
@@ -1968,8 +2348,8 @@ function drumProxy(a, b, frames) {
   return { pass: densityRatio <= 2.5 && oa.length >= 3 && ob.length >= 3 && agreement >= 0.5, densityRatio, onsetAgreement: agreement };
 }
 function evaluatePreludeAudio(a, b, p, controls, method, lead, fade) {
-  const frames = Math.round((lead + p.duration) * 44100), curves = stemCurves(method, controls), routes = Object.fromEntries(["a", "b"].map((side) => [side, Object.fromEntries(Object.keys(side === "a" ? a : b).map((stem) => [stem, [processor(), processor(), processor()]]))])), hp = processor();
-  let peak = 0, prePower = 0, preReference = 0, mainPower = 0, mainReference = 0, coeffs = {}, hpCoeff = rbj("hp", 20);
+  const frames = Math.round((lead + p.duration) * 44100), curves = stemCurves(method, controls), routes = Object.fromEntries(["a", "b"].map((side) => [side, Object.fromEntries(Object.keys(side === "a" ? a : b).map((stem) => [stem, [processor2(), processor2(), processor2()]]))])), hp = processor2();
+  let peak = 0, prePower = 0, preReference = 0, mainPower = 0, mainReference = 0, coeffs = {}, hpCoeff = rbj2("hp", 20);
   const eqAt = (side, t) => {
     const points = p.v30Eq?.[side];
     return ["low", "high", "mid"].map((band, i) => {
@@ -1978,7 +2358,7 @@ function evaluatePreludeAudio(a, b, p, controls, method, lead, fade) {
         const values = points.map((point) => [point.t, point[band]]);
         db = valueAt(values, t);
       }
-      return rbj(band, [140, 3600, 1200][i], db);
+      return rbj2(band, [140, 3600, 1200][i], db);
     });
   };
   for (let i = 0; i < frames; i++) {
@@ -1986,7 +2366,7 @@ function evaluatePreludeAudio(a, b, p, controls, method, lead, fade) {
     if (i % 128 === 0) {
       coeffs = { a: eqAt("a", main), b: eqAt("b", main) };
       const progress = Math.max(0, Math.min(1, (main - controls.lastBarStart) / (p.duration - controls.lastBarStart)));
-      hpCoeff = rbj("hp", 20 * 90 ** progress);
+      hpCoeff = rbj2("hp", 20 * 90 ** progress);
     }
     for (let ch = 0; ch < 2; ch++) {
       const filtered = { a: {}, b: {} };
@@ -2045,6 +2425,11 @@ async function analyseJetsonInput(input, read) {
   const analysis = analyseWindow(a, b, p, { a: buffers(mainA), b: buffers(mainB) }), requiredStems = /* @__PURE__ */ new Set();
   for (const [m, ss] of [["bass", ["bass"]], ["filter", ["other"]], ["yield", ["other"]], ["vocal", ["vocals"]], ["bass_filter", ["bass", "other"]]]) if (analysis.decision.methods[m].eligible) ss.forEach((s) => requiredStems.add(s));
   let result = { schema: "harbeat.jetson-mix-plan.v1", id: input.jobId, status: "ready", producer: "jetson", analysisVersion: "jetson-decision-v1", algorithmSha256: input.plannerSha256, plan: { from: a.id, to: b.id, windowId: p.window.id, start: p.start, end: p.end, duration: p.duration, rate: p.rate, bStart: p.window.start, bEnd: p.window.end, beatErrorMs: mainBeatErrorMs(a, b, p) }, sourceProof: input.sourceProof, ...analysis, eq: p.v30Eq, restore: p.restore, requiredStems: [...requiredStems] };
+  if (input.stemTimelineVersion !== void 0) {
+    if (!["stem-timeline-v1", "stem-timeline-v2"].includes(input.stemTimelineVersion)) throw Error("Unsupported stem timeline version");
+    const arrangement = analyseStemArrangement(a, b, p, { a: buffers(mainA), b: buffers(mainB) }, { calibrateSources: input.stemTimelineVersion === "stem-timeline-v2" });
+    result = { ...result, analysisVersion: input.stemTimelineVersion === "stem-timeline-v2" ? "jetson-decision-v3" : "jetson-decision-v2", stemArrangement: arrangement, requiredStems: [.../* @__PURE__ */ new Set([...result.requiredStems, ...arrangement.requiredStems])] };
+  }
   const waves = {}, prelude = input.prelude;
   let group = { id: input.jobId, title: a.title + " \u2192 " + b.title, skip: "\u6CA1\u6709\u5B8C\u6574\u7684\u524D\u7F6E\u9F13\u6BB5" };
   if (prelude) {

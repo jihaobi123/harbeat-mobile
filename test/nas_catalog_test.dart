@@ -102,7 +102,7 @@ void main() {
       expect(t.canPlay, true);
       expect(t.style, 'Hip-Hop');
       expect(t.previewUrl,
-          startsWith('https://8.136.120.255/api/analysis-lab/media/'));
+          startsWith('https://47.108.118.177/api/analysis-lab/media/'));
       expect(t.analysis['vocal_activity']['status'], 'ready');
     }
     final refreshed = await r.refresh();
@@ -218,7 +218,7 @@ void main() {
     expect(playlist.trackIds.length, 6);
     await c.playNasSet(mixed: false);
     expect(audio.path,
-        startsWith('https://8.136.120.255/api/analysis-lab/media/'));
+        startsWith('https://47.108.118.177/api/analysis-lab/media/'));
     expect(audio.headers, isNull);
     expect(c.queue.length, 6);
     await c.playNasSet(mixed: true);

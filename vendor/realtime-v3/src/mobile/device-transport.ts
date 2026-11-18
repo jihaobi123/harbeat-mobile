@@ -1,3 +1,5 @@
+import {PerformanceEffects,scratchRouting} from './performance-effects'
+import {planScratch,renderScratch,type ScratchPlan} from './performance-plan'
 import {ReservationAudioCache as AudioCache} from './reservation-cache'
 import {nativeSegment,nativeSegments,SegmentScheduler} from '../metric-upstream/continuous/segments'
 import type {Track} from '../metric-upstream/realtime/planner'
@@ -11,16 +13,59 @@ export class MetricTransport{
  readonly localExecution=true
  continuation:{track:Track;at:number;stream:Stream}|null=null
  ctx=new AudioContext({sampleRate:44100,latencyHint:'interactive'});cache:AudioCache;logs:any[]=[];active:Stream|null=null;transition:PlayingTransition|null=null;status='选择当前歌曲后开始播放';busy=false;buffering=false;paused=false
- private monitor!:AudioWorkletNode;private volume:GainNode;private limiter:DynamicsCompressorNode;private timer:number;private nodes:AudioNode[]=[];private mixSource:AudioBufferSourceNode|null=null;private dead=false;private revision=0;private load?:AbortController;private ready?:Promise<void>;private cleanupAt=0;private streams=new Set<Stream>();private bufferingResume=false;private bufferingOperation=false
- constructor(private base:URL,private changed:()=>void){this.cache=new AudioCache(this.ctx,base,s=>{this.status=s;this.changed()});this.volume=this.ctx.createGain();this.limiter=this.ctx.createDynamicsCompressor();this.limiter.threshold.value=-.5;this.limiter.knee.value=0;this.limiter.ratio.value=20;this.limiter.attack.value=.003;this.limiter.release.value=.12;this.limiter.connect(this.volume);this.volume.gain.value=.7;this.volume.connect(this.ctx.destination);this.ctx.addEventListener('statechange',()=>{if(!this.dead)this.log('audio_context_state',{state:this.ctx.state,paused:this.paused,buffering:this.buffering,position:this.position})});this.timer=window.setInterval(()=>this.tick(),80)}
- initialize(){return this.ready??=(async()=>{await this.ctx.audioWorklet.addModule(new URL('v3-device-clock.js',this.base));this.monitor=new AudioWorkletNode(this.ctx,'v3-clock',{outputChannelCount:[2]});this.monitor.connect(this.limiter);this.monitor.port.onmessage=({data})=>{this.logs.push({kind:data.kind==='audio_health'?'audio_health':'audio_observation',at:new Date().toISOString(),...data})}})()}
+ private effects:PerformanceEffects;private lastScratch:ScratchPlan|null=null;private lastScratchTiming:Record<string,number>|null=null;private monitor!:AudioWorkletNode;private volume:GainNode;private limiter:DynamicsCompressorNode;private timer:number;private nodes:AudioNode[]=[];private mixSource:AudioBufferSourceNode|null=null;private dead=false;private revision=0;private load?:AbortController;private ready?:Promise<void>;private cleanupAt=0;private streams=new Set<Stream>();private bufferingResume=false;private bufferingOperation=false
+ constructor(private base:URL,private changed:()=>void){this.cache=new AudioCache(this.ctx,base,s=>{this.status=s;this.changed()});this.volume=this.ctx.createGain();this.limiter=this.ctx.createDynamicsCompressor();this.limiter.threshold.value=-.5;this.limiter.knee.value=0;this.limiter.ratio.value=20;this.limiter.attack.value=.003;this.limiter.release.value=.12;this.limiter.connect(this.volume);this.effects=new PerformanceEffects(this.ctx,this.limiter);this.volume.gain.value=.7;this.volume.connect(this.ctx.destination);this.ctx.addEventListener('statechange',()=>{if(!this.dead)this.log('audio_context_state',{state:this.ctx.state,paused:this.paused,buffering:this.buffering,position:this.position})});this.timer=window.setInterval(()=>this.tick(),80)}
+ initialize(){return this.ready??=(async()=>{await this.ctx.audioWorklet.addModule(new URL('v3-device-clock.js',this.base));this.monitor=new AudioWorkletNode(this.ctx,'v3-clock',{outputChannelCount:[2]});this.monitor.connect(this.effects.input);this.monitor.port.onmessage=({data})=>{this.logs.push({kind:data.kind==='audio_health'?'audio_health':'audio_observation',at:new Date().toISOString(),...data})}})()}
  get current(){return this.active?.track??null}
  get position(){return this.active?Math.min(this.active.track.duration,this.active.offset+Math.max(0,this.ctx.currentTime-this.active.at)):0}
  get playing(){return !!this.active&&this.ctx.state==='running'&&!this.paused}
  get locked(){return !!this.transition&&this.ctx.currentTime>=this.transition.at-.25}
  setVolume(v:number){this.volume.gain.setTargetAtTime(.7*Math.max(0,Math.min(1,v)),this.ctx.currentTime,.02)}
+ /** Performance availability is independent from recommendation/preparation state. */
+ private scratchPlan(){
+  if(!this.playing||this.buffering||this.busy||!this.active)throw Error('播放稳定后可使用搓碟回应')
+  if(this.effects.scratching)throw Error('正在搓碟回应，请稍候')
+  const plan=planScratch(this.active.track,this.position),at=contextForSource(this.active.at,this.active.offset,plan.start)
+  const next=Math.min(this.transition?.at??Infinity,this.continuation?.at??Infinity)
+  if(at+plan.duration+.15>=next)throw Error('临近交接，暂不能搓碟')
+  this.excerpt(plan.sourceStart,plan.sourceDuration,false)
+  return{plan,at}
+ }
+ private excerpt(start:number,duration:number,copy=true){
+  const track=this.active!.track,sr=this.ctx.sampleRate,startFrame=Math.round(start*sr),count=Math.ceil(duration*sr),endFrame=startFrame+count
+  let covered=0,channels:Float32Array[]|null=null
+  for(const segment of nativeSegments(track)){
+   const segmentStart=Math.round(segment.start*sr),from=Math.max(startFrame,segmentStart),to=Math.min(endFrame,Math.round(segment.end*sr))
+   if(to<=from)continue
+   const buffer=this.cache.buffers.get(segment.asset.url)
+   if(!buffer||buffer.sampleRate!==sr||buffer.numberOfChannels<1||buffer.length<to-segmentStart)throw Error('当前片段缓存尚未覆盖搓碟窗口，请稍后再试')
+   if(!channels)channels=Array.from({length:Math.min(2,buffer.numberOfChannels)},()=>new Float32Array(copy?count:0))
+   if(channels.length!==Math.min(2,buffer.numberOfChannels))throw Error('缓存声道不一致，暂不能搓碟')
+   if(copy)channels.forEach((channel,c)=>channel.set(buffer.getChannelData(c).subarray(from-segmentStart,to-segmentStart),from-startFrame))
+   covered+=to-from
+  }
+  if(!channels||covered!==count)throw Error('当前片段缓存覆盖不足，暂不能搓碟')
+  return channels
+ }
+ get performance(){
+  let canScratch=false,scratchReason=''
+  try{this.scratchPlan();canScratch=true}catch(error){scratchReason=(error as Error).message}
+  return{supported:true,mc:this.effects.mc,scratching:this.effects.scratching,canScratch,scratchReason,routing:scratchRouting,lastScratch:this.lastScratch,lastScratchTiming:this.lastScratchTiming}
+ }
+ setMC(enabled:boolean){this.effects.setMC(enabled);this.log('mc_mode',{enabled,lowpassHz:320,order:4,bassGain:1});this.changed()}
+ scratch(){
+  const began=performance.now(),{plan,at}=this.scratchPlan(),planned=performance.now(),pcm=this.excerpt(plan.sourceStart,plan.sourceDuration),copied=performance.now(),samples=renderScratch(pcm,this.ctx.sampleRate,plan),rendered=performance.now()
+  const clip=this.ctx.createBuffer(samples.length,samples[0].length,this.ctx.sampleRate)
+  samples.forEach((channel,c)=>clip.getChannelData(c).set(channel))
+  // Recheck the clock after PCM generation; never silently start late.
+  if(at<this.ctx.currentTime+.02)throw Error('搓碟拍点已过，请重新触发')
+  const buffered=performance.now(),wasMC=this.effects.mc
+  if(!this.effects.scratch(clip,at))throw Error('正在搓碟回应，请稍候')
+  if(wasMC)this.log('mc_mode',{enabled:false,reason:'scratch_response'})
+  this.lastScratchTiming={renderMs:performance.now()-began,leadMs:(at-this.ctx.currentTime)*1000,planningMs:planned-began,copyMs:copied-planned,pcmMs:rendered-copied,bufferMs:buffered-rendered,scheduleMs:performance.now()-buffered};this.lastScratch=plan;this.log('scratch_response',{track:this.current!.id,plan,renderMs:performance.now()-began,scheduleLeadMs:(at-this.ctx.currentTime)*1000,contextStart:at,contextEnd:this.effects.lastScratchEnd,sourceSha256:this.current!.provenance?.masterSha256,routing:scratchRouting,backingGain:scratchRouting.originalGain});this.changed()
+ }
  private log(kind:string,data:any={}){this.logs.push({kind,at:new Date().toISOString(),context:this.ctx.currentTime,...data})}
- private clear(){this.revision++;this.load?.abort();for(const s of this.streams){s.scheduler.dispose();for(const source of s.sources){try{source.stop()}catch{}source.disconnect()}s.gain.disconnect()}this.streams.clear();if(this.mixSource){try{this.mixSource.stop()}catch{}this.mixSource.disconnect();this.mixSource=null}for(const n of this.nodes){if('stop' in n)try{(n as AudioBufferSourceNode).stop()}catch{}n.disconnect();}this.nodes=[];this.cleanupAt=0;this.active=null;this.transition=null;this.continuation=null;this.cache.protected.clear();this.monitor?.port.postMessage({kind:'clear'});this.buffering=false;this.bufferingResume=false}
+ private clear(){this.effects.cancelScratch(true);this.lastScratch=null;this.lastScratchTiming=null;this.revision++;this.load?.abort();for(const s of this.streams){s.scheduler.dispose();for(const source of s.sources){try{source.stop()}catch{}source.disconnect()}s.gain.disconnect()}this.streams.clear();if(this.mixSource){try{this.mixSource.stop()}catch{}this.mixSource.disconnect();this.mixSource=null}for(const n of this.nodes){if('stop' in n)try{(n as AudioBufferSourceNode).stop()}catch{}n.disconnect();}this.nodes=[];this.cleanupAt=0;this.active=null;this.transition=null;this.continuation=null;this.cache.protected.clear();this.monitor?.port.postMessage({kind:'clear'});this.buffering=false;this.bufferingResume=false}
  private stream(track:Track,offset:number,at:number,buffer:AudioBuffer,fade=false):Stream{
   const gain=this.ctx.createGain();gain.gain.value=.60;gain.connect(this.monitor);const sources=new Set<AudioBufferSourceNode>();let stream:Stream
   const scheduler=new SegmentScheduler(track,at,offset,{now:()=>this.ctx.currentTime,load:(asset,signal)=>this.cache.load(asset,signal),changed:()=>this.pins(),scheduled:e=>this.log('native_chunk',{track:track.id,...e}),schedule:(pcm,start,sourceOffset,duration,edge)=>{
@@ -47,6 +92,7 @@ export class MetricTransport{
    load.signal.throwIfAborted()
    if(!canArm(result.plan,a.track.id,this.position))throw Error('准备完成时接点已经过去，请重新准备')
    const at=contextForSource(a.at,a.offset,result.plan.start),end=at+result.plan.duration
+   if(this.effects.scratching&&at<this.effects.lastScratchEnd+.2)this.effects.cancelScratch(true)
    if(isDevicePrepared(result)){
     if(JSON.stringify(result.execution.sourceFingerprints.a)!==JSON.stringify(a.track.provenance)||JSON.stringify(result.execution.sourceFingerprints.b)!==JSON.stringify(b.provenance))throw Error('本机计划的源指纹已经变化')
     const graph=scheduleDeviceGraph(this.ctx,this.monitor,result,method,getDevicePCM(result),at)
@@ -94,7 +140,7 @@ export class MetricTransport{
   if(this.cleanupAt&&now>=this.cleanupAt){for(const n of this.nodes)n.disconnect();this.nodes=[];this.cleanupAt=0}
   for(const s of this.streams)s.scheduler.pump()
   const starving=[...this.streams].find(s=>s.scheduler.error||s.scheduler.late||now>=s.scheduler.deadline-.12)
-  if(starving&&!this.bufferingOperation&&this.playing){this.log('buffering_start',{track:starving.track.id,position:this.position,error:starving.scheduler.error,late:starving.scheduler.late,deadline:starving.scheduler.deadline,coveredSourceEnd:starving.scheduler.coveredSourceEnd});this.bufferingOperation=true;this.buffering=true;this.bufferingResume=true;void this.ctx.suspend().then(()=>{this.status='网络准备中，已暂停时间轴';this.changed()}).finally(()=>this.bufferingOperation=false)}
+  if(starving&&!this.bufferingOperation&&this.playing){this.log('buffering_start',{track:starving.track.id,position:this.position,error:starving.scheduler.error,late:starving.scheduler.late,deadline:starving.scheduler.deadline,coveredSourceEnd:starving.scheduler.coveredSourceEnd});this.effects.cancelScratch(true);this.bufferingOperation=true;this.buffering=true;this.bufferingResume=true;void this.ctx.suspend().then(()=>{this.status='网络准备中，已暂停时间轴';this.changed()}).finally(()=>this.bufferingOperation=false)}
   if(this.buffering&&!this.bufferingOperation){
    for(const s of this.streams)if(s.scheduler.error)s.scheduler.retry()
    if([...this.streams].every(s=>!s.scheduler.error&&!s.scheduler.late&&this.ctx.currentTime<s.scheduler.deadline-.12)){this.log('buffering_end',{position:this.position});this.buffering=false;if(this.bufferingResume&&!this.paused){this.bufferingOperation=true;void this.ctx.resume().finally(()=>{this.bufferingOperation=false;this.changed()})}}
@@ -103,10 +149,10 @@ export class MetricTransport{
   if(this.position>=this.active.track.duration-.03&&!this.transition&&!this.continuation&&!this.paused){this.status='播放结束，请选择下一首';this.pause('track-ended')}
   this.changed()
  }
- pause(reason='user'){this.paused=true;this.bufferingResume=false;void this.ctx.suspend();this.log('pause',{reason,track:this.current?.id,position:this.position,buffering:this.buffering});this.changed()}
+ pause(reason='user'){this.effects.cancelScratch(true);this.paused=true;this.bufferingResume=false;void this.ctx.suspend();this.log('pause',{reason,track:this.current?.id,position:this.position,buffering:this.buffering});this.changed()}
  async resume(){this.paused=false;this.bufferingResume=true;if(!this.buffering)await this.ctx.resume();this.log('resume');this.changed()}
- stop(){this.log('stop');this.clear();this.busy=false;this.paused=false;this.status='已停止';this.changed()}
+ stop(){this.log('stop');this.effects.reset();this.clear();this.busy=false;this.paused=false;this.status='已停止';this.changed()}
  async seek(offset:number){const track=this.current;if(!track)return;await this.start(track,offset)}
  export(){return {schema:'harbeat.metric-mix-session.v1',sampleRate:this.ctx.sampleRate,transport:{track:this.current?.id,position:this.position,duration:this.current?.duration,state:this.ctx.state,paused:this.paused,buffering:this.buffering,status:this.status,streams:[...this.streams].map(s=>({track:s.track.id,offset:s.offset,at:s.at,deadline:Number.isFinite(s.scheduler.deadline)?s.scheduler.deadline:null,coveredSourceEnd:s.scheduler.coveredSourceEnd,error:s.scheduler.error,late:s.scheduler.late}))},logs:this.logs,limitations:['Render-quantum timings are not device/Bluetooth latency','Rule scores are provisional,not listening success probabilities']}}
- dispose(){this.dead=true;this.clear();clearInterval(this.timer);this.cache.dispose();this.monitor?.disconnect();this.volume.disconnect();this.limiter.disconnect();void this.ctx.close()}
+ dispose(){this.dead=true;this.clear();clearInterval(this.timer);this.cache.dispose();this.monitor?.disconnect();this.effects.dispose();this.volume.disconnect();this.limiter.disconnect();void this.ctx.close()}
 }

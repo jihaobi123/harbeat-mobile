@@ -5,6 +5,11 @@ import 'package:audio_session/audio_session.dart';
 import 'package:just_audio/just_audio.dart';
 import 'mix_planner.dart';
 
+abstract interface class PlaybackOverlap {
+  /// Source progress of the second deck, or null before its audio starts.
+  double? get incomingProgress;
+}
+
 abstract interface class MixingAudioService implements AudioService {
   /// Downloads/opens B before asking for a plan against the live audio clock.
   Future<bool> mixTo(

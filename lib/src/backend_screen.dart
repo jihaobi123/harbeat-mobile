@@ -8,7 +8,7 @@ class _NetworkNotice extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: HardCard(
-          color: const Color(0xFFFFD4C9),
+          color: HB.errorSurface,
           shadow: false,
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -347,7 +347,7 @@ class _BackendScreenState extends State<BackendScreen> {
                               }),
                           decoration: const InputDecoration(
                               labelText: '服务地址',
-                              hintText: 'https://你的服务地址',
+                              hintText: BackendConfig.defaultAddress,
                               border: HB.inputBorder)),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<BackendApi>(

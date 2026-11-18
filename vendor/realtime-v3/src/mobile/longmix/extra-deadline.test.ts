@@ -1,0 +1,5 @@
+import {it,expect,vi,afterEach} from 'vitest'
+import {extraDeadline} from './extra-deadline'
+afterEach(()=>vi.useRealTimers())
+it('permits paused preheat, then bounds extra work after playback resumes',()=>{vi.useFakeTimers({toFake:['setInterval','clearInterval','performance']});let playing=false,position=20;const d=extraDeadline(67,()=>position,()=>playing,new AbortController().signal);vi.advanceTimersByTime(20000);expect(d.signal.aborted).toBe(false);playing=true;vi.advanceTimersByTime(100);vi.advanceTimersByTime(7900);expect(d.signal.aborted).toBe(false);vi.advanceTimersByTime(100);expect(d.signal.aborted).toBe(true);d.dispose()})
+it('releases extra preparation before the reserved AB cue window and caps paused work',()=>{vi.useFakeTimers({toFake:['setInterval','clearInterval','performance']});let playing=true,position=40;const d=extraDeadline(67,()=>position,()=>playing,new AbortController().signal);position=55;vi.advanceTimersByTime(100);expect(d.signal.aborted).toBe(true);d.dispose();const paused=extraDeadline(67,()=>20,()=>false,new AbortController().signal);vi.advanceTimersByTime(60000);expect(paused.signal.aborted).toBe(true);paused.dispose()})

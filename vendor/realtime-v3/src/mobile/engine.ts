@@ -3,14 +3,16 @@ import {decisionReport} from '../realtime/DecisionHistory'
 import type {Track,Intent} from '../realtime/planner'
 import {DanceRun,validateDanceSet} from './dance'
 import {ContinuousRun,loadContinuousIndex} from './continuous'
+import {overlapSourcePosition} from './deck-progress'
 declare global {interface Window {HarBeatEngineHost:{state:(json:string)=>void;reply:(id:number,json:string)=>void};HarBeatEngine:{dispatch:(message:{id:number;method:string;args:Record<string,any>})=>Promise<void>}}}
 let tracks:Track[]=[],session:MobileSession|null=null,ready=false,error=''
 let localTracks:Track[]=[],dance:DanceRun|null=null
 let continuous:ContinuousRun|null=null
 const info=(t:Track)=>({id:t.id,title:t.title,bpm:t.bpm,style:t.style,duration:t.duration})
-function snapshot(){const p=session?.player,plan=p?.lastPlan,pending=p?.pending;return {
+function snapshot(){const p=session?.player,plan=p?.lastPlan,pending=p?.pending,now=p?.ctx.currentTime??0;return {
  ready,error,playing:p?.playing||false,paused:p?.paused||false,busy:p?.busy||continuous?.starting||false,buffering:p?.buffering||false,
  current:p?.current?info(p.current):null,position:p?.position||0,duration:p?.current?.duration||0,
+ decks:{primaryPlaying:!!p?.playing&&(!pending||now<pending.end),incoming:pending?{track:info(pending.deck.track),playing:!!p?.playing&&now>=pending.start,position:overlapSourcePosition(now,pending)}:null},
  status:p?.status||'六首素材已就绪，点击开始播放',cacheMB:p?.cache.sizeMB||0,
  pending:pending?{title:tracks.find(t=>t.id===pending.plan.to)?.title,remaining:Math.max(0,pending.end-p!.ctx.currentTime),locked:p!.ctx.currentTime>=pending.start-.15}:null,
  plan:plan?{from:tracks.find(t=>t.id===plan.from)?.title,to:tracks.find(t=>t.id===plan.to)?.title,start:plan.start,end:plan.end,bars:plan.window.bars,rate:plan.rate,midDuck:plan.midDuck,dynamicEq:!!plan.v30Eq,vocalOverlap:!!(plan as any).vocalOverlap,reason:plan.reason}:null,

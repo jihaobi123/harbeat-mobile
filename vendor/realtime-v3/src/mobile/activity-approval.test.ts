@@ -28,6 +28,8 @@ it('embedded verified approvals are consumed offline by the exact automatic/manu
  const f=await fixture(),fetcher=vi.fn(()=>{throw Error('offline')});vi.stubGlobal('fetch',fetcher)
  const session=await ActivitySession.open(f.value,'预约',async id=>f.tracks.find(t=>t.id===id)!)
  expect(session.strategyCount).toBe(1)
+ expect(session.preparationPriority(f.plan)).toBe(f.strategy.decision.methods.bass.score)
+ expect(session.preparationPriority({...f.plan,id:'unapproved'})).toBe(0)
  expect(session.strategyVersion).toBe('jetson-decision-v1')
  expect(await requestJetsonPlan(f.a,f.b,f.plan,new URL('https://test.local/'),new AbortController().signal,()=>0)).toEqual(f.strategy)
  expect(fetcher).not.toHaveBeenCalled()
